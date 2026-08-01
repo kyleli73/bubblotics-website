@@ -1,0 +1,968 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   BUBBLOTICS — GLOBAL STYLES
+
+   Every colour, size, and shadow used on this site is declared once, at the
+   top, as a CSS custom property (a "variable"). Pages and components only ever
+   reference those variables. Change a value here and it updates everywhere.
+
+   Colour values come straight from the Bubblotics Branding Guide 26-7:
+     Cornflower Blue   #5995ED
+     Prussian Blue     #102542
+     School Bus Yellow #FEC601
+     Platinum          #EFF2F1
+     Bright Snow       #FCFAF9
+
+   The guide's rule is followed throughout: headers in blue with yellow
+   accents, long text as a primary colour on a neutral or the reverse. Yellow
+   is used sparingly on purpose. It marks what matters (a standout award, the
+   primary action) and stops working the moment it is everywhere.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@import '@fontsource-variable/source-sans-3';
+
+:root {
+  /* ── Brand colours, exactly as specified ─────────────────────────────── */
+  --cornflower: #5995ed;
+  --prussian: #102542;
+  --bus-yellow: #fec601;
+  --platinum: #eff2f1;
+  --snow: #fcfaf9;
+
+  /* ── Derived shades ──────────────────────────────────────────────────
+     Prussian Blue is the base of the site. A single flat colour across a
+     whole page reads as cheap, so these are steps around it, kept on the
+     same hue so nothing drifts off-brand. */
+  --prussian-950: #070f1c; /* deepest, page background */
+  --prussian-900: #0b1a2e;
+  --prussian-800: var(--prussian); /* #102542, panel background */
+  --prussian-700: #1a3557;
+  --prussian-600: #24466e;
+
+  --cornflower-light: #8ab6f4;
+  --cornflower-dim: #3d72c4;
+
+  /* ── Semantic tokens ─────────────────────────────────────────────────
+     Components reference these, not the raw colours above. That way a
+     future rebrand touches one block instead of two hundred rules. */
+  --bg: var(--prussian-950);
+  --bg-raised: var(--prussian-900);
+  --bg-panel: rgba(16, 37, 66, 0.62);
+
+  --ink: var(--snow); /* body text on dark */
+  --ink-muted: #a8bbd4; /* captions, secondary text. 7.1:1 on --bg */
+  --ink-faint: #6f86a5; /* labels and meta. 4.6:1 on --bg */
+  --ink-inverse: var(--prussian-950); /* text on light or yellow surfaces */
+
+  --accent: var(--cornflower);
+  --accent-soft: var(--cornflower-light);
+  --highlight: var(--bus-yellow);
+
+  --line: rgba(137, 172, 220, 0.16); /* hairline borders */
+  --line-strong: rgba(137, 172, 220, 0.32);
+
+  /* ── Glass ───────────────────────────────────────────────────────────
+     The "bubble" motif as surface treatment rather than decoration: a
+     translucent panel with a light top edge, like the highlight on a soap
+     bubble. Used for cards, the nav bar, and the CAD frame. */
+  --glass-bg: rgba(89, 149, 237, 0.07);
+  --glass-border: rgba(137, 172, 220, 0.2);
+  --glass-blur: 16px;
+
+  /* ── Typography ──────────────────────────────────────────────────────
+     Source Sans 3 for body copy, per the branding guide. It ships as a
+     variable font, so every weight from 200 to 900 is available from one
+     downloaded file.
+
+     [PLACEHOLDER] The guide names "Nelvetica Neue" for headlines. That
+     face isn't available as a web font. The stack below is the closest
+     neo-grotesque, and it renders natively on Apple devices with no
+     download at all. If the team licenses the real face, drop the files
+     in public/fonts/, add an @font-face block, and put its name at the
+     front of --font-display. Nothing else needs to change. */
+  --font-body: 'Source Sans 3 Variable', 'Source Sans 3', system-ui,
+    -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Helvetica Neue', Helvetica, 'Inter', system-ui, Arial,
+    sans-serif;
+
+  /* Fluid type. clamp(min, preferred, max) scales with the viewport between
+     a phone and a desktop without a single media query. */
+  --step--1: clamp(0.83rem, 0.8rem + 0.15vw, 0.92rem);
+  --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --step-1: clamp(1.2rem, 1.12rem + 0.4vw, 1.45rem);
+  --step-2: clamp(1.45rem, 1.3rem + 0.75vw, 1.95rem);
+  --step-3: clamp(1.8rem, 1.5rem + 1.4vw, 2.7rem);
+  --step-4: clamp(2.2rem, 1.7rem + 2.4vw, 3.8rem);
+  --step-5: clamp(2.7rem, 1.8rem + 4.2vw, 5.6rem);
+
+  /* ── Spacing, on a consistent scale ──────────────────────────────────
+     Picking from a scale instead of typing arbitrary pixel values is what
+     makes a layout feel deliberate rather than assembled. */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+  --sp-8: 4rem;
+  --sp-9: 6rem;
+  --sp-10: 8rem;
+
+  /* ── Shape and depth ─────────────────────────────────────────────── */
+  --radius-sm: 8px;
+  --radius: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 2px 8px rgba(7, 15, 28, 0.4);
+  --shadow: 0 12px 32px rgba(7, 15, 28, 0.45);
+  --shadow-lg: 0 28px 70px rgba(7, 15, 28, 0.6);
+  --glow: 0 0 44px rgba(89, 149, 237, 0.28);
+  --glow-yellow: 0 0 36px rgba(254, 198, 1, 0.26);
+
+  /* ── Motion ──────────────────────────────────────────────────────────
+     One easing curve, used everywhere. Mixed easings are the difference
+     between a site that feels designed and one that feels assembled. */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-io: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 160ms;
+  --dur: 320ms;
+  --dur-slow: 620ms;
+
+  --shell: 1200px; /* max content width */
+  --shell-narrow: 760px; /* max width for long-form reading */
+
+  /* Set from JS to the real header height so anchor links and the sticky
+     day headers clear the nav instead of hiding behind it. */
+  --header-h: 72px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   RESET
+   ───────────────────────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  /* Native smooth scroll as the fallback. Lenis takes over when JS loads;
+     if it fails or is blocked, in-page anchors still glide. */
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-h) + var(--sp-5));
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip; /* stops decorative bubbles causing sideways scroll */
+  min-height: 100vh;
+
+  /* The page's ambient light. Two soft radial washes, cornflower at top
+     left and a faint yellow at bottom right, fixed so they sit behind the
+     content as it scrolls. This is what stops a dark site reading as flat
+     black. */
+  background-image:
+    radial-gradient(
+      ellipse 80% 55% at 12% -8%,
+      rgba(89, 149, 237, 0.17),
+      transparent 62%
+    ),
+    radial-gradient(
+      ellipse 65% 50% at 92% 8%,
+      rgba(254, 198, 1, 0.055),
+      transparent 60%
+    );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+img,
+picture,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+ul[class],
+ol[class] {
+  list-style: none;
+  padding: 0;
+}
+
+a {
+  color: var(--accent-soft);
+  text-decoration-color: rgba(138, 182, 244, 0.4);
+  text-underline-offset: 3px;
+  transition: color var(--dur-fast) var(--ease);
+}
+
+a:hover {
+  color: var(--highlight);
+}
+
+/* Keyboard focus must always be obvious. Yellow reads clearly against every
+   surface on the site, which is exactly why it is reserved for this. */
+:focus-visible {
+  outline: 2px solid var(--highlight);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+::selection {
+  background: var(--highlight);
+  color: var(--ink-inverse);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   TYPOGRAPHY
+   ───────────────────────────────────────────────────────────────────────── */
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  text-wrap: balance; /* stops a lone word dropping to its own line */
+}
+
+/* The branding guide asks for headlines in all caps, bold. Applied to the
+   big display headings only. Running whole paragraphs in caps would wreck
+   readability, and the guide scopes the rule to headlines anyway. */
+h1,
+.h-display {
+  font-size: var(--step-5);
+  text-transform: uppercase;
+  letter-spacing: -0.015em;
+}
+
+h2 {
+  font-size: var(--step-3);
+  text-transform: uppercase;
+  letter-spacing: 0.005em;
+}
+
+h3 {
+  font-size: var(--step-2);
+  letter-spacing: -0.01em;
+}
+
+h4 {
+  font-size: var(--step-1);
+}
+
+p {
+  text-wrap: pretty; /* avoids single-word last lines */
+}
+
+.lead {
+  font-size: var(--step-1);
+  color: var(--ink-muted);
+  line-height: 1.55;
+  max-width: 62ch;
+}
+
+.muted {
+  color: var(--ink-muted);
+}
+
+.faint {
+  color: var(--ink-faint);
+}
+
+/* Small uppercase label above a heading. Used on every section so the page
+   has a consistent rhythm as you scroll. */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-display);
+  font-size: var(--step--1);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+  margin-bottom: var(--sp-3);
+}
+
+.eyebrow::before {
+  content: '';
+  width: 26px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--highlight), transparent);
+  border-radius: 2px;
+}
+
+/* Yellow accent on a word inside a heading. The guide's "blue headers with
+   yellow accents" rule, applied literally. */
+.accent-word {
+  color: var(--highlight);
+}
+
+.gradient-word {
+  background: linear-gradient(
+    100deg,
+    var(--cornflower-light) 0%,
+    var(--cornflower) 45%,
+    var(--highlight) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   LAYOUT
+   ───────────────────────────────────────────────────────────────────────── */
+
+.shell {
+  width: 100%;
+  max-width: var(--shell);
+  margin-inline: auto;
+  padding-inline: var(--sp-5);
+}
+
+@media (min-width: 768px) {
+  .shell {
+    padding-inline: var(--sp-6);
+  }
+}
+
+.shell-narrow {
+  max-width: var(--shell-narrow);
+}
+
+.section {
+  padding-block: var(--sp-9);
+  position: relative;
+}
+
+.section-tight {
+  padding-block: var(--sp-7);
+}
+
+@media (min-width: 900px) {
+  .section {
+    padding-block: var(--sp-10);
+  }
+}
+
+.section-head {
+  max-width: 68ch;
+  margin-bottom: var(--sp-7);
+}
+
+.section-head p {
+  color: var(--ink-muted);
+  margin-top: var(--sp-4);
+  font-size: var(--step-1);
+  line-height: 1.55;
+}
+
+/* A hairline that fades out at both ends. Separates sections without the
+   hard edge of a plain border. */
+.rule {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--line-strong) 18%,
+    var(--line-strong) 82%,
+    transparent
+  );
+}
+
+.grid {
+  display: grid;
+  gap: var(--sp-5);
+}
+
+.grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+}
+
+.grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+}
+
+.grid-4 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+}
+
+.stack > * + * {
+  margin-top: var(--sp-4);
+}
+
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: center;
+}
+
+/* Visible only to screen readers. For labels that would be redundant on
+   screen but are needed for anyone listening to the page. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* First thing a keyboard user tabs to. Lets them jump the nav entirely. */
+.skip-link {
+  position: absolute;
+  top: var(--sp-3);
+  left: var(--sp-3);
+  z-index: 999;
+  padding: var(--sp-3) var(--sp-5);
+  background: var(--highlight);
+  color: var(--ink-inverse);
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  transform: translateY(-160%);
+  transition: transform var(--dur) var(--ease);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+  color: var(--ink-inverse);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   SURFACES — the bubble motif as glass
+   ───────────────────────────────────────────────────────────────────────── */
+
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.3);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.3);
+  border-radius: var(--radius-lg);
+}
+
+.card {
+  position: relative;
+  background: linear-gradient(
+    165deg,
+    rgba(89, 149, 237, 0.1),
+    rgba(16, 37, 66, 0.5) 55%
+  );
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-5);
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    transform var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+
+/* The soap-bubble highlight: a bright hairline along the top edge that
+   brightens on hover. One CSS rule, and it is what makes these read as
+   bubbles rather than as generic dark cards. */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    150deg,
+    rgba(252, 250, 249, 0.32),
+    transparent 38%,
+    transparent 70%,
+    rgba(89, 149, 237, 0.24)
+  );
+  /* Masks the gradient down to the 1px border ring only. */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0.75;
+  transition: opacity var(--dur) var(--ease);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow), var(--glow);
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+/* Cards that are entirely a link. The whole card becomes the click target
+   via the ::after overlay, so the link text stays meaningful for screen
+   readers while the mouse gets a big, forgiving hit area. */
+.card-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.card-link:hover {
+  color: inherit;
+}
+
+.card-link .card-title {
+  transition: color var(--dur-fast) var(--ease);
+}
+
+.card-link:hover .card-title {
+  color: var(--highlight);
+}
+
+.card-media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: var(--radius);
+  margin: calc(var(--sp-5) * -1) calc(var(--sp-5) * -1) var(--sp-5);
+  border-bottom: 1px solid var(--line);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--prussian-900);
+}
+
+.card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--dur-slow) var(--ease);
+}
+
+.card:hover .card-media img {
+  transform: scale(1.045);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   PLACEHOLDER IMAGE
+   Deliberately obvious. A missing photo should look unfinished, not like a
+   design choice, so nobody ships the site with these still in place.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.ph-image {
+  display: grid;
+  place-content: center;
+  gap: var(--sp-2);
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
+  text-align: center;
+  padding: var(--sp-5);
+  color: var(--ink-faint);
+  background-color: var(--prussian-900);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(89, 149, 237, 0.07) 0 12px,
+    transparent 12px 24px
+  );
+}
+
+.ph-image span {
+  font-family: var(--font-display);
+  font-size: var(--step--1);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+}
+
+.ph-image small {
+  font-size: var(--step--1);
+  line-height: 1.4;
+  max-width: 30ch;
+}
+
+/* Inline marker for placeholder text. Search the built site for the yellow
+   dashed outline and you have found everything still to write. */
+.ph-tag {
+  display: inline-block;
+  padding: 0.1em 0.5em;
+  border: 1px dashed var(--highlight);
+  border-radius: var(--radius-sm);
+  color: var(--highlight);
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   BUTTONS
+   ───────────────────────────────────────────────────────────────────────── */
+
+.btn {
+  --btn-bg: var(--accent);
+  --btn-fg: var(--ink-inverse);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  /* 48px tall at the default font size. Comfortably above the 44px minimum
+     touch target, which matters because most visitors are on a phone. */
+  min-height: 48px;
+  padding: var(--sp-3) var(--sp-6);
+  border-radius: var(--radius-pill);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--step-0);
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    transform var(--dur-fast) var(--ease),
+    box-shadow var(--dur) var(--ease),
+    filter var(--dur-fast) var(--ease);
+}
+
+/* A soft light sweeps across on hover. Subtle enough to read as quality
+   rather than as an effect you notice. */
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(252, 250, 249, 0.45) 50%,
+    transparent 80%
+  );
+  transform: translateX(-110%);
+  transition: transform var(--dur-slow) var(--ease);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  color: var(--btn-fg);
+  box-shadow: 0 10px 28px rgba(89, 149, 237, 0.35);
+}
+
+.btn:hover::after {
+  transform: translateX(110%);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* The single most important action on a page. Yellow, and used once per
+   screen at most. */
+.btn-primary {
+  --btn-bg: var(--highlight);
+  --btn-fg: var(--ink-inverse);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 10px 28px rgba(254, 198, 1, 0.32);
+}
+
+.btn-ghost {
+  --btn-bg: transparent;
+  --btn-fg: var(--ink);
+  border: 1px solid var(--line-strong);
+  backdrop-filter: blur(8px);
+}
+
+.btn-ghost:hover {
+  --btn-fg: var(--ink-inverse);
+  background: var(--snow);
+  border-color: var(--snow);
+  box-shadow: var(--shadow);
+}
+
+.btn-sm {
+  min-height: 40px;
+  padding: var(--sp-2) var(--sp-4);
+  font-size: var(--step--1);
+}
+
+/* Text link with an arrow that slides on hover. Used to close out sections. */
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: var(--step--1);
+  text-decoration: none;
+  color: var(--accent-soft);
+}
+
+.link-arrow svg {
+  transition: transform var(--dur) var(--ease);
+}
+
+.link-arrow:hover svg {
+  transform: translateX(5px);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   TAGS AND BADGES
+   ───────────────────────────────────────────────────────────────────────── */
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 0.25em 0.75em;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background: rgba(89, 149, 237, 0.1);
+  color: var(--ink-muted);
+  font-size: var(--step--1);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.tag-gold {
+  border-color: rgba(254, 198, 1, 0.45);
+  background: rgba(254, 198, 1, 0.12);
+  color: var(--highlight);
+}
+
+.tag-solid {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--ink-inverse);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   PROSE — long-form body copy in markdown pages
+   ───────────────────────────────────────────────────────────────────────── */
+
+.prose {
+  max-width: 68ch;
+  color: var(--ink-muted);
+  font-size: var(--step-0);
+  line-height: 1.75;
+}
+
+.prose > * + * {
+  margin-top: var(--sp-5);
+}
+
+.prose h2 {
+  font-size: var(--step-2);
+  color: var(--ink);
+  margin-top: var(--sp-8);
+  text-transform: none;
+  letter-spacing: -0.01em;
+}
+
+.prose h3 {
+  font-size: var(--step-1);
+  color: var(--ink);
+  margin-top: var(--sp-6);
+}
+
+.prose strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: var(--sp-5);
+}
+
+.prose li + li {
+  margin-top: var(--sp-2);
+}
+
+.prose li::marker {
+  color: var(--accent);
+}
+
+.prose blockquote {
+  border-left: 3px solid var(--highlight);
+  padding-left: var(--sp-5);
+  font-size: var(--step-1);
+  color: var(--ink);
+  font-style: italic;
+}
+
+.prose img {
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+}
+
+.prose code {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.9em;
+  padding: 0.15em 0.4em;
+  border-radius: 5px;
+  background: rgba(89, 149, 237, 0.14);
+  color: var(--accent-soft);
+}
+
+.prose hr {
+  border: 0;
+  height: 1px;
+  background: var(--line-strong);
+  margin-block: var(--sp-7);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   SCROLL REVEAL
+
+   Elements marked data-reveal start invisible and are animated in by GSAP
+   ScrollTrigger as they enter the viewport.
+
+   The `.has-js` guard matters: the hidden state is only applied once the
+   inline script in <head> confirms JavaScript is running. Without that
+   guard, a visitor with JS disabled or a failed CDN would get a completely
+   blank page. This is the classic way to break a site and never notice.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.has-js [data-reveal] {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* Anyone who has asked their system to reduce motion gets the finished
+   layout immediately, with no movement at all. Not a nicety: motion
+   triggers nausea and migraines for some people. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .has-js [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   PAGE HEADER — the band at the top of every page except home
+   ───────────────────────────────────────────────────────────────────────── */
+
+.page-head {
+  position: relative;
+  padding-top: calc(var(--header-h) + var(--sp-8));
+  padding-bottom: var(--sp-7);
+  overflow: hidden;
+}
+
+.page-head::after {
+  /* A wide, soft bubble of light behind the title. */
+  content: '';
+  position: absolute;
+  top: -40%;
+  left: 50%;
+  width: min(1100px, 130vw);
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    circle,
+    rgba(89, 149, 237, 0.15),
+    transparent 62%
+  );
+  pointer-events: none;
+  z-index: -1;
+}
+
+.page-head h1 {
+  font-size: var(--step-4);
+}
+
+.page-head .lead {
+  margin-top: var(--sp-5);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   PRINT
+   Sponsors and judges do print pages. Make it not embarrassing.
+   ───────────────────────────────────────────────────────────────────────── */
+
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .site-header,
+  .site-footer,
+  .bubbles,
+  .skip-link {
+    display: none !important;
+  }
+
+  .card,
+  .glass {
+    border: 1px solid #ccc;
+    background: none;
+    box-shadow: none;
+  }
+
+  a {
+    color: #000;
+  }
+}

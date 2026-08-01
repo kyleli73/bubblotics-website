@@ -1,0 +1,17 @@
+<!--
+  [PLACEHOLDER] Stand-in favicon: the bubble mark in the team's colours.
+  Replace with the real logo mark when it exists. Keep it as SVG so it stays
+  sharp at every size a browser asks for.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8AB6F4"/>
+      <stop offset="100%" stop-color="#5995ED"/>
+    </linearGradient>
+  </defs>
+  <rect width="48" height="48" rx="10" fill="#102542"/>
+  <circle cx="35.5" cy="14" r="5.5" fill="#FEC601"/>
+  <circle cx="20" cy="28" r="14" fill="url(#g)"/>
+  <circle cx="15.5" cy="23" r="4" fill="#FCFAF9" opacity="0.55"/>
+</svg>
