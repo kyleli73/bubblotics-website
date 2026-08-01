@@ -1,0 +1,107 @@
+---
+/*
+ * The frame every page sits inside.
+ *
+ * A page never writes its own <html>, <head>, header, or footer. It supplies
+ * a title and description, then its content as a slot. That is what keeps the
+ * nav identical on all nine pages: it exists once, here.
+ */
+
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { team } from '../data/site';
+import { url } from '../lib/paths';
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Absolute or base-relative path to a link-preview image. */
+  image?: string;
+  /** Set on the home page so its <title> isn't "Bubblotics | Bubblotics". */
+  bareTitle?: boolean;
+}
+
+const {
+  title,
+  description = team.metaDescription,
+  image,
+  bareTitle = false,
+} = Astro.props;
+
+const pageTitle = bareTitle ? title : `${title} | ${team.name} · Team ${team.number}`;
+
+// Astro.site comes from `site` in astro.config.mjs. Social platforms need a
+// full https:// URL for preview images, not a relative path.
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'http://localhost');
+const previewImage = image
+  ? new URL(url(image), Astro.site ?? 'http://localhost').href
+  : undefined;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical.href} />
+
+    <!--
+      [PLACEHOLDER] Replace with the real favicon once the logo exists.
+      An .svg favicon scales to every size a browser might ask for.
+    -->
+    <link rel="icon" type="image/svg+xml" href={url('/favicon.svg')} />
+
+    <!-- The browser chrome colour on mobile, matched to the page. -->
+    <meta name="theme-color" content="#102542" />
+
+    <!-- Link previews in iMessage, Discord, Instagram DMs, and Slack. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={team.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical.href} />
+    {previewImage && <meta property="og:image" content={previewImage} />}
+    <meta
+      name="twitter:card"
+      content={previewImage ? 'summary_large_image' : 'summary'}
+    />
+
+    <!--
+      Marks the document as JavaScript-capable BEFORE any CSS is applied.
+
+      global.css hides [data-reveal] elements only under `.has-js`. If JS is
+      disabled, blocked, or the bundle fails to download, this class is never
+      added, the hiding rule never matches, and the visitor gets the full
+      page with no animation. Without this guard the site would render blank
+      for those people, which is the classic way to break a site with
+      scroll animations and never find out.
+    -->
+    <script is:inline>
+      document.documentElement.classList.add('has-js');
+    </script>
+  </head>
+
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+
+    <Header />
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <Footer />
+
+    <!--
+      Astro bundles, minifies, and fingerprints this for us. It loads as a
+      module, which is deferred by default, so it never blocks the page from
+      painting.
+    -->
+    <script>
+      import '../scripts/motion';
+    </script>
+  </body>
+</html>

@@ -1,0 +1,454 @@
+---
+/*
+ * Site header.
+ *
+ * Sticky, translucent, and it changes state on scroll: transparent over the
+ * hero so the bubbles show through, then it condenses into a solid glass bar
+ * once you move down the page. That transition is handled in the header's
+ * own script at the bottom of this file.
+ *
+ * Nine nav items is a lot for a phone, so below 1024px the whole thing
+ * collapses into a full-screen panel.
+ */
+
+import { nav } from '../data/site';
+import { url, isActive } from '../lib/paths';
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+
+const currentPath = Astro.url.pathname;
+---
+
+<header class="site-header" id="site-header">
+  <div class="shell header-inner">
+    <a href={url('/')} class="brand" aria-label="Bubblotics, Team 35858, home">
+      <Logo variant="full" size={42} />
+    </a>
+
+    <nav class="desktop-nav" aria-label="Main">
+      <ul>
+        {
+          nav.map((item) => {
+            const active = isActive(url(item.href), currentPath);
+            return (
+              <li>
+                <a
+                  href={url(item.href)}
+                  class:list={['nav-link', { active }]}
+                  aria-current={active ? 'page' : undefined}
+                >
+                  {item.label}
+                </a>
+              </li>
+            );
+          })
+        }
+      </ul>
+    </nav>
+
+    <a href={url('/sponsors/')} class="btn btn-primary btn-sm header-cta">
+      Sponsor Us
+    </a>
+
+    <button
+      class="menu-toggle"
+      id="menu-toggle"
+      aria-expanded="false"
+      aria-controls="mobile-nav"
+    >
+      <span class="sr-only">Open menu</span>
+      <Icon name="menu" size={24} class="icon-open" />
+      <Icon name="close" size={24} class="icon-close" />
+    </button>
+  </div>
+</header>
+
+<!--
+  The mobile panel is a sibling of the header rather than a child, so it can
+  cover the full viewport without fighting the header's backdrop-filter.
+  `inert` is the important bit: while the panel is closed, it removes every
+  link inside from the tab order and from screen readers. Without it, a
+  keyboard user tabs into an invisible menu and gets stranded.
+-->
+<div class="mobile-nav" id="mobile-nav" inert>
+  <nav class="shell" aria-label="Mobile">
+    <ul>
+      {
+        nav.map((item, i) => {
+          const active = isActive(url(item.href), currentPath);
+          return (
+            <li style={`--i: ${i}`}>
+              <a
+                href={url(item.href)}
+                class:list={['mobile-link', { active }]}
+                aria-current={active ? 'page' : undefined}
+              >
+                <span class="mobile-link-num">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                {item.label}
+              </a>
+            </li>
+          );
+        })
+      }
+    </ul>
+    <a href={url('/sponsors/')} class="btn btn-primary mobile-cta">
+      Sponsor Us
+    </a>
+  </nav>
+</div>
+
+<style>
+  .site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    transition:
+      background var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      backdrop-filter var(--dur) var(--ease),
+      transform var(--dur) var(--ease);
+    border-bottom: 1px solid transparent;
+  }
+
+  /* Added by the script once the page scrolls past the hero. */
+  .site-header.scrolled {
+    background: rgba(7, 15, 28, 0.72);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    border-bottom-color: var(--line);
+  }
+
+  /* Slides out of the way when you scroll down, comes back the moment you
+     scroll up. Gives the content the full screen without ever making
+     someone scroll to the top to reach the nav. */
+  .site-header.hidden {
+    transform: translateY(-105%);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    height: var(--header-h);
+  }
+
+  .brand {
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .desktop-nav {
+    display: none;
+  }
+
+  .desktop-nav ul {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-1);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-link {
+    position: relative;
+    display: block;
+    padding: var(--sp-2) var(--sp-3);
+    border-radius: var(--radius-pill);
+    color: var(--ink-muted);
+    font-size: 0.94rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      color var(--dur-fast) var(--ease),
+      background var(--dur-fast) var(--ease);
+  }
+
+  .nav-link:hover {
+    color: var(--ink);
+    background: rgba(89, 149, 237, 0.12);
+  }
+
+  /* A small bubble under the current page rather than an underline. */
+  .nav-link.active {
+    color: var(--ink);
+  }
+
+  .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--highlight);
+    box-shadow: 0 0 10px var(--highlight);
+  }
+
+  .header-cta {
+    display: none;
+  }
+
+  .menu-toggle {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    color: var(--ink);
+    background: rgba(89, 149, 237, 0.08);
+    backdrop-filter: blur(8px);
+    transition: background var(--dur-fast) var(--ease);
+  }
+
+  .menu-toggle:hover {
+    background: rgba(89, 149, 237, 0.2);
+  }
+
+  /* Both icons are stacked in the same grid cell; only one is shown. */
+  .menu-toggle :global(svg) {
+    grid-area: 1 / 1;
+    transition:
+      opacity var(--dur-fast) var(--ease),
+      transform var(--dur) var(--ease);
+  }
+
+  .menu-toggle :global(.icon-close) {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.7);
+  }
+
+  .menu-toggle[aria-expanded='true'] :global(.icon-open) {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.7);
+  }
+
+  .menu-toggle[aria-expanded='true'] :global(.icon-close) {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (min-width: 1024px) {
+    .desktop-nav {
+      display: block;
+    }
+    .header-cta {
+      display: inline-flex;
+    }
+    .menu-toggle {
+      display: none;
+    }
+  }
+
+  /* ── Mobile panel ─────────────────────────────────────────────────── */
+
+  .mobile-nav {
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+    display: flex;
+    align-items: center;
+    background: rgba(7, 15, 28, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--dur) var(--ease),
+      visibility var(--dur) var(--ease);
+    overflow-y: auto;
+    padding-block: calc(var(--header-h) + var(--sp-5)) var(--sp-6);
+  }
+
+  .mobile-nav.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .mobile-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .mobile-link {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-4);
+    padding: var(--sp-3) 0;
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    text-decoration: none;
+    transition:
+      color var(--dur-fast) var(--ease),
+      transform var(--dur) var(--ease);
+
+    /* Each item slides up slightly later than the one above it, so the
+       menu unfolds instead of appearing all at once. */
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  .mobile-nav.open .mobile-link {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--dur) var(--ease) calc(var(--i) * 38ms + 90ms),
+      transform var(--dur) var(--ease) calc(var(--i) * 38ms + 90ms),
+      color var(--dur-fast) var(--ease);
+  }
+
+  .mobile-link:hover,
+  .mobile-link.active {
+    color: var(--highlight);
+  }
+
+  .mobile-link-num {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    min-width: 2ch;
+  }
+
+  .mobile-cta {
+    margin-top: var(--sp-6);
+    width: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-link {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  /*
+   * Header behaviour. Three jobs:
+   *   1. Publish the real header height as a CSS variable.
+   *   2. Condense and auto-hide the bar as the page scrolls.
+   *   3. Open and close the mobile panel, accessibly.
+   */
+
+  const header = document.getElementById('site-header');
+  const toggle = document.getElementById('menu-toggle');
+  const panel = document.getElementById('mobile-nav');
+
+  if (header) {
+    /* ── 1. Header height ────────────────────────────────────────────
+       Anchor links and sticky offsets need to know how tall the bar is.
+       Measuring it beats hard-coding a number that drifts out of date
+       the first time someone changes the logo size. */
+    const publishHeight = () => {
+      document.documentElement.style.setProperty(
+        '--header-h',
+        `${header.offsetHeight}px`
+      );
+    };
+    publishHeight();
+    window.addEventListener('resize', publishHeight);
+
+    /* ── 2. Scroll state ─────────────────────────────────────────────
+       Scroll events fire far more often than the screen refreshes.
+       requestAnimationFrame collapses a burst of them into one update
+       per frame, which is the difference between smooth and janky on a
+       mid-range phone. */
+    let lastY = window.scrollY;
+    let ticking = false;
+
+    const onScroll = () => {
+      const y = window.scrollY;
+
+      header.classList.toggle('scrolled', y > 24);
+
+      // Only hide once well past the hero, and never while the mobile
+      // menu is open (the bar holds the close button).
+      const menuOpen = panel?.classList.contains('open');
+      const goingDown = y > lastY;
+      header.classList.toggle('hidden', goingDown && y > 400 && !menuOpen);
+
+      lastY = y;
+      ticking = false;
+    };
+
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(onScroll);
+        }
+      },
+      { passive: true } // tells the browser we won't block the scroll
+    );
+  }
+
+  /* ── 3. Mobile menu ───────────────────────────────────────────────── */
+  if (toggle && panel) {
+    const setOpen = (open: boolean) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      panel.classList.toggle('open', open);
+
+      // `inert` keeps closed links out of the tab order and out of the
+      // accessibility tree. Removing it is what makes the panel usable.
+      if (open) {
+        panel.removeAttribute('inert');
+      } else {
+        panel.setAttribute('inert', '');
+      }
+
+      // Stop the page behind the overlay from scrolling.
+      document.body.style.overflow = open ? 'hidden' : '';
+
+      const label = toggle.querySelector('.sr-only');
+      if (label) label.textContent = open ? 'Close menu' : 'Open menu';
+
+      // Move focus into the panel so a keyboard user lands somewhere
+      // useful, and hand it back to the button on close.
+      if (open) {
+        panel.querySelector<HTMLAnchorElement>('a')?.focus();
+      } else {
+        (toggle as HTMLButtonElement).focus();
+      }
+    };
+
+    toggle.addEventListener('click', () => {
+      setOpen(toggle.getAttribute('aria-expanded') !== 'true');
+    });
+
+    // Escape closes it, which is what everyone expects from an overlay.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && panel.classList.contains('open')) {
+        setOpen(false);
+      }
+    });
+
+    // Tapping a link navigates; close first so the panel isn't still up
+    // if the browser restores this page from its back-forward cache.
+    panel.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => setOpen(false));
+    });
+
+    // Crossing into desktop layout with the panel open would leave the
+    // body unscrollable and no visible way to close it.
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    desktop.addEventListener('change', (e) => {
+      if (e.matches && panel.classList.contains('open')) setOpen(false);
+    });
+  }
+</script>

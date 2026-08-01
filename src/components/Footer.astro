@@ -1,0 +1,273 @@
+---
+/*
+ * Site footer.
+ *
+ * Contact details, the social links that actually exist, a sitemap built
+ * from the same `nav` array the header uses, and the FIRST attribution.
+ */
+
+import { team, nav, contact, activeSocials } from '../data/site';
+import { url } from '../lib/paths';
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+
+const year = new Date().getFullYear();
+
+/* Split the nav into two columns so it doesn't run as one long strip. */
+const half = Math.ceil(nav.length / 2);
+const navCols = [nav.slice(0, half), nav.slice(half)];
+---
+
+<footer class="site-footer">
+  <div class="shell">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <Logo variant="full" size={46} />
+        <p class="footer-blurb">
+          {team.formalName} competes in the {team.program}. We build a new
+          robot every season and bring engineering to students who have not
+          met it yet.
+        </p>
+
+        <ul class="socials">
+          <li>
+            <a
+              href={`mailto:${contact.email}`}
+              class="social"
+              aria-label={`Email ${team.name}`}
+            >
+              <Icon name="mail" size={19} />
+            </a>
+          </li>
+          {
+            activeSocials.map((s) => (
+              <li>
+                <a
+                  href={s.url}
+                  class="social"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${team.name} on ${s.name}`}
+                >
+                  <Icon name={s.icon} size={19} />
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <div class="footer-links">
+        {
+          navCols.map((col) => (
+            <nav aria-label="Footer">
+              <ul>
+                {col.map((item) => (
+                  <li>
+                    <a href={url(item.href)}>{item.label}</a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))
+        }
+      </div>
+
+      <div class="footer-contact">
+        <h3 class="footer-heading">Get in touch</h3>
+        <a href={`mailto:${contact.email}`} class="contact-line">
+          {contact.email}
+        </a>
+        {
+          activeSocials.map((s) => (
+            <a
+              href={s.url}
+              class="contact-line"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {s.handle} <span class="faint">on {s.name}</span>
+            </a>
+          ))
+        }
+        <p class="contact-line faint">{team.location}</p>
+
+        <a href={url('/sponsors/')} class="btn btn-primary btn-sm footer-cta">
+          Back the team
+        </a>
+      </div>
+    </div>
+
+    <hr class="rule" />
+
+    <div class="footer-bottom">
+      <p>&copy; {year} {team.name} &middot; {team.formalName}</p>
+      <p class="faint">
+        <!--
+          FIRST asks that teams identify FIRST and the program by name when
+          referencing them. This line covers it.
+        -->
+        <em>FIRST</em>&reg; and <em>FIRST</em>&reg; Tech Challenge are trademarks
+        of For Inspiration and Recognition of Science and Technology (<em
+          >FIRST</em
+        >), which is not overseeing, involved with, or responsible for this
+        website.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    position: relative;
+    margin-top: var(--sp-9);
+    padding-block: var(--sp-8) var(--sp-6);
+    border-top: 1px solid var(--line);
+    background: linear-gradient(
+      to bottom,
+      rgba(16, 37, 66, 0.35),
+      rgba(7, 15, 28, 0.9)
+    );
+  }
+
+  .footer-top {
+    display: grid;
+    gap: var(--sp-7);
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 720px) {
+    .footer-top {
+      grid-template-columns: 1.4fr 1fr;
+    }
+  }
+
+  @media (min-width: 1000px) {
+    .footer-top {
+      grid-template-columns: 1.6fr 1.2fr 1fr;
+      gap: var(--sp-8);
+    }
+  }
+
+  .footer-blurb {
+    margin-top: var(--sp-4);
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+    max-width: 42ch;
+    line-height: 1.6;
+  }
+
+  .socials {
+    display: flex;
+    gap: var(--sp-3);
+    margin-top: var(--sp-5);
+    list-style: none;
+    padding: 0;
+  }
+
+  .social {
+    display: grid;
+    place-items: center;
+    /* 44px, the minimum comfortable touch target. */
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    background: rgba(89, 149, 237, 0.08);
+    color: var(--ink-muted);
+    transition:
+      transform var(--dur) var(--ease),
+      background var(--dur-fast) var(--ease),
+      color var(--dur-fast) var(--ease),
+      box-shadow var(--dur) var(--ease);
+  }
+
+  .social:hover {
+    transform: translateY(-3px);
+    background: var(--highlight);
+    border-color: var(--highlight);
+    color: var(--ink-inverse);
+    box-shadow: var(--glow-yellow);
+  }
+
+  .footer-links {
+    display: flex;
+    gap: var(--sp-7);
+  }
+
+  .footer-links ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
+
+  .footer-links a {
+    color: var(--ink-muted);
+    text-decoration: none;
+    font-size: var(--step--1);
+    font-weight: 600;
+  }
+
+  .footer-links a:hover {
+    color: var(--highlight);
+  }
+
+  .footer-heading {
+    font-family: var(--font-display);
+    font-size: var(--step--1);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    margin-bottom: var(--sp-4);
+  }
+
+  .contact-line {
+    display: block;
+    margin-bottom: var(--sp-2);
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+    text-decoration: none;
+    word-break: break-word;
+  }
+
+  a.contact-line:hover {
+    color: var(--highlight);
+  }
+
+  .footer-cta {
+    margin-top: var(--sp-4);
+  }
+
+  .footer-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    margin-top: var(--sp-5);
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    line-height: 1.5;
+  }
+
+  .footer-bottom em {
+    font-style: italic;
+    font-weight: 600;
+  }
+
+  @media (min-width: 900px) {
+    .footer-bottom {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--sp-6);
+    }
+
+    .footer-bottom p:last-child {
+      max-width: 62ch;
+      text-align: right;
+    }
+  }
+</style>

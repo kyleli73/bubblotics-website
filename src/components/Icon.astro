@@ -1,0 +1,66 @@
+---
+/*
+ * Inline SVG icons.
+ *
+ * These are drawn straight into the HTML rather than loaded from an icon
+ * font or a CDN. Three reasons: no extra network request, they inherit the
+ * surrounding text colour automatically, and there is no third-party script
+ * to break the site when it goes down.
+ *
+ * Add a new icon by adding a key to `paths` below.
+ */
+
+interface Props {
+  name: keyof typeof paths;
+  size?: number;
+  class?: string;
+}
+
+const paths = {
+  instagram:
+    '<rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/>',
+  youtube:
+    '<rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9.2v5.6l5-2.8z" fill="currentColor" stroke="none"/>',
+  github:
+    '<path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>',
+  mail: '<rect x="2" y="4" width="20" height="16" rx="3"/><path d="m3 7 8.2 5.6a1.5 1.5 0 0 0 1.6 0L21 7"/>',
+  arrow: '<path d="M4 12h15m0 0-6-6m6 6-6 6"/>',
+  arrowUpRight: '<path d="M7 17 17 7m0 0H8m9 0v9"/>',
+  trophy:
+    '<path d="M7 4h10v6a5 5 0 0 1-10 0z"/><path d="M7 6H4.5A1.5 1.5 0 0 0 3 7.5C3 9.5 4.5 11 7 11M17 6h2.5A1.5 1.5 0 0 1 21 7.5c0 2-1.5 3.5-4 3.5"/><path d="M12 15v3m-3.5 3h7"/>',
+  robot:
+    '<rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4m-3.5 9v2m7-2v2M8 20v1m8-1v1"/>',
+  users:
+    '<path d="M16 20v-1.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V20"/><circle cx="9" cy="7" r="3.5"/><path d="M22 20v-1.5a4 4 0 0 0-3-3.9M16 3.6a4 4 0 0 1 0 7"/>',
+  calendar:
+    '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4m8-4v4"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  close: '<path d="m6 6 12 12M18 6 6 18"/>',
+  cube: '<path d="M12 2.8 20.5 7v10L12 21.2 3.5 17V7z"/><path d="M3.5 7 12 11.6 20.5 7M12 11.6V21"/>',
+  spark:
+    '<path d="M12 3v4m0 10v4M3 12h4m10 0h4M5.6 5.6l2.8 2.8m7.2 7.2 2.8 2.8m0-12.8-2.8 2.8m-7.2 7.2-2.8 2.8"/>',
+  location:
+    '<path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.7"/>',
+  play: '<circle cx="12" cy="12" r="9.2"/><path d="M10 8.5v7l6-3.5z" fill="currentColor" stroke="none"/>',
+  check: '<path d="m5 12.5 4.5 4.5L19 7"/>',
+  heart:
+    '<path d="M12 20.5S3.5 15 3.5 9.2A4.7 4.7 0 0 1 12 6.4a4.7 4.7 0 0 1 8.5 2.8c0 5.8-8.5 11.3-8.5 11.3z"/>',
+} as const;
+
+const { name, size = 20, class: className = '' } = Astro.props;
+---
+
+<svg
+  class={className}
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.7"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+  focusable="false"
+  set:html={paths[name]}
+/>

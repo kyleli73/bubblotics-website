@@ -1,0 +1,47 @@
+---
+/*
+ * The title band at the top of every page except Home.
+ *
+ * Having one component do this is what makes eight different pages feel like
+ * one site. If the spacing here changes, it changes on all of them.
+ */
+
+import Bubbles from './Bubbles.astro';
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  lead?: string;
+}
+
+const { eyebrow, title, lead } = Astro.props;
+---
+
+<section class="page-head">
+  <Bubbles count={10} tone="subtle" />
+  <div class="shell">
+    {eyebrow && <p class="eyebrow" data-reveal="fade">{eyebrow}</p>}
+    <h1 data-reveal data-reveal-delay="0.05" set:html={title} />
+    {
+      lead && (
+        <p class="lead" data-reveal data-reveal-delay="0.12">
+          {lead}
+        </p>
+      )
+    }
+    <slot />
+  </div>
+</section>
+
+<style>
+  .page-head {
+    /* The bubbles are absolutely positioned inside this section, so it has
+       to establish a positioning context. */
+    position: relative;
+  }
+
+  .page-head :global(.shell) {
+    position: relative;
+    z-index: 1;
+  }
+</style>

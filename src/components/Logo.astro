@@ -1,0 +1,130 @@
+---
+/*
+ * Team mark.
+ *
+ * [PLACEHOLDER] This is a stand-in, not the real Bubblotics logo. The
+ * branding guide lists the logo section as "*todo", so nothing official
+ * exists to drop in yet.
+ *
+ * When the real artwork arrives:
+ *   1. Save it as public/images/logo.svg (SVG keeps it sharp at any size).
+ *   2. Replace the <svg> below with <img src={url('/images/logo.svg')} …>.
+ *   3. Delete the <style> block.
+ * Nothing else on the site needs to change. The guide's three variants
+ * (symbol only / number and name / name only) map onto the `variant` prop.
+ *
+ * The placeholder is three overlapping bubbles: the largest carries the
+ * team number, matching the guide's rule that the number is always solid
+ * against a contrasting background.
+ */
+
+interface Props {
+  /** 'mark' is the symbol alone, 'full' adds the wordmark beside it. */
+  variant?: 'mark' | 'full';
+  size?: number;
+  class?: string;
+}
+
+const { variant = 'full', size = 40, class: className = '' } = Astro.props;
+---
+
+<span class={`logo ${className}`} data-variant={variant}>
+  <svg
+    class="logo-mark"
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    role="img"
+    aria-label="Bubblotics"
+  >
+    <defs>
+      <linearGradient id="bl-g1" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#8AB6F4"></stop>
+        <stop offset="100%" stop-color="#5995ED"></stop>
+      </linearGradient>
+      <radialGradient id="bl-shine" cx="32%" cy="28%" r="60%">
+        <stop offset="0%" stop-color="#FCFAF9" stop-opacity="0.85"></stop>
+        <stop offset="60%" stop-color="#FCFAF9" stop-opacity="0"></stop>
+      </radialGradient>
+    </defs>
+
+    <!-- Two small satellite bubbles -->
+    <circle cx="38.5" cy="11.5" r="7" fill="#FEC601" opacity="0.9"></circle>
+    <circle cx="10" cy="12.5" r="4.5" fill="#5995ED" opacity="0.55"></circle>
+
+    <!-- Main bubble carrying the team number -->
+    <circle cx="21" cy="28" r="18" fill="url(#bl-g1)"></circle>
+    <circle cx="21" cy="28" r="18" fill="url(#bl-shine)"></circle>
+    <text
+      x="21"
+      y="28"
+      text-anchor="middle"
+      dominant-baseline="central"
+      fill="#102542"
+      font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+      font-size="11.5"
+      font-weight="700"
+      letter-spacing="-0.4">35858</text
+    >
+  </svg>
+
+  {
+    variant === 'full' && (
+      <span class="logo-word">
+        <span class="logo-name">Bubblotics</span>
+        <span class="logo-num">Team 35858</span>
+      </span>
+    )
+  }
+</span>
+
+<style>
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-3);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .logo-mark {
+    flex-shrink: 0;
+    transition: transform var(--dur) var(--ease);
+  }
+
+  /* The mark lifts when you hover anywhere on the header link. */
+  :global(a:hover) > .logo .logo-mark,
+  :global(a:hover).logo .logo-mark {
+    transform: translateY(-2px) rotate(-4deg);
+  }
+
+  .logo-word {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.05;
+  }
+
+  .logo-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  .logo-num {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* Below 380px the wordmark is dropped so the header never wraps. */
+  @media (max-width: 380px) {
+    .logo-word {
+      display: none;
+    }
+  }
+</style>

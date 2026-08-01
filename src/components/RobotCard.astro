@@ -1,0 +1,212 @@
+---
+/*
+ * One robot, as a card. Used on the Robots index and teased on the home page.
+ *
+ * Takes a whole entry from the `robots` content collection, so adding a
+ * markdown file in src/content/robots/ is all it takes for a new card to
+ * appear.
+ */
+
+import type { CollectionEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+import { url } from '../lib/paths';
+import Icon from './Icon.astro';
+
+interface Props {
+  robot: CollectionEntry<'robots'>;
+  /** Index in the list, used for the "Season 01" label. */
+  index?: number;
+}
+
+const { robot, index } = Astro.props;
+const d = robot.data;
+const href = url(`/robots/${robot.id}/`);
+---
+
+<article class="card card-link robot-card">
+  <div class="card-media">
+    {
+      d.heroImage ? (
+        <Image
+          src={d.heroImage}
+          alt={d.heroImageAlt ?? `${d.name}, the team's ${d.season} robot`}
+          widths={[400, 800, 1200]}
+          sizes="(min-width: 900px) 380px, 100vw"
+          loading="lazy"
+        />
+      ) : (
+        <div class="ph-image">
+          <span>[Placeholder]</span>
+          <small>
+            Add a photo of {d.name} and set `heroImage` in its markdown file.
+          </small>
+        </div>
+      )
+    }
+
+    {
+      index !== undefined && (
+        <span class="season-badge">
+          Season {String(index + 1).padStart(2, '0')}
+        </span>
+      )
+    }
+
+    {
+      d.featured && (
+        <span class="tag tag-gold current-badge">
+          <Icon name="spark" size={13} />
+          Current
+        </span>
+      )
+    }
+  </div>
+
+  <p class="robot-meta">
+    <span>{d.year}</span>
+    <span class="dot" aria-hidden="true">&bull;</span>
+    <span class="game">{d.season}</span>
+  </p>
+
+  <h3 class="card-title">
+    <!--
+      The whole card is clickable via the ::after overlay below, but the
+      link itself wraps only the robot name. A screen reader announces
+      "Voyager, link" instead of reading the entire card as one link.
+    -->
+    <a href={href} class="stretched">{d.name}</a>
+  </h3>
+
+  <p class="robot-summary">{d.summary}</p>
+
+  {
+    d.results.length > 0 && (
+      <ul class="robot-results">
+        {d.results.slice(0, 3).map((r) => (
+          <li>
+            <Icon name="trophy" size={14} />
+            {r}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  <span class="link-arrow robot-cta">
+    View robot
+    <Icon name="arrow" size={16} />
+  </span>
+</article>
+
+<style>
+  .robot-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  /* Turns the whole card into the click target while keeping the accessible
+     name limited to the link text. */
+  .stretched {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .stretched::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+  }
+
+  .robot-card:hover .card-title {
+    color: var(--highlight);
+  }
+
+  .season-badge {
+    position: absolute;
+    top: var(--sp-3);
+    left: var(--sp-3);
+    padding: 0.25em 0.7em;
+    border-radius: var(--radius-pill);
+    background: rgba(7, 15, 28, 0.72);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--line-strong);
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .current-badge {
+    position: absolute;
+    top: var(--sp-3);
+    right: var(--sp-3);
+    backdrop-filter: blur(8px);
+  }
+
+  .robot-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: var(--sp-2);
+  }
+
+  .robot-meta .game {
+    color: var(--accent);
+  }
+
+  .card-title {
+    font-size: var(--step-2);
+    margin-bottom: var(--sp-3);
+  }
+
+  .robot-summary {
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+    line-height: 1.6;
+    /* Clamped to three lines so a long summary can't make one card in a
+       row taller than the rest. */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .robot-results {
+    list-style: none;
+    padding: 0;
+    margin: var(--sp-4) 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
+
+  .robot-results li {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+  }
+
+  .robot-results :global(svg) {
+    color: var(--highlight);
+    flex-shrink: 0;
+  }
+
+  .robot-cta {
+    /* margin-top:auto pins this to the bottom of the card, so the arrows
+       line up across a row whatever length the summaries are. */
+    margin-top: auto;
+    padding-top: var(--sp-5);
+  }
+</style>

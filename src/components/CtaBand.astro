@@ -1,0 +1,128 @@
+---
+/*
+ * The closing call to action. Appears near the bottom of most pages so there
+ * is always a next step rather than a dead end.
+ */
+
+import Icon from './Icon.astro';
+import { url } from '../lib/paths';
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  body: string;
+  primaryLabel?: string;
+  primaryHref?: string;
+  secondaryLabel?: string;
+  secondaryHref?: string;
+}
+
+const {
+  eyebrow = 'Get involved',
+  title,
+  body,
+  primaryLabel = 'Sponsor Us',
+  primaryHref = '/sponsors/',
+  secondaryLabel = 'Contact the team',
+  secondaryHref = '/contact/',
+} = Astro.props;
+---
+
+<section class="section">
+  <div class="shell">
+    <div class="cta glass" data-reveal="scale">
+      <div class="cta-glow" aria-hidden="true"></div>
+
+      <div class="cta-content">
+        <p class="eyebrow">{eyebrow}</p>
+        <h2>{title}</h2>
+        <p class="cta-body">{body}</p>
+
+        <div class="cluster cta-actions">
+          <a
+            href={url(primaryHref)}
+            class="btn btn-primary"
+            data-magnetic="0.2"
+          >
+            {primaryLabel}
+            <Icon name="arrowUpRight" size={17} />
+          </a>
+          <a href={url(secondaryHref)} class="btn btn-ghost">
+            {secondaryLabel}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta {
+    position: relative;
+    overflow: hidden;
+    padding: var(--sp-8) var(--sp-5);
+    text-align: center;
+    border-radius: var(--radius-xl);
+  }
+
+  @media (min-width: 768px) {
+    .cta {
+      padding: var(--sp-9) var(--sp-8);
+    }
+  }
+
+  /* A large soft bubble of light behind the copy, drifting slowly. It is
+     what stops this block reading as a plain grey box. */
+  .cta-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: min(760px, 120%);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(
+        circle at 38% 38%,
+        rgba(89, 149, 237, 0.28),
+        transparent 58%
+      ),
+      radial-gradient(
+        circle at 68% 62%,
+        rgba(254, 198, 1, 0.14),
+        transparent 55%
+      );
+    filter: blur(6px);
+    pointer-events: none;
+    animation: drift 22s ease-in-out infinite alternate;
+  }
+
+  @keyframes drift {
+    to {
+      transform: translate(-46%, -54%) scale(1.12);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cta-glow {
+      animation: none;
+    }
+  }
+
+  .cta-content {
+    position: relative;
+    z-index: 1;
+    max-width: 58ch;
+    margin-inline: auto;
+  }
+
+  .cta-body {
+    margin-top: var(--sp-4);
+    color: var(--ink-muted);
+    font-size: var(--step-1);
+    line-height: 1.55;
+  }
+
+  .cta-actions {
+    justify-content: center;
+    margin-top: var(--sp-6);
+  }
+</style>

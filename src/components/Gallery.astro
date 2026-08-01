@@ -1,0 +1,394 @@
+---
+/*
+ * Photo grid with a lightbox.
+ *
+ * ── Adding photos ──────────────────────────────────────────────────────
+ * Drop image files into src/assets/gallery/ and they appear here. There is
+ * no list to update. The `import.meta.glob` call below finds every image in
+ * that folder at build time, and Astro compresses each one and generates
+ * smaller versions for phones automatically.
+ *
+ * Name the files descriptively (provincials-2026-pit.jpg, not IMG_4471.jpg).
+ * The filename becomes the alt text if no caption is supplied, and alt text
+ * is what a blind visitor hears instead of the photo.
+ *
+ * With the folder empty, the component renders marked placeholder tiles so
+ * the layout is still visible while you gather photos.
+ */
+
+import { Image } from 'astro:assets';
+
+interface Props {
+  /** How many tiles to show. Omit for all of them. */
+  limit?: number;
+  columns?: 2 | 3 | 4;
+}
+
+const { limit, columns = 3 } = Astro.props;
+
+/*
+ * eager: true means the images are resolved during the build, not fetched in
+ * the browser. `query: '?url'` is deliberately NOT used, because we want the
+ * full ImageMetadata (width and height included) so <Image> can reserve the
+ * right space and avoid the page jumping as photos load.
+ */
+const modules = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/assets/gallery/*.{jpg,jpeg,png,webp,avif}',
+  { eager: true }
+);
+
+const photos = Object.entries(modules)
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([path, mod]) => {
+    // "provincials-2026-pit.jpg" -> "Provincials 2026 pit"
+    const base = path.split('/').pop()!.replace(/\.[^.]+$/, '');
+    const caption = base
+      .replace(/[-_]+/g, ' ')
+      .replace(/^\d+\s*/, '') // strip a leading sort number if present
+      .replace(/^\w/, (c) => c.toUpperCase());
+    return { src: mod.default, caption };
+  });
+
+const shown = limit ? photos.slice(0, limit) : photos;
+const placeholderCount = limit ?? 9;
+const isEmpty = shown.length === 0;
+---
+
+<div class="gallery" data-columns={columns} data-reveal data-stagger>
+  {
+    isEmpty
+      ? Array.from({ length: placeholderCount }).map((_, i) => (
+          <div class="tile tile-empty">
+            <div class="ph-image">
+              <span>[Placeholder]</span>
+              {i === 0 && (
+                <small>
+                  Drop photos into src/assets/gallery/ and they appear here
+                  automatically.
+                </small>
+              )}
+            </div>
+          </div>
+        ))
+      : shown.map((photo, i) => (
+          <button
+            class="tile"
+            type="button"
+            data-lightbox
+            data-index={i}
+            data-caption={photo.caption}
+          >
+            <Image
+              src={photo.src}
+              alt={photo.caption}
+              widths={[320, 640, 1000]}
+              sizes="(min-width: 900px) 33vw, 50vw"
+              loading={i < 6 ? 'eager' : 'lazy'}
+            />
+            <span class="tile-caption">{photo.caption}</span>
+          </button>
+        ))
+  }
+</div>
+
+{
+  !isEmpty && (
+    <>
+      {/*
+        Full-resolution copies for the lightbox, hidden from the layout and
+        from screen readers. The grid thumbnails are only ~640px wide, so
+        opening one at full screen would otherwise look soft.
+      */}
+      <div hidden aria-hidden="true" id="lightbox-source">
+        {shown.map((photo, i) => (
+          <Image
+            src={photo.src}
+            alt=""
+            width={1600}
+            data-full={i}
+            loading="lazy"
+          />
+        ))}
+      </div>
+
+      {/*
+        <dialog> gives us the modal behaviour for free: it traps focus,
+        closes on Escape, and returns focus to whatever opened it. Writing
+        that by hand is where most custom lightboxes get accessibility wrong.
+      */}
+      <dialog class="lightbox" id="lightbox" aria-label="Photo viewer">
+        <button class="lb-close" data-lb-close aria-label="Close photo viewer">
+          &times;
+        </button>
+        <button class="lb-nav lb-prev" data-lb-prev aria-label="Previous photo">
+          &#8249;
+        </button>
+        <figure class="lb-figure">
+          <img id="lb-img" alt="" />
+          <figcaption id="lb-caption" />
+        </figure>
+        <button class="lb-nav lb-next" data-lb-next aria-label="Next photo">
+          &#8250;
+        </button>
+      </dialog>
+    </>
+  )
+}
+
+<style>
+  .gallery {
+    display: grid;
+    gap: var(--sp-3);
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 700px) {
+    .gallery[data-columns='3'] {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .gallery[data-columns='4'] {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .tile {
+    position: relative;
+    display: block;
+    padding: 0;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--prussian-900);
+    cursor: zoom-in;
+    transition:
+      transform var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease),
+      border-color var(--dur) var(--ease);
+  }
+
+  .tile-empty {
+    cursor: default;
+  }
+
+  .tile :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition:
+      transform var(--dur-slow) var(--ease),
+      filter var(--dur) var(--ease);
+  }
+
+  .tile:hover {
+    transform: translateY(-3px);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow), var(--glow);
+  }
+
+  .tile:hover :global(img) {
+    transform: scale(1.06);
+  }
+
+  /* Caption slides up from the bottom edge on hover or keyboard focus. */
+  .tile-caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: var(--sp-5) var(--sp-3) var(--sp-3);
+    background: linear-gradient(to top, rgba(7, 15, 28, 0.92), transparent);
+    color: var(--snow);
+    font-size: var(--step--1);
+    font-weight: 600;
+    text-align: left;
+    line-height: 1.35;
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+      opacity var(--dur) var(--ease),
+      transform var(--dur) var(--ease);
+  }
+
+  .tile:hover .tile-caption,
+  .tile:focus-visible .tile-caption {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ── Lightbox ─────────────────────────────────────────────────────── */
+
+  .lightbox {
+    /* A <dialog> is display:none until opened, so these only apply while
+       it is showing. */
+    width: min(96vw, 1400px);
+    max-width: none;
+    height: min(94vh, 1000px);
+    max-height: none;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--snow);
+    overflow: visible;
+  }
+
+  .lightbox[open] {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: var(--sp-3);
+  }
+
+  /* ::backdrop is the layer the browser paints behind an open dialog. */
+  .lightbox::backdrop {
+    background: rgba(7, 15, 28, 0.93);
+    backdrop-filter: blur(10px);
+  }
+
+  .lb-figure {
+    grid-column: 2;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-4);
+    height: 100%;
+    min-height: 0; /* lets the image shrink inside the grid row */
+  }
+
+  .lb-figure img {
+    max-width: 100%;
+    max-height: calc(100% - 3rem);
+    object-fit: contain;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .lb-figure figcaption {
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+    text-align: center;
+  }
+
+  .lb-nav,
+  .lb-close {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    background: rgba(16, 37, 66, 0.7);
+    backdrop-filter: blur(8px);
+    color: var(--snow);
+    font-size: 1.6rem;
+    line-height: 1;
+    transition:
+      background var(--dur-fast) var(--ease),
+      transform var(--dur-fast) var(--ease);
+  }
+
+  .lb-nav:hover,
+  .lb-close:hover {
+    background: var(--accent);
+    transform: scale(1.06);
+  }
+
+  .lb-close {
+    position: absolute;
+    top: calc(var(--sp-4) * -1);
+    right: 0;
+    z-index: 2;
+  }
+
+  @media (max-width: 620px) {
+    /* On a phone the side arrows would eat the photo. Move them under it. */
+    .lightbox[open] {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr auto;
+    }
+    .lb-figure {
+      grid-column: 1;
+    }
+    .lb-prev {
+      grid-row: 2;
+      justify-self: start;
+    }
+    .lb-next {
+      grid-row: 2;
+      grid-column: 1;
+      justify-self: end;
+    }
+  }
+</style>
+
+<script>
+  /*
+   * Lightbox controller.
+   *
+   * The heavy lifting (focus trapping, Escape to close, restoring focus) is
+   * handled by the native <dialog> element. This script only tracks which
+   * photo is showing and swaps the image.
+   */
+
+  const dialog = document.getElementById('lightbox') as HTMLDialogElement | null;
+  const img = document.getElementById('lb-img') as HTMLImageElement | null;
+  const caption = document.getElementById('lb-caption');
+  const source = document.getElementById('lightbox-source');
+
+  if (dialog && img && caption && source) {
+    const tiles = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-lightbox]')
+    );
+    const fulls = Array.from(
+      source.querySelectorAll<HTMLImageElement>('[data-full]')
+    );
+
+    let current = 0;
+
+    const show = (index: number) => {
+      // Wrap around at both ends so the arrows never dead-end.
+      current = (index + tiles.length) % tiles.length;
+
+      const full = fulls[current];
+      const text = tiles[current].dataset.caption ?? '';
+
+      // srcset carries the responsive sizes Astro generated, so the browser
+      // picks an appropriate resolution for the screen it is on.
+      img.src = full.src;
+      img.srcset = full.srcset ?? '';
+      img.alt = text;
+      caption.textContent = `${text} · ${current + 1} of ${tiles.length}`;
+    };
+
+    tiles.forEach((tile, i) => {
+      tile.addEventListener('click', () => {
+        show(i);
+        dialog.showModal();
+      });
+    });
+
+    dialog
+      .querySelector('[data-lb-close]')
+      ?.addEventListener('click', () => dialog.close());
+    dialog
+      .querySelector('[data-lb-prev]')
+      ?.addEventListener('click', () => show(current - 1));
+    dialog
+      .querySelector('[data-lb-next]')
+      ?.addEventListener('click', () => show(current + 1));
+
+    // Arrow keys, because anyone browsing a photo grid will try them.
+    dialog.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') show(current - 1);
+      if (e.key === 'ArrowRight') show(current + 1);
+    });
+
+    // Clicking the dark area outside the photo closes it. The check is that
+    // the click landed on the dialog itself rather than on anything inside.
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+  }
+</script>

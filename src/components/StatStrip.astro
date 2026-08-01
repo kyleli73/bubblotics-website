@@ -1,0 +1,102 @@
+---
+/*
+ * The animated numbers strip.
+ *
+ * Each figure counts up from zero when it scrolls into view. The counting is
+ * driven entirely by the data-count attributes below; see src/scripts/motion.ts.
+ *
+ * Note the fallback text inside each <span>: it is the finished number, so a
+ * visitor with JavaScript off sees "12", not an empty box.
+ */
+
+import { stats } from '../data/site';
+---
+
+<section class="stats-band" aria-label="Team statistics">
+  <div class="shell">
+    <ul class="stats-grid" data-reveal data-stagger>
+      {
+        stats.map((stat) => (
+          <li class="stat">
+            <span
+              class="stat-value"
+              data-count={stat.value}
+              data-count-suffix={stat.suffix}
+            >
+              {stat.value.toLocaleString()}
+              {stat.suffix}
+            </span>
+            <span class="stat-label">{stat.label}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .stats-band {
+    position: relative;
+    padding-block: var(--sp-7);
+    border-block: 1px solid var(--line);
+    background: linear-gradient(
+      180deg,
+      rgba(89, 149, 237, 0.06),
+      rgba(16, 37, 66, 0.28)
+    );
+  }
+
+  .stats-grid {
+    display: grid;
+    /* Two across on a phone, four on a laptop. auto-fit does that without
+       a single media query. */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+    gap: var(--sp-5);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .stat {
+    position: relative;
+    text-align: center;
+    padding: var(--sp-3) var(--sp-2);
+  }
+
+  /* Hairline divider between figures, skipped on the first so the row
+     doesn't open with a stray line. */
+  .stat + .stat::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 18%;
+    height: 64%;
+    width: 1px;
+    background: var(--line-strong);
+  }
+
+  .stat-value {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--step-4);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    /* Digits share a width, so the number doesn't jitter while counting. */
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(160deg, var(--snow), var(--cornflower-light));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .stat-label {
+    display: block;
+    margin-top: var(--sp-2);
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+</style>
