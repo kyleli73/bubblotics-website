@@ -1,0 +1,179 @@
+---
+/*
+ * Floating bubble field.
+ *
+ * The team's visual signature. A set of translucent circles that drift
+ * upward behind the hero, each with a light highlight in the top-left so it
+ * reads as a bubble rather than a flat dot.
+ *
+ * Built with CSS animations rather than a canvas or a particle library:
+ *   - No JavaScript, so it renders before the page has finished loading.
+ *   - The browser runs it on the compositor, so it costs almost nothing.
+ *   - It stops dead for anyone who has asked for reduced motion.
+ *
+ * `count` and `tone` let each page use the same effect at a different
+ * intensity, so the hero can be lively while a sponsor page stays calm.
+ */
+
+interface Props {
+  count?: number;
+  /** 'full' for the home hero, 'subtle' for interior pages. */
+  tone?: 'full' | 'subtle';
+  class?: string;
+}
+
+const { count = 18, tone = 'full', class: className = '' } = Astro.props;
+
+/*
+ * Positions are computed once at build time, not in the browser. Every
+ * visitor sees the same arrangement, and there is no layout shift while JS
+ * boots. The values below are deterministic-looking but hand-tuned enough
+ * to avoid the even spacing that makes generated layouts look generated.
+ */
+const bubbles = Array.from({ length: count }, (_, i) => {
+  const golden = 0.6180339887;
+  const x = ((i * golden * 100) % 100).toFixed(2); // spread across the width
+  const size = 14 + ((i * 37) % 100) * (tone === 'full' ? 1.15 : 0.7);
+  const duration = 16 + ((i * 23) % 22);
+  const delay = -((i * 7.3) % 24); // negative: already mid-flight on load
+  const drift = ((i % 5) - 2) * 26; // sideways wander, px
+  const opacity = (tone === 'full' ? 0.5 : 0.28) - ((i % 4) * 0.06);
+
+  return { x, size, duration, delay, drift, opacity };
+});
+---
+
+<div class={`bubbles ${className}`} aria-hidden="true">
+  {
+    bubbles.map((b) => (
+      <span
+        class="bubble"
+        style={`
+          --x: ${b.x}%;
+          --size: ${b.size}px;
+          --dur: ${b.duration}s;
+          --delay: ${b.delay}s;
+          --drift: ${b.drift}px;
+          --op: ${b.opacity};
+        `}
+      />
+    ))
+  }
+</div>
+
+<style>
+  .bubbles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    /* Sits behind content but above the page background wash. */
+    z-index: 0;
+    /* Fades out toward the bottom so bubbles dissolve into the next
+       section instead of stopping at a hard edge. */
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 12%,
+      #000 72%,
+      transparent
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 12%,
+      #000 72%,
+      transparent
+    );
+  }
+
+  .bubble {
+    position: absolute;
+    left: var(--x);
+    bottom: -12%;
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    opacity: 0;
+
+    /* A bubble is mostly its edge. The radial gradient keeps the middle
+       almost clear, the inset shadow draws the rim, and the ::before dot
+       is the specular highlight where the light hits it. */
+    background: radial-gradient(
+      circle at 32% 28%,
+      rgba(252, 250, 249, 0.34),
+      rgba(89, 149, 237, 0.16) 42%,
+      rgba(89, 149, 237, 0.04) 70%
+    );
+    border: 1px solid rgba(137, 172, 220, 0.34);
+    box-shadow:
+      inset -2px -3px 8px rgba(16, 37, 66, 0.5),
+      inset 2px 3px 10px rgba(252, 250, 249, 0.18),
+      0 0 18px rgba(89, 149, 237, 0.16);
+    backdrop-filter: blur(1px);
+
+    animation: rise var(--dur) linear var(--delay) infinite;
+    will-change: transform, opacity;
+  }
+
+  .bubble::before {
+    content: '';
+    position: absolute;
+    top: 16%;
+    left: 20%;
+    width: 26%;
+    height: 26%;
+    border-radius: 50%;
+    background: rgba(252, 250, 249, 0.65);
+    filter: blur(0.5px);
+  }
+
+  /* Every fifth bubble picks up the yellow accent. Sparse on purpose: the
+     brand's yellow is a highlight colour, and a field of yellow bubbles
+     would read as a different team entirely. */
+  .bubble:nth-child(5n) {
+    background: radial-gradient(
+      circle at 32% 28%,
+      rgba(255, 244, 210, 0.4),
+      rgba(254, 198, 1, 0.14) 44%,
+      rgba(254, 198, 1, 0.03) 72%
+    );
+    border-color: rgba(254, 198, 1, 0.34);
+    box-shadow:
+      inset -2px -3px 8px rgba(16, 37, 66, 0.45),
+      inset 2px 3px 10px rgba(255, 244, 210, 0.2),
+      0 0 20px rgba(254, 198, 1, 0.16);
+  }
+
+  @keyframes rise {
+    0% {
+      transform: translate3d(0, 0, 0) scale(0.85);
+      opacity: 0;
+    }
+    12% {
+      opacity: var(--op);
+    }
+    /* The horizontal offset reverses partway up so the path curves
+       instead of running dead straight. Real bubbles wobble. */
+    50% {
+      transform: translate3d(var(--drift), -55vh, 0) scale(1);
+    }
+    88% {
+      opacity: var(--op);
+    }
+    100% {
+      transform: translate3d(calc(var(--drift) * -0.6), -118vh, 0) scale(1.1);
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bubble {
+      animation: none;
+      /* Held still, low opacity: the texture survives, the movement
+         does not. */
+      opacity: calc(var(--op) * 0.5);
+      transform: translate3d(0, -40vh, 0);
+    }
+  }
+</style>
