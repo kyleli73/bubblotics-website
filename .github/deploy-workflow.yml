@@ -1,0 +1,93 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  Build and deploy to GitHub Pages.
+#
+#  This runs on GitHub's servers every time someone pushes to `main`. It
+#  installs the dependencies, runs `npm run build`, and publishes the result.
+#  Nobody needs to build anything on their own machine, and nobody needs to
+#  remember to.
+#
+#  ── ONE-TIME SETUP ──────────────────────────────────────────────────────
+#  This file does nothing until Pages is switched on for the repository:
+#
+#    1. Push this repo to GitHub.
+#    2. Repository → Settings → Pages.
+#    3. Under "Build and deployment", set Source to "GitHub Actions".
+#       (NOT "Deploy from a branch". That is the older method and it will
+#        ignore this workflow entirely.)
+#    4. Push any commit to main. The Actions tab shows the run.
+#
+#  Then set `base` in astro.config.mjs to match the repository name, or every
+#  link on the published site will 404. That file explains why.
+# ═══════════════════════════════════════════════════════════════════════════
+
+name: Deploy to GitHub Pages
+
+on:
+  # Every push to main triggers a rebuild.
+  push:
+    branches: [main]
+
+  # Adds a "Run workflow" button on the Actions tab, for rebuilding without
+  # having to make a commit.
+  workflow_dispatch:
+
+# The permissions the deploy needs. GitHub grants the minimum by default, so
+# these have to be asked for explicitly.
+permissions:
+  contents: read # to check out the code
+  pages: write # to publish
+  id-token: write # to prove to Pages that this run is authorised
+
+# If two pushes land close together, let the newer one finish and skip the
+# older. `cancel-in-progress: false` means a deploy already underway is
+# allowed to complete rather than being killed halfway.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          # Astro 5 needs Node 18.20.8 or newer. 20 is the current LTS.
+          node-version: 20
+          # Caches node_modules between runs, which takes the install from
+          # about a minute down to a few seconds.
+          cache: npm
+
+      - name: Install dependencies
+        # `npm ci` installs exactly what package-lock.json specifies, and
+        # fails if the lockfile and package.json disagree. `npm install`
+        # would quietly upgrade things and could break a build that worked
+        # locally. Always `ci` in automation.
+        run: npm ci
+
+      - name: Build the site
+        run: npm run build
+
+      - name: Upload the built site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Astro writes its output here.
+          path: ./dist
+
+  deploy:
+    # Waits for `build` to succeed. A failed build never reaches deploy, so a
+    # broken commit cannot take the live site down.
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
