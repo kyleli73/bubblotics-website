@@ -1,0 +1,452 @@
+---
+/*
+ * Sponsors.
+ *
+ * This page has two audiences at once: existing sponsors, who should see
+ * their name treated well, and prospective ones, who need the pitch and a
+ * clear way to say yes. The tiers come from src/data/site.ts.
+ *
+ * Launching with no sponsors is fine. Each tier renders an honest open slot
+ * rather than a blank space that reads as a broken page.
+ */
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Icon from '../components/Icon.astro';
+import { sponsorTiers, contact, team } from '../data/site';
+import { url } from '../lib/paths';
+
+const hasAnySponsor = sponsorTiers.some((t) => t.members.length > 0);
+
+/*
+ * [PLACEHOLDER] Rough budget breakdown. Sponsors respond far better to a
+ * specific list than to "support our team", so replace these with the team's
+ * real costs.
+ */
+const costs = [
+  { item: 'Season registration and event fees', amount: '[PLACEHOLDER: $X,XXX]' },
+  { item: 'Robot parts, motors, and control system', amount: '[PLACEHOLDER: $X,XXX]' },
+  { item: 'Tooling, spares, and consumables', amount: '[PLACEHOLDER: $XXX]' },
+  { item: 'Travel to provincials and beyond', amount: '[PLACEHOLDER: $X,XXX]' },
+  { item: 'Outreach kits and demo materials', amount: '[PLACEHOLDER: $XXX]' },
+];
+
+const why = [
+  {
+    icon: 'users' as const,
+    title: 'Reach',
+    body: '[PLACEHOLDER] Your logo travels to every competition we attend, in front of thousands of students, parents, mentors, and volunteers across the season.',
+  },
+  {
+    icon: 'spark' as const,
+    title: 'Pipeline',
+    body: '[PLACEHOLDER] FIRST alumni go into engineering, trades, and computer science. Supporting a team is how a local employer meets them years before anyone else does.',
+  },
+  {
+    icon: 'heart' as const,
+    title: 'Community',
+    body: '[PLACEHOLDER] Our outreach reaches students who have never touched a robot. Sponsorship is what pays for the kits we bring them.',
+  },
+];
+---
+
+<BaseLayout
+  title="Sponsors"
+  description={`Support ${team.name}, FTC Team ${team.number}. Sponsorship tiers, what your contribution pays for, and how to get in touch.`}
+>
+  <PageHero
+    eyebrow="Sponsors"
+    title="Back the <span class='accent-word'>team</span>"
+    lead="Every part on our robot was paid for by someone who decided a student team was worth backing. Here is exactly where that money goes and what we can offer in return."
+  />
+
+  <!-- ═══ CURRENT SPONSORS ═══════════════════════════════════════════ -->
+  <section class="section section-tight">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow" data-reveal="fade">Thank you</p>
+        <h2 data-reveal>
+          {hasAnySponsor ? 'Our supporters' : 'This space is waiting for you'}
+        </h2>
+        {
+          !hasAnySponsor && (
+            <p data-reveal data-reveal-delay="0.06">
+              We are building our first roster of sponsors. Whoever comes on
+              board first gets top placement here, on the robot, and on
+              everything we wear.
+            </p>
+          )
+        }
+      </div>
+
+      {
+        sponsorTiers.map((tier) => (
+          <div class="tier" data-reveal="fade">
+            <div class="tier-head">
+              <h3>{tier.name}</h3>
+              <span class="tier-amount">{tier.contribution}</span>
+            </div>
+
+            {tier.members.length > 0 ? (
+              <ul class="logo-row">
+                {tier.members.map((m) => (
+                  <li class="logo-slot">
+                    {m.url ? (
+                      <a href={m.url} target="_blank" rel="noopener noreferrer">
+                        {m.logo ? (
+                          <img src={url(m.logo)} alt={m.name} loading="lazy" />
+                        ) : (
+                          <span class="logo-name">{m.name}</span>
+                        )}
+                      </a>
+                    ) : m.logo ? (
+                      <img src={url(m.logo)} alt={m.name} loading="lazy" />
+                    ) : (
+                      <span class="logo-name">{m.name}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <a href={`mailto:${contact.email}?subject=${encodeURIComponent(`${tier.name} sponsorship enquiry`)}`} class="open-slot">
+                <Icon name="spark" size={18} />
+                <span>
+                  <strong>Open</strong>
+                  Be the first {tier.name.toLowerCase()} sponsor
+                </span>
+              </a>
+            )}
+
+            <ul class="benefits">
+              {tier.benefits.map((b) => (
+                <li>
+                  <Icon name="check" size={14} />
+                  {b}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- ═══ WHY IT MATTERS ═════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow" data-reveal="fade">Why sponsor us</p>
+        <h2 data-reveal>What you get out of it</h2>
+      </div>
+
+      <div class="grid grid-3" data-reveal data-stagger>
+        {
+          why.map((w) => (
+            <article class="card why-card">
+              <span class="why-icon">
+                <Icon name={w.icon} size={20} />
+              </span>
+              <h3>{w.title}</h3>
+              <p>{w.body}</p>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ WHERE THE MONEY GOES ═══════════════════════════════════════ -->
+  <section class="section section-tight">
+    <div class="shell">
+      <div class="budget-layout">
+        <div class="section-head">
+          <p class="eyebrow" data-reveal="fade">Transparency</p>
+          <h2 data-reveal>Where the money goes</h2>
+          <p data-reveal data-reveal-delay="0.06">
+            A season costs what it costs. Here is the breakdown, so you know
+            exactly what you would be funding.
+          </p>
+        </div>
+
+        <ul class="budget" data-reveal="left">
+          {
+            costs.map((c) => (
+              <li>
+                <span class="budget-item">{c.item}</span>
+                <span class="budget-dots" aria-hidden="true" />
+                <span class="budget-amount">{c.amount}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FINAL CTA ══════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="shell">
+      <div class="sponsor-cta glass" data-reveal="scale">
+        <p class="eyebrow">Ready when you are</p>
+        <h2>Let's talk</h2>
+        <p class="sponsor-cta-body">
+          Email us and we will send the full sponsorship package, including
+          logo placement mockups and our engineering portfolio. We can also
+          bring the robot to your office, which is usually more convincing
+          than a PDF.
+        </p>
+
+        <div class="cluster sponsor-actions">
+          <a
+            href={`mailto:${contact.email}?subject=${encodeURIComponent(`Sponsorship enquiry for Team ${team.number}`)}`}
+            class="btn btn-primary"
+            data-magnetic="0.2"
+          >
+            <Icon name="mail" size={17} />
+            {contact.email}
+          </a>
+          <a href={url('/contact/')} class="btn btn-ghost">Other ways to reach us</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .tier + .tier {
+    margin-top: var(--sp-7);
+  }
+
+  .tier-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+    padding-bottom: var(--sp-3);
+    margin-bottom: var(--sp-5);
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .tier-head h3 {
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--highlight);
+  }
+
+  .tier-amount {
+    font-size: var(--step--1);
+    font-weight: 600;
+    color: var(--ink-faint);
+  }
+
+  .logo-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+    gap: var(--sp-4);
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--sp-5);
+  }
+
+  .logo-slot {
+    display: grid;
+    place-items: center;
+    min-height: 110px;
+    padding: var(--sp-4);
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    /* Sponsor logos usually arrive as dark artwork on white. A light panel
+       is the only reliable way to show them all without asking every
+       sponsor for a reversed version. */
+    background: var(--snow);
+  }
+
+  .logo-slot img {
+    max-height: 64px;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .logo-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--step-0);
+    color: var(--prussian);
+    text-align: center;
+  }
+
+  .open-slot {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-5);
+    margin-bottom: var(--sp-5);
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--ink-muted);
+    transition:
+      border-color var(--dur) var(--ease),
+      background var(--dur) var(--ease),
+      transform var(--dur) var(--ease);
+  }
+
+  .open-slot:hover {
+    border-color: var(--highlight);
+    background: rgba(254, 198, 1, 0.06);
+    transform: translateY(-2px);
+    color: var(--ink);
+  }
+
+  .open-slot :global(svg) {
+    color: var(--highlight);
+    flex-shrink: 0;
+  }
+
+  .open-slot span {
+    display: flex;
+    flex-direction: column;
+    font-size: var(--step--1);
+    line-height: 1.4;
+  }
+
+  .open-slot strong {
+    font-family: var(--font-display);
+    font-size: var(--step-0);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--highlight);
+  }
+
+  .benefits {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: var(--sp-2) var(--sp-5);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .benefits li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-2);
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+    line-height: 1.5;
+  }
+
+  .benefits :global(svg) {
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+
+  /* ── Why ─────────────────────────────────────────────────────────── */
+
+  .why-icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(89, 149, 237, 0.16);
+    color: var(--accent);
+    margin-bottom: var(--sp-4);
+  }
+
+  .why-card h3 {
+    font-size: var(--step-1);
+    margin-bottom: var(--sp-3);
+  }
+
+  .why-card p {
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+    line-height: 1.65;
+  }
+
+  /* ── Budget ──────────────────────────────────────────────────────── */
+
+  .budget-layout {
+    display: grid;
+    gap: var(--sp-6);
+  }
+
+  @media (min-width: 900px) {
+    .budget-layout {
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: var(--sp-8);
+      align-items: start;
+    }
+
+    .budget-layout .section-head {
+      margin-bottom: 0;
+    }
+  }
+
+  .budget {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .budget li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-3);
+    padding-block: var(--sp-3);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .budget-item {
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+  }
+
+  /* A dotted leader line, like a table of contents. Pushes the amount to
+     the right edge and ties the two together across the gap. */
+  .budget-dots {
+    flex: 1;
+    border-bottom: 1px dotted var(--line-strong);
+    min-width: var(--sp-4);
+  }
+
+  .budget-amount {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--highlight);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* ── Final CTA ───────────────────────────────────────────────────── */
+
+  .sponsor-cta {
+    padding: var(--sp-8) var(--sp-6);
+    text-align: center;
+  }
+
+  @media (min-width: 768px) {
+    .sponsor-cta {
+      padding: var(--sp-9) var(--sp-8);
+    }
+  }
+
+  .sponsor-cta-body {
+    max-width: 58ch;
+    margin: var(--sp-4) auto 0;
+    color: var(--ink-muted);
+    font-size: var(--step-1);
+    line-height: 1.55;
+  }
+
+  .sponsor-actions {
+    justify-content: center;
+    margin-top: var(--sp-6);
+  }
+</style>

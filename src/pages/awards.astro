@@ -1,0 +1,298 @@
+---
+/*
+ * Awards and results.
+ *
+ * Grouped by season, newest first, in the "Legacy" style: every competition
+ * attended gets a block, with the awards under it. Standout results are
+ * flagged in yellow so a judge or sponsor scanning the page finds them
+ * immediately.
+ *
+ * All of the data comes from the `seasons` array in src/data/site.ts.
+ */
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import CtaBand from '../components/CtaBand.astro';
+import Icon from '../components/Icon.astro';
+import StatStrip from '../components/StatStrip.astro';
+import { seasons } from '../data/site';
+import { url } from '../lib/paths';
+
+// Totals are derived, not typed in, so they can never disagree with the list
+// underneath them. Add a competition and these update by themselves.
+const totalAwards = seasons.reduce(
+  (sum, s) => sum + s.competitions.reduce((n, c) => n + c.awards.length, 0),
+  0
+);
+const totalEvents = seasons.reduce((n, s) => n + s.competitions.length, 0);
+---
+
+<BaseLayout
+  title="Awards"
+  description="Every competition Bubblotics has attended and every award the team has won, season by season."
+>
+  <PageHero
+    eyebrow="Results"
+    title="Awards and <span class='accent-word'>results</span>"
+    lead={`${totalAwards} awards across ${totalEvents} events. The full record, season by season, including the ones that did not go our way.`}
+  />
+
+  <StatStrip />
+
+  <section class="section">
+    <div class="shell">
+      {
+        seasons.map((season) => (
+          <div class="season">
+            <header class="season-head" data-reveal="fade">
+              <div>
+                <h2 class="season-year">{season.year}</h2>
+                <p class="season-game">{season.game}</p>
+              </div>
+
+              {season.robot && (
+                <p class="season-robot">
+                  <Icon name="robot" size={16} />
+                  {season.robotSlug ? (
+                    <a href={url(`/robots/${season.robotSlug}/`)}>
+                      {season.robot}
+                    </a>
+                  ) : (
+                    <span>{season.robot}</span>
+                  )}
+                </p>
+              )}
+            </header>
+
+            <div class="comp-list">
+              {season.competitions.map((comp) => (
+                <article class="card comp" data-reveal="left">
+                  <div class="comp-head">
+                    <h3>{comp.event}</h3>
+                    <p class="comp-meta">
+                      <span>
+                        <Icon name="location" size={13} />
+                        {comp.location}
+                      </span>
+                      <span>
+                        <Icon name="calendar" size={13} />
+                        {comp.date}
+                      </span>
+                      {comp.record && (
+                        <span class="comp-record">{comp.record}</span>
+                      )}
+                    </p>
+                  </div>
+
+                  {comp.awards.length > 0 ? (
+                    <ul class="award-list">
+                      {comp.awards.map((a) => (
+                        <li class:list={['award', { standout: a.standout }]}>
+                          <span class="award-icon">
+                            <Icon
+                              name={a.standout ? 'trophy' : 'check'}
+                              size={15}
+                            />
+                          </span>
+                          <span class="award-text">
+                            <strong>{a.award}</strong>
+                            {a.detail && <span class="award-detail">{a.detail}</span>}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    /* An event with no award is still worth listing. It is
+                       part of the record, and hiding it would be dishonest. */
+                    <p class="no-award faint">
+                      Competed, no award. Still learned something.
+                    </p>
+                  )}
+                </article>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+
+      {
+        seasons.length === 0 && (
+          <div class="card empty-state">
+            <h3>No results recorded yet</h3>
+            <p>
+              <span class="ph-tag">[Placeholder]</span> Add seasons to the
+              <code>seasons</code> array in <code>src/data/site.ts</code>.
+            </p>
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <CtaBand
+    eyebrow="What comes next"
+    title="The next banner"
+    body="Getting to the next event costs registration, travel, and parts. If your organisation wants a hand in that, we would like to talk."
+  />
+</BaseLayout>
+
+<style>
+  .season + .season {
+    margin-top: var(--sp-9);
+  }
+
+  .season-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    padding-bottom: var(--sp-4);
+    margin-bottom: var(--sp-5);
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .season-year {
+    font-size: var(--step-3);
+    line-height: 1;
+  }
+
+  .season-game {
+    margin-top: var(--sp-2);
+    font-family: var(--font-display);
+    font-size: var(--step-0);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .season-robot {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    font-size: var(--step--1);
+    font-weight: 600;
+    color: var(--ink-muted);
+  }
+
+  .season-robot :global(svg) {
+    color: var(--highlight);
+  }
+
+  .comp-list {
+    display: grid;
+    gap: var(--sp-4);
+  }
+
+  @media (min-width: 900px) {
+    .comp-list {
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+    }
+  }
+
+  .comp-head {
+    padding-bottom: var(--sp-4);
+    margin-bottom: var(--sp-4);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .comp h3 {
+    font-size: var(--step-1);
+    line-height: 1.25;
+  }
+
+  .comp-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2) var(--sp-4);
+    margin-top: var(--sp-3);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .comp-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+  }
+
+  .comp-record {
+    font-variant-numeric: tabular-nums;
+    padding: 0.1em 0.6em;
+    border-radius: var(--radius-pill);
+    background: rgba(89, 149, 237, 0.14);
+    color: var(--ink-muted);
+  }
+
+  .award-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+  }
+
+  .award {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-3);
+  }
+
+  .award-icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(89, 149, 237, 0.16);
+    color: var(--accent);
+    margin-top: 1px;
+  }
+
+  /* The gold treatment. Kept for results that genuinely stand out, because
+     highlighting everything highlights nothing. */
+  .award.standout .award-icon {
+    background: var(--highlight);
+    color: var(--ink-inverse);
+    box-shadow: var(--glow-yellow);
+  }
+
+  .award.standout strong {
+    color: var(--highlight);
+  }
+
+  .award-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .award-text strong {
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.35;
+  }
+
+  .award-detail {
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+    line-height: 1.5;
+  }
+
+  .no-award {
+    font-size: var(--step--1);
+    font-style: italic;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: var(--sp-8);
+  }
+
+  .empty-state h3 {
+    margin-bottom: var(--sp-3);
+  }
+</style>

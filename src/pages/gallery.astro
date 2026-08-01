@@ -1,0 +1,53 @@
+---
+/*
+ * Gallery.
+ *
+ * The Gallery component does all the work, including reading the photo
+ * folder. This page is just the frame around it.
+ */
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Gallery from '../components/Gallery.astro';
+import CtaBand from '../components/CtaBand.astro';
+---
+
+<BaseLayout
+  title="Gallery"
+  description="Photos from the pits, the build season, competitions, and outreach events."
+>
+  <PageHero
+    eyebrow="Gallery"
+    title="The season, <span class='accent-word'>in photos</span>"
+    lead="Build season, competitions, pits, and the community events in between. Click any photo to open it full size."
+  />
+
+  <section class="section section-tight">
+    <div class="shell">
+      <Gallery columns={3} />
+
+      <p class="gallery-note faint" data-reveal="fade">
+        Photos are stored in <code>src/assets/gallery/</code>. Drop new ones in
+        and they appear here automatically. The README explains it in full.
+      </p>
+    </div>
+  </section>
+
+  <CtaBand
+    eyebrow="Follow along"
+    title="More on Instagram"
+    body="Build updates, competition days, and the occasional failure worth watching go up on our Instagram between seasons."
+    primaryLabel="Follow @bubblotics"
+    primaryHref="/contact/"
+    secondaryLabel="Read our updates"
+    secondaryHref="/updates/"
+  />
+</BaseLayout>
+
+<style>
+  .gallery-note {
+    margin-top: var(--sp-6);
+    text-align: center;
+    font-size: var(--step--1);
+  }
+</style>

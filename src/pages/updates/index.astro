@@ -1,0 +1,260 @@
+---
+/*
+ * Updates index.
+ *
+ * The newest post gets a wide featured card; the rest fall into a grid.
+ * Everything comes from markdown files in src/content/updates/.
+ */
+
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import UpdateCard from '../../components/UpdateCard.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import Icon from '../../components/Icon.astro';
+import { url, formatDate } from '../../lib/paths';
+
+const posts = (await getCollection('updates', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+const [featured, ...rest] = posts;
+---
+
+<BaseLayout
+  title="Updates"
+  description="Build season progress, competition recaps, and news from Bubblotics."
+>
+  <PageHero
+    eyebrow="Updates"
+    title="From the <span class='accent-word'>workshop</span>"
+    lead="Build progress, competition recaps, and the occasional post-mortem on something that broke."
+  />
+
+  {
+    featured && (
+      <section class="section section-tight">
+        <div class="shell">
+          <article class="featured card" data-reveal="scale">
+            <div class="featured-media">
+              {featured.data.coverImage ? (
+                <Image
+                  src={featured.data.coverImage}
+                  alt={featured.data.coverImageAlt ?? ''}
+                  widths={[600, 1000, 1400]}
+                  sizes="(min-width: 900px) 55vw, 100vw"
+                  loading="eager"
+                />
+              ) : (
+                <div class="ph-image">
+                  <span>[Placeholder]</span>
+                  <small>Set `coverImage` in this post's markdown file.</small>
+                </div>
+              )}
+              <span class="tag tag-gold featured-flag">Latest</span>
+            </div>
+
+            <div class="featured-body">
+              <p class="featured-meta">
+                <Icon name="calendar" size={14} />
+                <time datetime={featured.data.date.toISOString().split('T')[0]}>
+                  {formatDate(featured.data.date)}
+                </time>
+                <span class="dot">&bull;</span>
+                {featured.data.author}
+              </p>
+
+              <h2 class="featured-title">
+                <a href={url(`/updates/${featured.id}/`)}>
+                  {featured.data.title}
+                </a>
+              </h2>
+
+              <p class="featured-excerpt">{featured.data.excerpt}</p>
+
+              {featured.data.tags.length > 0 && (
+                <ul class="featured-tags">
+                  {featured.data.tags.map((t) => (
+                    <li class="tag">{t}</li>
+                  ))}
+                </ul>
+              )}
+
+              <a
+                href={url(`/updates/${featured.id}/`)}
+                class="btn btn-ghost featured-cta"
+              >
+                Read the post
+                <Icon name="arrow" size={16} />
+              </a>
+            </div>
+          </article>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="section section-tight">
+    <div class="shell">
+      {
+        rest.length > 0 && (
+          <div class="section-head">
+            <p class="eyebrow" data-reveal="fade">Archive</p>
+            <h2 data-reveal>Everything else</h2>
+          </div>
+        )
+      }
+
+      {
+        rest.length > 0 && (
+          <div class="grid grid-3" data-reveal data-stagger>
+            {rest.map((post) => (
+              <UpdateCard post={post} />
+            ))}
+          </div>
+        )
+      }
+
+      {
+        posts.length === 0 && (
+          <div class="card empty-state">
+            <h3>No posts yet</h3>
+            <p>
+              <span class="ph-tag">[Placeholder]</span> Add a markdown file to
+              <code>src/content/updates/</code> and it appears here. The README
+              walks through it.
+            </p>
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <CtaBand
+    eyebrow="Stay in touch"
+    title="Follow the season"
+    body="We post here after every competition and through build season. Instagram gets the short version."
+    primaryLabel="Contact us"
+    primaryHref="/contact/"
+    secondaryLabel="See the robots"
+    secondaryHref="/robots/"
+  />
+</BaseLayout>
+
+<style>
+  .featured {
+    display: grid;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  @media (min-width: 900px) {
+    .featured {
+      grid-template-columns: 1.1fr 1fr;
+    }
+  }
+
+  .featured-media {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    background: var(--prussian-900);
+    overflow: hidden;
+  }
+
+  @media (min-width: 900px) {
+    .featured-media {
+      aspect-ratio: auto;
+      min-height: 340px;
+    }
+  }
+
+  .featured-media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .featured-flag {
+    position: absolute;
+    top: var(--sp-4);
+    left: var(--sp-4);
+    backdrop-filter: blur(8px);
+  }
+
+  .featured-body {
+    padding: var(--sp-6);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  @media (min-width: 900px) {
+    .featured-body {
+      padding: var(--sp-7);
+    }
+  }
+
+  .featured-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: var(--sp-4);
+  }
+
+  .featured-meta :global(svg) {
+    color: var(--accent);
+  }
+
+  .featured-title {
+    font-size: var(--step-3);
+    line-height: 1.1;
+    text-transform: none;
+    letter-spacing: -0.015em;
+  }
+
+  .featured-title a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .featured-title a:hover {
+    color: var(--highlight);
+  }
+
+  .featured-excerpt {
+    margin-top: var(--sp-4);
+    color: var(--ink-muted);
+    font-size: var(--step-0);
+    line-height: 1.65;
+  }
+
+  .featured-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    list-style: none;
+    padding: 0;
+    margin: var(--sp-5) 0 0;
+  }
+
+  .featured-cta {
+    align-self: flex-start;
+    margin-top: var(--sp-6);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: var(--sp-8);
+  }
+
+  .empty-state h3 {
+    margin-bottom: var(--sp-3);
+  }
+</style>

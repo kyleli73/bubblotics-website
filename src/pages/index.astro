@@ -1,0 +1,564 @@
+---
+/*
+ * Home page.
+ *
+ * Order matters here. A visitor arriving from an Instagram link gives a page
+ * a few seconds, so the sequence is: who we are, proof we are good at it,
+ * what we build, what we are up to, how to help.
+ */
+
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Bubbles from '../components/Bubbles.astro';
+import StatStrip from '../components/StatStrip.astro';
+import RobotCard from '../components/RobotCard.astro';
+import UpdateCard from '../components/UpdateCard.astro';
+import CtaBand from '../components/CtaBand.astro';
+import Icon from '../components/Icon.astro';
+import Gallery from '../components/Gallery.astro';
+import { team, subteams } from '../data/site';
+import { url } from '../lib/paths';
+
+// Newest robots first. `draft: true` in a markdown file keeps it off the site
+// while it is being written.
+const robots = (await getCollection('robots', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.order - a.data.order
+);
+
+const posts = (await getCollection('updates', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+---
+
+<BaseLayout title={`${team.name} · FTC Team ${team.number}`} bareTitle>
+  <!-- ═══ HERO ═══════════════════════════════════════════════════════ -->
+  <section class="hero" data-hero>
+    <Bubbles count={22} tone="full" />
+
+    <!-- Two large soft lights behind the headline. data-parallax makes them
+         drift as the page scrolls, which gives the flat background depth. -->
+    <div class="hero-glow hero-glow-blue" data-hero-glow data-parallax="0.18">
+    </div>
+    <div class="hero-glow hero-glow-gold" data-hero-glow data-parallax="0.28">
+    </div>
+
+    <div class="shell hero-inner">
+      <p class="hero-badge" data-hero-item>
+        <Icon name="location" size={14} />
+        {team.location}
+        <span class="dot" aria-hidden="true">&bull;</span>
+        {team.program}
+      </p>
+
+      <h1 class="hero-title" data-hero-item>
+        <span class="hero-line">Bubblotics</span>
+        <span class="hero-line hero-number">Team 35858</span>
+      </h1>
+
+      <p class="hero-tagline" data-hero-item>{team.tagline}</p>
+
+      <p class="hero-lead" data-hero-item>
+        {team.blurb.split('. ')[0]}.
+      </p>
+
+      <div class="cluster hero-actions" data-hero-item>
+        <a href={url('/robots/')} class="btn btn-primary" data-magnetic="0.22">
+          See our robots
+          <Icon name="arrow" size={17} />
+        </a>
+        <a href={url('/about/')} class="btn btn-ghost">Our story</a>
+      </div>
+    </div>
+
+    <!-- Scroll cue. aria-hidden because it is decoration; the content
+         below is reachable without it. -->
+    <div class="scroll-cue" aria-hidden="true">
+      <span class="scroll-cue-track"><span class="scroll-cue-dot"></span></span>
+      <span class="scroll-cue-label">Scroll</span>
+    </div>
+  </section>
+
+  <StatStrip />
+
+  <!-- ═══ WHO WE ARE ═════════════════════════════════════════════════ -->
+  <section class="section" id="who-we-are">
+    <div class="shell">
+      <div class="split">
+        <div>
+          <p class="eyebrow" data-reveal="fade">Who we are</p>
+          <h2 data-reveal>
+            A student team that builds
+            <span class="gradient-word">real machines</span>
+          </h2>
+          <p class="lead" data-reveal data-reveal-delay="0.08">{team.blurb}</p>
+
+          <ul class="subteam-list" data-reveal data-stagger>
+            {
+              subteams.map((s) => (
+                <li class="subteam">
+                  <h3>{s.name}</h3>
+                  <p>{s.description}</p>
+                </li>
+              ))
+            }
+          </ul>
+
+          <a href={url('/about/')} class="link-arrow who-cta" data-reveal="fade">
+            Read our story
+            <Icon name="arrow" size={16} />
+          </a>
+        </div>
+
+        <div class="split-media" data-reveal="right">
+          <div class="media-frame">
+            <div class="ph-image">
+              <span>[Placeholder]</span>
+              <small>
+                A wide team photo goes here. Save it to
+                src/assets/team/team-photo.jpg and swap this block for an
+                &lt;Image&gt;.
+              </small>
+            </div>
+          </div>
+
+          <!-- Floating stat card overlapping the photo. The overlap is what
+               makes the section read as designed rather than as two columns. -->
+          <div class="float-card glass" data-parallax="0.08">
+            <Icon name="users" size={22} />
+            <p class="float-value">{team.rookieYear}</p>
+            <p class="float-label">Rookie season</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ ROBOTS ═════════════════════════════════════════════════════ -->
+  <section class="section" id="robots">
+    <div class="shell">
+      <div class="head-row">
+        <div class="section-head">
+          <p class="eyebrow" data-reveal="fade">The fleet</p>
+          <h2 data-reveal>One robot, <span class="accent-word">every year</span></h2>
+          <p data-reveal data-reveal-delay="0.06">
+            Each season brings a new game and a new machine. Every robot below
+            has its own page with design decisions, subsystem breakdowns, and
+            how it actually performed.
+          </p>
+        </div>
+        <a href={url('/robots/')} class="link-arrow head-link" data-reveal="fade">
+          All robots
+          <Icon name="arrow" size={16} />
+        </a>
+      </div>
+
+      {
+        robots.length > 0 ? (
+          <div class="grid grid-3" data-reveal data-stagger>
+            {robots.slice(0, 3).map((robot, i) => (
+              <RobotCard robot={robot} index={robots.length - 1 - i} />
+            ))}
+          </div>
+        ) : (
+          <p class="empty-note">
+            <span class="ph-tag">[Placeholder]</span> No robot pages yet. See
+            the README for how to add one.
+          </p>
+        )
+      }
+    </div>
+  </section>
+
+  <!-- ═══ GALLERY TEASER ═════════════════════════════════════════════ -->
+  <section class="section section-tight">
+    <div class="shell">
+      <div class="head-row">
+        <div class="section-head">
+          <p class="eyebrow" data-reveal="fade">In the pits</p>
+          <h2 data-reveal>Season <span class="accent-word">in photos</span></h2>
+        </div>
+        <a href={url('/gallery/')} class="link-arrow head-link" data-reveal="fade">
+          Full gallery
+          <Icon name="arrow" size={16} />
+        </a>
+      </div>
+
+      <Gallery limit={6} columns={3} />
+    </div>
+  </section>
+
+  <!-- ═══ UPDATES ════════════════════════════════════════════════════ -->
+  <section class="section" id="updates">
+    <div class="shell">
+      <div class="head-row">
+        <div class="section-head">
+          <p class="eyebrow" data-reveal="fade">Latest</p>
+          <h2 data-reveal>From the <span class="accent-word">workshop</span></h2>
+        </div>
+        <a href={url('/updates/')} class="link-arrow head-link" data-reveal="fade">
+          All updates
+          <Icon name="arrow" size={16} />
+        </a>
+      </div>
+
+      {
+        posts.length > 0 ? (
+          <div class="grid grid-3" data-reveal data-stagger>
+            {posts.map((post) => (
+              <UpdateCard post={post} />
+            ))}
+          </div>
+        ) : (
+          <p class="empty-note">
+            <span class="ph-tag">[Placeholder]</span> No posts yet. See the
+            README for how to add one.
+          </p>
+        )
+      }
+    </div>
+  </section>
+
+  <CtaBand
+    title="Help us build the next one"
+    body="Sponsorship pays for the aluminium, the motors, the registration fees, and the bus. It also puts your name in front of every student, parent, and mentor at the events we attend."
+  />
+</BaseLayout>
+
+<style>
+  /* ── Hero ────────────────────────────────────────────────────────── */
+
+  .hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    /* 100svh is the "small viewport height": the space left once a mobile
+       browser's address bar is showing. Plain 100vh causes the bottom of
+       the hero to sit under the browser chrome on iOS. */
+    min-height: 100svh;
+    padding-top: calc(var(--header-h) + var(--sp-7));
+    padding-bottom: var(--sp-9);
+    overflow: hidden;
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+  }
+
+  .hero-glow {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(20px);
+  }
+
+  .hero-glow-blue {
+    top: -18%;
+    left: -12%;
+    width: min(900px, 95vw);
+    aspect-ratio: 1;
+    background: radial-gradient(
+      circle,
+      rgba(89, 149, 237, 0.3),
+      transparent 62%
+    );
+  }
+
+  .hero-glow-gold {
+    bottom: -25%;
+    right: -14%;
+    width: min(720px, 85vw);
+    aspect-ratio: 1;
+    background: radial-gradient(
+      circle,
+      rgba(254, 198, 1, 0.15),
+      transparent 62%
+    );
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-4);
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    background: rgba(89, 149, 237, 0.1);
+    backdrop-filter: blur(10px);
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--ink-muted);
+    margin-bottom: var(--sp-5);
+  }
+
+  .hero-badge :global(svg) {
+    color: var(--highlight);
+  }
+
+  .dot {
+    color: var(--ink-faint);
+  }
+
+  .hero-title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05em;
+  }
+
+  .hero-line {
+    display: block;
+    line-height: 0.95;
+    background: linear-gradient(
+      170deg,
+      var(--snow) 0%,
+      var(--platinum) 40%,
+      var(--cornflower-light) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* The number gets the yellow. The branding guide's "blue headers with
+     yellow accents" rule, applied to the biggest text on the site. */
+  .hero-number {
+    font-size: 0.42em;
+    letter-spacing: 0.14em;
+    background: none;
+    color: var(--highlight);
+    -webkit-text-fill-color: var(--highlight);
+    margin-top: 0.35em;
+  }
+
+  .hero-tagline {
+    margin-top: var(--sp-5);
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  .hero-lead {
+    margin: var(--sp-4) auto 0;
+    max-width: 56ch;
+    font-size: var(--step-1);
+    line-height: 1.55;
+    color: var(--ink-muted);
+  }
+
+  .hero-actions {
+    justify-content: center;
+    margin-top: var(--sp-7);
+  }
+
+  /* ── Scroll cue ──────────────────────────────────────────────────── */
+
+  .scroll-cue {
+    position: absolute;
+    bottom: var(--sp-5);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-2);
+    z-index: 2;
+  }
+
+  .scroll-cue-track {
+    display: block;
+    width: 24px;
+    height: 38px;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--line-strong);
+    position: relative;
+  }
+
+  /* A bubble falling down the inside of the track, on a loop. */
+  .scroll-cue-dot {
+    position: absolute;
+    top: 7px;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    margin-left: -2.5px;
+    border-radius: 50%;
+    background: var(--highlight);
+    animation: cue 1.9s var(--ease-io) infinite;
+  }
+
+  @keyframes cue {
+    0%,
+    18% {
+      transform: translateY(0);
+      opacity: 0;
+    }
+    35% {
+      opacity: 1;
+    }
+    72% {
+      transform: translateY(16px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(16px);
+      opacity: 0;
+    }
+  }
+
+  .scroll-cue-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-cue-dot {
+      animation: none;
+      opacity: 1;
+    }
+  }
+
+  /* Below 600px tall (a phone in landscape) the cue overlaps the buttons. */
+  @media (max-height: 640px) {
+    .scroll-cue {
+      display: none;
+    }
+  }
+
+  /* ── Who we are ──────────────────────────────────────────────────── */
+
+  .split {
+    display: grid;
+    gap: var(--sp-7);
+    align-items: center;
+  }
+
+  @media (min-width: 940px) {
+    .split {
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: var(--sp-8);
+    }
+  }
+
+  .subteam-list {
+    display: grid;
+    gap: var(--sp-4);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+    list-style: none;
+    padding: 0;
+    margin: var(--sp-6) 0 0;
+  }
+
+  .subteam {
+    padding-left: var(--sp-4);
+    border-left: 2px solid var(--line-strong);
+  }
+
+  .subteam h3 {
+    font-family: var(--font-display);
+    font-size: var(--step-0);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: var(--sp-1);
+  }
+
+  .subteam p {
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+    line-height: 1.55;
+  }
+
+  .who-cta {
+    display: inline-flex;
+    margin-top: var(--sp-6);
+  }
+
+  .split-media {
+    position: relative;
+  }
+
+  .media-frame {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .float-card {
+    position: absolute;
+    left: calc(var(--sp-5) * -1);
+    bottom: var(--sp-6);
+    padding: var(--sp-4) var(--sp-5);
+    text-align: left;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .float-card :global(svg) {
+    color: var(--highlight);
+    margin-bottom: var(--sp-2);
+  }
+
+  .float-value {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  .float-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-top: var(--sp-1);
+  }
+
+  @media (max-width: 520px) {
+    /* The card hangs off the edge on a narrow screen. Tuck it back in. */
+    .float-card {
+      left: var(--sp-3);
+      bottom: var(--sp-3);
+    }
+  }
+
+  /* ── Section heads with a trailing link ──────────────────────────── */
+
+  .head-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    margin-bottom: var(--sp-6);
+  }
+
+  .head-row .section-head {
+    margin-bottom: 0;
+    flex: 1 1 340px;
+  }
+
+  .head-link {
+    padding-bottom: var(--sp-2);
+  }
+
+  .empty-note {
+    padding: var(--sp-6);
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius);
+    color: var(--ink-muted);
+    text-align: center;
+  }
+</style>

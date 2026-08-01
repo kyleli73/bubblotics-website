@@ -1,0 +1,291 @@
+---
+/*
+ * Outreach.
+ *
+ * Judges weight this heavily, and so do sponsors. Numbers matter more than
+ * adjectives here: how many students, how many hours, how many times.
+ */
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import CtaBand from '../components/CtaBand.astro';
+import Icon from '../components/Icon.astro';
+import Gallery from '../components/Gallery.astro';
+import { outreach, contact } from '../data/site';
+
+/*
+ * [PLACEHOLDER] Replace with the team's real reach figures. These are the
+ * numbers judges ask about, so keep them honest and keep a record of how
+ * they were counted.
+ */
+const impact = [
+  { value: '[XXX]', label: 'Students reached' },
+  { value: '[XX]', label: 'Events run' },
+  { value: '[XXX]', label: 'Volunteer hours' },
+  { value: '[X]', label: 'Teams mentored' },
+];
+---
+
+<BaseLayout
+  title="Outreach"
+  description="STEM demonstrations, school visits, and community events run by Bubblotics."
+>
+  <PageHero
+    eyebrow="Outreach"
+    title="Robotics <span class='accent-word'>past the shop door</span>"
+    lead="A robot that only ever gets seen by people already at a competition has not gone far enough. These are the events where we put it in front of everyone else."
+  />
+
+  <!-- ═══ IMPACT NUMBERS ═════════════════════════════════════════════ -->
+  <section class="section-tight impact-band">
+    <div class="shell">
+      <ul class="impact-grid" data-reveal data-stagger>
+        {
+          impact.map((i) => (
+            <li class="impact">
+              <span class="impact-value">{i.value}</span>
+              <span class="impact-label">{i.label}</span>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="impact-note faint">
+        <span class="ph-tag">[Placeholder]</span> Replace these figures in
+        <code>src/pages/outreach.astro</code>. Keep a record of how each was
+        counted; judges do ask.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══ EVENTS ═════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow" data-reveal="fade">What we run</p>
+        <h2 data-reveal>Events and programs</h2>
+        <p data-reveal data-reveal-delay="0.06">
+          Demonstrations, workshops, and ongoing mentorship. Newest first.
+        </p>
+      </div>
+
+      <div class="events">
+        {
+          outreach.map((event, i) => (
+            <article class="card event" data-reveal="left">
+              <span class="event-num">{String(i + 1).padStart(2, '0')}</span>
+
+              <div class="event-body">
+                <h3>{event.title}</h3>
+
+                <p class="event-meta">
+                  <span>
+                    <Icon name="calendar" size={13} />
+                    {event.date}
+                  </span>
+                  <span>
+                    <Icon name="users" size={13} />
+                    {event.audience}
+                  </span>
+                </p>
+
+                <p class="event-desc">{event.description}</p>
+              </div>
+
+              <div class="event-media">
+                <div class="ph-image">
+                  <span>[Placeholder]</span>
+                  <small>Photo from this event.</small>
+                </div>
+              </div>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ BOOK US ════════════════════════════════════════════════════ -->
+  <section class="section section-tight">
+    <div class="shell">
+      <div class="card book" data-reveal="scale">
+        <div>
+          <p class="eyebrow">Invite us</p>
+          <h2>Want the robot at your school or event?</h2>
+          <p class="book-body">
+            We bring a competition robot, a driver station, and students who
+            can explain how all of it works. Classrooms, libraries, community
+            fairs, scout groups. Reach out and tell us the date.
+          </p>
+        </div>
+
+        <a href={`mailto:${contact.email}?subject=Outreach%20request`} class="btn btn-primary" data-magnetic="0.2">
+          <Icon name="mail" size={17} />
+          Email the team
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PHOTOS ═════════════════════════════════════════════════════ -->
+  <section class="section section-tight">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow" data-reveal="fade">Out in the community</p>
+        <h2 data-reveal>Photos from outreach</h2>
+      </div>
+      <Gallery limit={6} columns={3} />
+    </div>
+  </section>
+
+  <CtaBand
+    eyebrow="Support outreach"
+    title="Outreach costs money too"
+    body="Demo kits, travel, and the spare parts that get broken by curious eight-year-olds. Sponsorship covers all of it."
+  />
+</BaseLayout>
+
+<style>
+  .impact-band {
+    border-block: 1px solid var(--line);
+    background: linear-gradient(
+      180deg,
+      rgba(89, 149, 237, 0.06),
+      rgba(16, 37, 66, 0.25)
+    );
+  }
+
+  .impact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+    gap: var(--sp-5);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .impact {
+    text-align: center;
+  }
+
+  .impact-value {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--highlight);
+  }
+
+  .impact-label {
+    display: block;
+    margin-top: var(--sp-2);
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .impact-note {
+    margin-top: var(--sp-5);
+    text-align: center;
+    font-size: var(--step--1);
+  }
+
+  /* ── Events ──────────────────────────────────────────────────────── */
+
+  .events {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-5);
+  }
+
+  .event {
+    display: grid;
+    gap: var(--sp-5);
+    align-items: center;
+  }
+
+  @media (min-width: 860px) {
+    .event {
+      grid-template-columns: 56px 1fr 260px;
+      gap: var(--sp-6);
+    }
+  }
+
+  .event-num {
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    font-weight: 700;
+    line-height: 1;
+    color: rgba(89, 149, 237, 0.28);
+  }
+
+  .event h3 {
+    font-size: var(--step-1);
+    line-height: 1.25;
+  }
+
+  .event-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2) var(--sp-4);
+    margin-top: var(--sp-3);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+  }
+
+  .event-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+  }
+
+  .event-meta :global(svg) {
+    color: var(--accent);
+  }
+
+  .event-desc {
+    margin-top: var(--sp-4);
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+    line-height: 1.65;
+    max-width: 60ch;
+  }
+
+  .event-media {
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+
+  /* ── Book us ─────────────────────────────────────────────────────── */
+
+  .book {
+    display: grid;
+    gap: var(--sp-6);
+    align-items: center;
+    padding: var(--sp-7);
+  }
+
+  @media (min-width: 860px) {
+    .book {
+      grid-template-columns: 1fr auto;
+      gap: var(--sp-8);
+    }
+  }
+
+  .book h2 {
+    font-size: var(--step-2);
+    text-transform: none;
+    letter-spacing: -0.01em;
+  }
+
+  .book-body {
+    margin-top: var(--sp-4);
+    color: var(--ink-muted);
+    line-height: 1.65;
+    max-width: 60ch;
+  }
+</style>

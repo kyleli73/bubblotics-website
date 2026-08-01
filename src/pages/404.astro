@@ -1,0 +1,129 @@
+---
+/*
+ * 404 page.
+ *
+ * GitHub Pages serves this file automatically for any URL it cannot match,
+ * as long as it is named 404.html at the root of the published site. Astro
+ * builds src/pages/404.astro to exactly that.
+ */
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Bubbles from '../components/Bubbles.astro';
+import Icon from '../components/Icon.astro';
+import { nav } from '../data/site';
+import { url } from '../lib/paths';
+---
+
+<BaseLayout title="Page not found" description="That page does not exist.">
+  <section class="notfound">
+    <Bubbles count={16} tone="full" />
+
+    <div class="shell notfound-inner">
+      <p class="code">404</p>
+      <h1>This one popped</h1>
+      <p class="lead">
+        That page does not exist, or it moved. Here is everywhere else on the
+        site.
+      </p>
+
+      <ul class="links">
+        {
+          nav.map((item) => (
+            <li>
+              <a href={url(item.href)}>
+                {item.label}
+                <Icon name="arrow" size={15} />
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+
+      <a href={url('/')} class="btn btn-primary notfound-cta">Back home</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .notfound {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 86svh;
+    padding-top: calc(var(--header-h) + var(--sp-7));
+    padding-bottom: var(--sp-8);
+    overflow: hidden;
+    text-align: center;
+  }
+
+  .notfound-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  .code {
+    font-family: var(--font-display);
+    font-size: clamp(5rem, 22vw, 12rem);
+    font-weight: 700;
+    line-height: 0.85;
+    letter-spacing: -0.05em;
+    background: linear-gradient(
+      165deg,
+      var(--cornflower-light),
+      rgba(89, 149, 237, 0.15)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .notfound h1 {
+    font-size: var(--step-3);
+    margin-top: var(--sp-3);
+  }
+
+  .notfound .lead {
+    margin: var(--sp-4) auto 0;
+    max-width: 46ch;
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sp-2);
+    list-style: none;
+    padding: 0;
+    margin: var(--sp-7) 0 0;
+  }
+
+  .links a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    min-height: 44px;
+    padding: var(--sp-2) var(--sp-4);
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    background: rgba(89, 149, 237, 0.08);
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+      background var(--dur-fast) var(--ease),
+      color var(--dur-fast) var(--ease),
+      transform var(--dur) var(--ease);
+  }
+
+  .links a:hover {
+    background: var(--highlight);
+    border-color: var(--highlight);
+    color: var(--ink-inverse);
+    transform: translateY(-2px);
+  }
+
+  .notfound-cta {
+    margin-top: var(--sp-6);
+  }
+</style>

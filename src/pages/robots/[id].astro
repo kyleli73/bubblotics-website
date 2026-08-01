@@ -1,0 +1,586 @@
+---
+/*
+ * One robot's page.
+ *
+ * `getStaticPaths` is what turns a folder of markdown files into a folder of
+ * HTML pages. Astro calls it at build time, gets back one entry per robot,
+ * and renders this template once for each. Nobody has to create a new file
+ * per robot.
+ *
+ * Page order, top to bottom:
+ *   1. Hero: name, season, headline results
+ *   2. Spec table
+ *   3. Interactive CAD (only if the markdown supplies an Onshape link)
+ *   4. Video (only if it supplies a YouTube ID)
+ *   5. Engineering notes: the markdown body itself
+ *
+ * Sections 3 and 4 disappear entirely when their data is missing, so a robot
+ * page with only a photo and a paragraph still looks finished rather than
+ * broken.
+ */
+
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Bubbles from '../../components/Bubbles.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import Icon from '../../components/Icon.astro';
+import { url } from '../../lib/paths';
+
+export async function getStaticPaths() {
+  const robots = await getCollection('robots', ({ data }) => !data.draft);
+  const sorted = robots.sort((a, b) => b.data.order - a.data.order);
+
+  return sorted.map((robot, i) => ({
+    params: { id: robot.id },
+    props: {
+      robot,
+      // Passed through so the page can link to the next and previous robot
+      // without loading the whole collection again.
+      prev: sorted[i + 1],
+      next: sorted[i - 1],
+    },
+  }));
+}
+
+interface Props {
+  robot: CollectionEntry<'robots'>;
+  prev?: CollectionEntry<'robots'>;
+  next?: CollectionEntry<'robots'>;
+}
+
+const { robot, prev, next } = Astro.props;
+const d = robot.data;
+
+// `render` compiles the markdown body. <Content /> renders it as HTML.
+const { Content } = await render(robot);
+---
+
+<BaseLayout title={d.name} description={d.summary}>
+  <!-- ═══ HERO ═══════════════════════════════════════════════════════ -->
+  <section class="robot-hero">
+    <Bubbles count={12} tone="subtle" />
+
+    <div class="shell robot-hero-inner">
+      <a href={url('/robots/')} class="back-link">
+        <Icon name="arrow" size={15} class="back-arrow" />
+        All robots
+      </a>
+
+      <p class="eyebrow" data-reveal="fade">
+        {d.year} &middot; {d.season}
+      </p>
+
+      <h1 data-reveal>{d.name}</h1>
+
+      <p class="lead" data-reveal data-reveal-delay="0.08">{d.summary}</p>
+
+      {
+        d.results.length > 0 && (
+          <ul class="hero-results" data-reveal data-stagger>
+            {d.results.map((r) => (
+              <li class="tag tag-gold">
+                <Icon name="trophy" size={14} />
+                {r}
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+
+    <div class="shell">
+      <div class="hero-photo" data-reveal="scale">
+        {
+          d.heroImage ? (
+            <Image
+              src={d.heroImage}
+              alt={d.heroImageAlt ?? `${d.name}, the ${d.season} competition robot`}
+              widths={[600, 1000, 1600, 2000]}
+              sizes="(min-width: 1200px) 1140px, 100vw"
+              loading="eager"
+            />
+          ) : (
+            <div class="ph-image">
+              <span>[Placeholder]</span>
+              <small>
+                Save a photo to src/assets/robots/ and set `heroImage` in this
+                robot's markdown file.
+              </small>
+            </div>
+          )
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SPECS ══════════════════════════════════════════════════════ -->
+  {
+    d.specs.length > 0 && (
+      <section class="section section-tight">
+        <div class="shell">
+          <div class="section-head">
+            <p class="eyebrow" data-reveal="fade">At a glance</p>
+            <h2 data-reveal>Specifications</h2>
+          </div>
+
+          <dl class="specs" data-reveal data-stagger>
+            {d.specs.map((s) => (
+              <div class="spec card">
+                <dt>{s.label}</dt>
+                <dd>{s.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- ═══ CAD ════════════════════════════════════════════════════════
+       Only renders when `onshapeEmbedUrl` is set. See the README section
+       "Adding an Onshape CAD viewer" for how to generate that link.
+  ══════════════════════════════════════════════════════════════════════ -->
+  {
+    d.onshapeEmbedUrl && (
+      <section class="section cad-section" id="cad">
+        <div class="cad-ambience" aria-hidden="true" />
+
+        <div class="shell">
+          <div class="section-head">
+            <p class="eyebrow" data-reveal="fade">
+              <Icon name="cube" size={14} />
+              Interactive CAD
+            </p>
+            <h2 data-reveal>
+              Turn it over <span class="accent-word">yourself</span>
+            </h2>
+            <p data-reveal data-reveal-delay="0.06">
+              This is the live Onshape document, not a render. Drag to rotate,
+              scroll to zoom, and open the assembly tree to pull subsystems
+              apart. It updates whenever we update the CAD.
+            </p>
+          </div>
+
+          <figure class="cad-frame glass" data-reveal="scale">
+            <div class="cad-chrome">
+              <span class="cad-dot" />
+              <span class="cad-dot" />
+              <span class="cad-dot" />
+              <span class="cad-label">{d.name} · Onshape</span>
+            </div>
+
+            {/*
+              loading="lazy" keeps Onshape's viewer (which is a large
+              application) from downloading until someone scrolls to it.
+              Without it, this one iframe would dominate the page's load
+              time for every visitor, including the ones who never reach it.
+            */}
+            <iframe
+              src={d.onshapeEmbedUrl}
+              title={`Interactive 3D CAD model of ${d.name}`}
+              loading="lazy"
+              allowfullscreen
+            />
+
+            {d.onshapeCaption && (
+              <figcaption>{d.onshapeCaption}</figcaption>
+            )}
+          </figure>
+
+          <p class="cad-note faint">
+            Not loading? The Onshape document has to be shared publicly for the
+            embed to work. See the README.
+          </p>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- ═══ VIDEO ══════════════════════════════════════════════════════ -->
+  {
+    d.videoId && (
+      <section class="section section-tight">
+        <div class="shell">
+          <div class="section-head">
+            <p class="eyebrow" data-reveal="fade">
+              <Icon name="play" size={14} />
+              Behind the bot
+            </p>
+            <h2 data-reveal>Watch it run</h2>
+          </div>
+
+          <div class="video-frame glass" data-reveal="scale">
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${d.videoId}`}
+              title={`${d.name} video`}
+              loading="lazy"
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- ═══ ENGINEERING NOTES ══════════════════════════════════════════
+       The markdown body. Written in a deliberately different register from
+       the rest of the site: this section is for judges and for next year's
+       team, so it should read like an engineering notebook, not marketing.
+  ══════════════════════════════════════════════════════════════════════ -->
+  <section class="section notes-section" id="engineering">
+    <div class="shell">
+      <div class="notes-layout">
+        <aside class="notes-aside">
+          <p class="eyebrow">Engineering notes</p>
+          <p class="notes-aside-body">
+            Subsystem breakdowns, the decisions behind them, and what we would
+            do differently. Written for judges and for whoever inherits this
+            robot's parts next season.
+          </p>
+        </aside>
+
+        <div class="prose" data-reveal="left">
+          <Content />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PREV / NEXT ════════════════════════════════════════════════ -->
+  {
+    (prev || next) && (
+      <section class="section section-tight">
+        <div class="shell">
+          <hr class="rule" />
+          <nav class="robot-nav" aria-label="Other robots">
+            {prev ? (
+              <a href={url(`/robots/${prev.id}/`)} class="robot-nav-link prev">
+                <span class="robot-nav-dir">Previous season</span>
+                <span class="robot-nav-name">{prev.data.name}</span>
+              </a>
+            ) : (
+              <span />
+            )}
+
+            {next && (
+              <a href={url(`/robots/${next.id}/`)} class="robot-nav-link next">
+                <span class="robot-nav-dir">Next season</span>
+                <span class="robot-nav-name">{next.data.name}</span>
+              </a>
+            )}
+          </nav>
+        </div>
+      </section>
+    )
+  }
+
+  <CtaBand
+    eyebrow="Support the build"
+    title={`Help us top ${d.name}`}
+    body="Every robot on this site was paid for by sponsors and fundraising. The next one will be too."
+  />
+</BaseLayout>
+
+<style>
+  /* ── Hero ────────────────────────────────────────────────────────── */
+
+  .robot-hero {
+    position: relative;
+    padding-top: calc(var(--header-h) + var(--sp-7));
+    padding-bottom: var(--sp-6);
+    overflow: hidden;
+  }
+
+  .robot-hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-5);
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    color: var(--highlight);
+  }
+
+  /* Reuses the arrow icon pointing the other way. */
+  .back-link :global(.back-arrow) {
+    transform: rotate(180deg);
+    transition: transform var(--dur) var(--ease);
+  }
+
+  .back-link:hover :global(.back-arrow) {
+    transform: rotate(180deg) translateX(4px);
+  }
+
+  .robot-hero h1 {
+    font-size: var(--step-5);
+  }
+
+  .hero-results {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+    list-style: none;
+    padding: 0;
+    margin: var(--sp-5) 0 0;
+  }
+
+  .hero-photo {
+    position: relative;
+    margin-top: var(--sp-7);
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-lg), var(--glow);
+    background: var(--prussian-900);
+  }
+
+  .hero-photo :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* ── Specs ───────────────────────────────────────────────────────── */
+
+  .specs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+    gap: var(--sp-4);
+    margin: 0;
+  }
+
+  .spec {
+    padding: var(--sp-5);
+  }
+
+  .spec dt {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: var(--sp-2);
+  }
+
+  .spec dd {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  /* ── CAD ─────────────────────────────────────────────────────────── */
+
+  .cad-section {
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* The "hologram" glow behind the viewer. The Onshape iframe renders its
+     own interface, which we cannot restyle, so the theming happens in the
+     chrome around it. */
+  .cad-ambience {
+    position: absolute;
+    top: 12%;
+    left: 50%;
+    width: min(1200px, 130vw);
+    aspect-ratio: 1.4;
+    transform: translateX(-50%);
+    background: radial-gradient(
+        ellipse at 40% 40%,
+        rgba(89, 149, 237, 0.22),
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse at 65% 60%,
+        rgba(254, 198, 1, 0.09),
+        transparent 55%
+      );
+    filter: blur(10px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .cad-section :global(.shell) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .cad-frame {
+    padding: 0;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg), var(--glow);
+  }
+
+  /* A small window-chrome bar above the viewer, styled in the team's
+     colours. It frames Onshape's own interface as though it belongs here. */
+  .cad-chrome {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-3) var(--sp-4);
+    border-bottom: 1px solid var(--glass-border);
+    background: rgba(7, 15, 28, 0.5);
+  }
+
+  .cad-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--line-strong);
+  }
+
+  .cad-dot:first-child {
+    background: var(--highlight);
+  }
+
+  .cad-label {
+    margin-left: var(--sp-3);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .cad-frame iframe {
+    display: block;
+    width: 100%;
+    /* Tall enough to actually manipulate a model on a laptop, capped so it
+       never exceeds the screen on a phone. */
+    height: clamp(380px, 62vh, 720px);
+    border: 0;
+    background: var(--prussian-900);
+  }
+
+  .cad-frame figcaption {
+    padding: var(--sp-4) var(--sp-5);
+    border-top: 1px solid var(--glass-border);
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+  }
+
+  .cad-note {
+    margin-top: var(--sp-4);
+    font-size: var(--step--1);
+    text-align: center;
+  }
+
+  /* ── Video ───────────────────────────────────────────────────────── */
+
+  .video-frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .video-frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  /* ── Engineering notes ───────────────────────────────────────────── */
+
+  .notes-section {
+    border-top: 1px solid var(--line);
+    background: linear-gradient(
+      180deg,
+      rgba(16, 37, 66, 0.3),
+      transparent 40%
+    );
+  }
+
+  .notes-layout {
+    display: grid;
+    gap: var(--sp-6);
+  }
+
+  @media (min-width: 960px) {
+    .notes-layout {
+      grid-template-columns: 260px 1fr;
+      gap: var(--sp-8);
+      align-items: start;
+    }
+
+    .notes-aside {
+      /* Sticks alongside the notes as you scroll, so you always know which
+         section of the page you are in. */
+      position: sticky;
+      top: calc(var(--header-h) + var(--sp-5));
+    }
+  }
+
+  .notes-aside-body {
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    line-height: 1.6;
+  }
+
+  /* ── Prev / next ─────────────────────────────────────────────────── */
+
+  .robot-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--sp-5);
+    margin-top: var(--sp-6);
+  }
+
+  .robot-nav-link {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1);
+    text-decoration: none;
+    transition: transform var(--dur) var(--ease);
+  }
+
+  .robot-nav-link.next {
+    text-align: right;
+    margin-left: auto;
+  }
+
+  .robot-nav-link:hover {
+    transform: translateY(-2px);
+  }
+
+  .robot-nav-dir {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .robot-nav-name {
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .robot-nav-link:hover .robot-nav-name {
+    color: var(--highlight);
+  }
+</style>

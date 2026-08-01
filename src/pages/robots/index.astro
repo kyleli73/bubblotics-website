@@ -1,0 +1,290 @@
+---
+/*
+ * Robots index.
+ *
+ * The featured robot (the one with `featured: true` in its markdown) gets a
+ * full-width spotlight at the top. Everything else falls into the grid below,
+ * newest first.
+ */
+
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import RobotCard from '../../components/RobotCard.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import Icon from '../../components/Icon.astro';
+import { url } from '../../lib/paths';
+
+const all = (await getCollection('robots', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.order - a.data.order
+);
+
+// Fall back to the newest robot if nobody has set `featured` yet.
+const featured = all.find((r) => r.data.featured) ?? all[0];
+const rest = all.filter((r) => r.id !== featured?.id);
+---
+
+<BaseLayout
+  title="Robots"
+  description="Every competition robot Bubblotics has built, season by season, with design notes and results."
+>
+  <PageHero
+    eyebrow="The fleet"
+    title="Every robot, <span class='accent-word'>every season</span>"
+    lead="One game a year, one machine built for it. Each page covers what we designed, why we designed it that way, and how it held up on the field."
+  />
+
+  {
+    featured && (
+      <section class="section section-tight">
+        <div class="shell">
+          <article class="spotlight glass" data-reveal="scale">
+            <div class="spotlight-media">
+              {featured.data.heroImage ? (
+                <Image
+                  src={featured.data.heroImage}
+                  alt={
+                    featured.data.heroImageAlt ??
+                    `${featured.data.name}, the ${featured.data.season} robot`
+                  }
+                  widths={[600, 1000, 1600]}
+                  sizes="(min-width: 900px) 55vw, 100vw"
+                  loading="eager"
+                />
+              ) : (
+                <div class="ph-image">
+                  <span>[Placeholder]</span>
+                  <small>
+                    Add a hero photo of {featured.data.name} and set
+                    `heroImage` in its markdown file.
+                  </small>
+                </div>
+              )}
+            </div>
+
+            <div class="spotlight-body">
+              <p class="eyebrow">Current season</p>
+              <h2 class="spotlight-name">{featured.data.name}</h2>
+              <p class="spotlight-meta">
+                {featured.data.year}
+                <span class="dot">&bull;</span>
+                <span class="game">{featured.data.season}</span>
+              </p>
+              <p class="spotlight-summary">{featured.data.summary}</p>
+
+              {featured.data.results.length > 0 && (
+                <ul class="spotlight-results">
+                  {featured.data.results.map((r) => (
+                    <li>
+                      <Icon name="trophy" size={15} />
+                      {r}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <a
+                href={url(`/robots/${featured.id}/`)}
+                class="btn btn-primary spotlight-cta"
+                data-magnetic="0.2"
+              >
+                Explore {featured.data.name}
+                <Icon name="arrow" size={17} />
+              </a>
+            </div>
+          </article>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="section section-tight">
+    <div class="shell">
+      {
+        rest.length > 0 && (
+          <div class="section-head">
+            <p class="eyebrow" data-reveal="fade">Previous seasons</p>
+            <h2 data-reveal>The ones that came before</h2>
+          </div>
+        )
+      }
+
+      {
+        all.length > 0 ? (
+          <div class="grid grid-3" data-reveal data-stagger>
+            {rest.map((robot) => (
+              /*
+               * `all` is sorted newest first, so the newest robot sits at
+               * position 0. The season badge counts the other way (the first
+               * robot the team ever built is "Season 01"), hence the flip.
+               */
+              <RobotCard
+                robot={robot}
+                index={all.length - 1 - all.findIndex((r) => r.id === robot.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div class="empty-state card">
+            <h3>No robots yet</h3>
+            <p>
+              <span class="ph-tag">[Placeholder]</span> Add a markdown file to
+              <code>src/content/robots/</code> and a page appears here. The
+              README has a step-by-step walkthrough and a template you can
+              copy.
+            </p>
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <CtaBand
+    eyebrow="Behind the build"
+    title="The parts cost real money"
+    body="Motors, aluminium stock, spare batteries, and a registration fee before the season even starts. Sponsors are why any of it gets built."
+  />
+</BaseLayout>
+
+<style>
+  .spotlight {
+    display: grid;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  @media (min-width: 900px) {
+    .spotlight {
+      grid-template-columns: 1.15fr 1fr;
+      align-items: stretch;
+    }
+  }
+
+  .spotlight-media {
+    position: relative;
+    min-height: 300px;
+    aspect-ratio: 16 / 11;
+    background: var(--prussian-900);
+    overflow: hidden;
+  }
+
+  @media (min-width: 900px) {
+    .spotlight-media {
+      aspect-ratio: auto;
+    }
+  }
+
+  .spotlight-media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* A soft gradient where the photo meets the text, so the two halves
+     blend instead of butting up against a hard line. */
+  .spotlight-media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(7, 15, 28, 0.75),
+      transparent 45%
+    );
+    pointer-events: none;
+  }
+
+  @media (min-width: 900px) {
+    .spotlight-media::after {
+      background: linear-gradient(
+        to right,
+        transparent 55%,
+        rgba(16, 37, 66, 0.55)
+      );
+    }
+  }
+
+  .spotlight-body {
+    padding: var(--sp-6);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  @media (min-width: 900px) {
+    .spotlight-body {
+      padding: var(--sp-8);
+    }
+  }
+
+  .spotlight-name {
+    font-size: var(--step-4);
+    line-height: 1;
+  }
+
+  .spotlight-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    margin-top: var(--sp-3);
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .spotlight-meta .game {
+    color: var(--accent);
+  }
+
+  .spotlight-summary {
+    margin-top: var(--sp-5);
+    color: var(--ink-muted);
+    font-size: var(--step-1);
+    line-height: 1.55;
+  }
+
+  .spotlight-results {
+    list-style: none;
+    padding: 0;
+    margin: var(--sp-5) 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
+
+  .spotlight-results li {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+  }
+
+  .spotlight-results :global(svg) {
+    color: var(--highlight);
+    flex-shrink: 0;
+  }
+
+  .spotlight-cta {
+    align-self: flex-start;
+    margin-top: var(--sp-6);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: var(--sp-8);
+  }
+
+  .empty-state h3 {
+    margin-bottom: var(--sp-3);
+  }
+
+  .empty-state p {
+    color: var(--ink-muted);
+    max-width: 52ch;
+    margin-inline: auto;
+  }
+</style>

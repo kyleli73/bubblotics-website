@@ -1,0 +1,222 @@
+---
+/*
+ * One blog post.
+ *
+ * Same pattern as the robot pages: getStaticPaths turns every markdown file
+ * in src/content/updates/ into its own HTML page at build time.
+ */
+
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Bubbles from '../../components/Bubbles.astro';
+import UpdateCard from '../../components/UpdateCard.astro';
+import Icon from '../../components/Icon.astro';
+import { url, formatDate } from '../../lib/paths';
+import { contact } from '../../data/site';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('updates', ({ data }) => !data.draft);
+  const sorted = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+  return sorted.map((post) => ({
+    params: { id: post.id },
+    props: {
+      post,
+      // Two other posts to read next, excluding this one.
+      related: sorted.filter((p) => p.id !== post.id).slice(0, 2),
+    },
+  }));
+}
+
+interface Props {
+  post: CollectionEntry<'updates'>;
+  related: CollectionEntry<'updates'>[];
+}
+
+const { post, related } = Astro.props;
+const d = post.data;
+const { Content } = await render(post);
+---
+
+<BaseLayout title={d.title} description={d.excerpt}>
+  <article>
+    <header class="post-head">
+      <Bubbles count={8} tone="subtle" />
+
+      <div class="shell shell-narrow post-head-inner">
+        <a href={url('/updates/')} class="back-link">
+          <Icon name="arrow" size={15} class="back-arrow" />
+          All updates
+        </a>
+
+        <p class="post-meta" data-reveal="fade">
+          <time datetime={d.date.toISOString().split('T')[0]}>
+            {formatDate(d.date)}
+          </time>
+          <span class="dot">&bull;</span>
+          {d.author}
+        </p>
+
+        <h1 data-reveal>{d.title}</h1>
+
+        <p class="lead" data-reveal data-reveal-delay="0.08">{d.excerpt}</p>
+
+        {
+          d.tags.length > 0 && (
+            <ul class="post-tags" data-reveal="fade">
+              {d.tags.map((t) => (
+                <li class="tag">{t}</li>
+              ))}
+            </ul>
+          )
+        }
+      </div>
+    </header>
+
+    {
+      d.coverImage && (
+        <div class="shell">
+          <figure class="post-cover" data-reveal="scale">
+            <Image
+              src={d.coverImage}
+              alt={d.coverImageAlt ?? ''}
+              widths={[600, 1000, 1600]}
+              sizes="(min-width: 1200px) 1140px, 100vw"
+              loading="eager"
+            />
+          </figure>
+        </div>
+      )
+    }
+
+    <div class="section section-tight">
+      <div class="shell shell-narrow">
+        <div class="prose">
+          <Content />
+        </div>
+
+        <hr class="rule post-rule" />
+
+        <p class="post-foot">
+          Questions about this post? Email us at
+          <a href={`mailto:${contact.email}`}>{contact.email}</a>.
+        </p>
+      </div>
+    </div>
+  </article>
+
+  {
+    related.length > 0 && (
+      <section class="section section-tight related">
+        <div class="shell">
+          <div class="section-head">
+            <p class="eyebrow" data-reveal="fade">Keep reading</p>
+            <h2 data-reveal>More updates</h2>
+          </div>
+
+          <div class="grid grid-2" data-reveal data-stagger>
+            {related.map((p) => (
+              <UpdateCard post={p} />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+</BaseLayout>
+
+<style>
+  .post-head {
+    position: relative;
+    padding-top: calc(var(--header-h) + var(--sp-7));
+    padding-bottom: var(--sp-6);
+    overflow: hidden;
+  }
+
+  .post-head-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  .post-head h1 {
+    font-size: var(--step-4);
+    text-transform: none;
+    letter-spacing: -0.02em;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-5);
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    color: var(--highlight);
+  }
+
+  .back-link :global(.back-arrow) {
+    transform: rotate(180deg);
+    transition: transform var(--dur) var(--ease);
+  }
+
+  .back-link:hover :global(.back-arrow) {
+    transform: rotate(180deg) translateX(4px);
+  }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-4);
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    list-style: none;
+    padding: 0;
+    margin: var(--sp-5) 0 0;
+  }
+
+  .post-cover {
+    margin: var(--sp-6) 0 0;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .post-cover :global(img) {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+
+  .post-rule {
+    margin-block: var(--sp-7);
+  }
+
+  .post-foot {
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+  }
+
+  .related {
+    border-top: 1px solid var(--line);
+  }
+</style>

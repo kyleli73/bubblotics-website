@@ -1,0 +1,354 @@
+---
+/*
+ * About / Our Story.
+ */
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Gallery from '../components/Gallery.astro';
+import CtaBand from '../components/CtaBand.astro';
+import StatStrip from '../components/StatStrip.astro';
+import Icon from '../components/Icon.astro';
+import { team, subteams } from '../data/site';
+
+/*
+ * [PLACEHOLDER] The whole timeline is invented. Replace each entry with
+ * something that actually happened, and delete any that do not apply. Three
+ * or four real milestones beat eight vague ones.
+ */
+const timeline = [
+  {
+    year: '[PLACEHOLDER: 20XX]',
+    title: 'The team forms',
+    body: '[PLACEHOLDER: Who started it, why, and what the first season looked like. Two or three sentences is plenty.]',
+  },
+  {
+    year: '[PLACEHOLDER: 20XX]',
+    title: 'First qualifier',
+    body: '[PLACEHOLDER: The first competition. What went wrong is usually the better story.]',
+  },
+  {
+    year: '[PLACEHOLDER: 20XX]',
+    title: 'Provincials',
+    body: '[PLACEHOLDER: How the team advanced and what changed about how it worked.]',
+  },
+  {
+    year: '[PLACEHOLDER: 20XX]',
+    title: 'Where we are now',
+    body: '[PLACEHOLDER: The current season, current size, and what the team is aiming at.]',
+  },
+];
+
+const values = [
+  {
+    icon: 'spark' as const,
+    title: 'Build it twice',
+    // [PLACEHOLDER] Replace with the team's actual working principles.
+    body: '[PLACEHOLDER] A first prototype exists to be wrong. We would rather find a failure in the shop in November than on the field in March.',
+  },
+  {
+    icon: 'users' as const,
+    title: 'Everyone touches the robot',
+    body: '[PLACEHOLDER] No member spends a season without a wrench or a keyboard in their hands. Business students machine parts, and builders write outreach copy.',
+  },
+  {
+    icon: 'heart' as const,
+    title: 'Leave it better',
+    body: '[PLACEHOLDER] Every season we hand down documentation, tooling, and mentorship so the next group starts further ahead than we did.',
+  },
+];
+---
+
+<BaseLayout
+  title="Our Story"
+  description={`How ${team.name} started, how the team is organised, and what we are working toward.`}
+>
+  <PageHero
+    eyebrow="Our story"
+    title="Built by students, <span class='accent-word'>season after season</span>"
+    lead={team.blurb}
+  />
+
+  <StatStrip />
+
+  <!-- ═══ MISSION ════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="shell">
+      <div class="mission">
+        <div>
+          <p class="eyebrow" data-reveal="fade">Mission</p>
+          <h2 data-reveal>Why we do this</h2>
+        </div>
+        <div class="prose" data-reveal="left">
+          <p>
+            <span class="ph-tag">[Placeholder]</span> Replace this with the team's
+            own mission, in the team's own words. Say what Bubblotics is trying
+            to do, who it is trying to reach, and what would count as a good
+            season beyond the scoreboard. Two or three paragraphs.
+          </p>
+          <p>
+            <span class="ph-tag">[Placeholder]</span> A second paragraph on what
+            members actually get out of it: the skills, the mentorship, where
+            alumni have gone. Judges read this section, and so do parents
+            deciding whether to sign a permission form.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ VALUES ═════════════════════════════════════════════════════ -->
+  <section class="section section-tight">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow" data-reveal="fade">How we work</p>
+        <h2 data-reveal>Three things we hold to</h2>
+      </div>
+
+      <div class="grid grid-3" data-reveal data-stagger>
+        {
+          values.map((v) => (
+            <article class="card value-card">
+              <span class="value-icon">
+                <Icon name={v.icon} size={22} />
+              </span>
+              <h3>{v.title}</h3>
+              <p>{v.body}</p>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TIMELINE ═══════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow" data-reveal="fade">Timeline</p>
+        <h2 data-reveal>How we got here</h2>
+        <p data-reveal data-reveal-delay="0.06">
+          Rookie year {team.rookieYear}. What follows is the short version.
+        </p>
+      </div>
+
+      <ol class="timeline">
+        {
+          timeline.map((item) => (
+            <li class="timeline-item" data-reveal="left">
+              <span class="timeline-year">{item.year}</span>
+              <div class="timeline-body">
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- ═══ SUBTEAMS ═══════════════════════════════════════════════════ -->
+  <section class="section section-tight">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow" data-reveal="fade">Structure</p>
+        <h2 data-reveal>Four subteams, <span class="accent-word">one robot</span></h2>
+        <p data-reveal data-reveal-delay="0.06">
+          Work is split so nothing waits on one person, and everyone still
+          knows how the whole machine goes together.
+        </p>
+      </div>
+
+      <div class="grid grid-4" data-reveal data-stagger>
+        {
+          subteams.map((s, i) => (
+            <article class="card subteam-card">
+              <span class="subteam-num">{String(i + 1).padStart(2, '0')}</span>
+              <h3>{s.name}</h3>
+              <p>{s.description}</p>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PHOTOS ═════════════════════════════════════════════════════ -->
+  <section class="section section-tight">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow" data-reveal="fade">The team</p>
+        <h2 data-reveal>Faces behind the robot</h2>
+      </div>
+      <Gallery limit={6} columns={3} />
+    </div>
+  </section>
+
+  <CtaBand
+    eyebrow="Join or support"
+    title="Want in?"
+    body="Students, mentors, and sponsors are all welcome. Tell us which one you are and we will get back to you."
+    primaryLabel="Contact us"
+    primaryHref="/contact/"
+    secondaryLabel="Sponsor the team"
+    secondaryHref="/sponsors/"
+  />
+</BaseLayout>
+
+<style>
+  .mission {
+    display: grid;
+    gap: var(--sp-6);
+  }
+
+  @media (min-width: 900px) {
+    .mission {
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: var(--sp-8);
+    }
+  }
+
+  .value-card :global(svg) {
+    color: var(--ink-inverse);
+  }
+
+  .value-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: var(--highlight);
+    margin-bottom: var(--sp-4);
+    box-shadow: var(--glow-yellow);
+  }
+
+  .value-card h3 {
+    font-size: var(--step-1);
+    margin-bottom: var(--sp-3);
+  }
+
+  .value-card p {
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+    line-height: 1.65;
+  }
+
+  /* ── Timeline ────────────────────────────────────────────────────── */
+
+  .timeline {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: relative;
+  }
+
+  /* The vertical spine. Fades at both ends so it doesn't stop abruptly. */
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      var(--line-strong) 8%,
+      var(--line-strong) 92%,
+      transparent
+    );
+  }
+
+  @media (min-width: 760px) {
+    .timeline::before {
+      left: 148px;
+    }
+  }
+
+  .timeline-item {
+    position: relative;
+    display: grid;
+    gap: var(--sp-2);
+    padding-left: var(--sp-7);
+    padding-bottom: var(--sp-7);
+  }
+
+  @media (min-width: 760px) {
+    .timeline-item {
+      grid-template-columns: 130px 1fr;
+      gap: var(--sp-8);
+      padding-left: 0;
+    }
+  }
+
+  /* The bubble marker on the spine. */
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 7px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--prussian-950);
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 0 4px rgba(89, 149, 237, 0.14);
+  }
+
+  @media (min-width: 760px) {
+    .timeline-item::before {
+      left: 141px;
+    }
+  }
+
+  .timeline-year {
+    font-family: var(--font-display);
+    font-size: var(--step-0);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--highlight);
+  }
+
+  .timeline-body h3 {
+    font-size: var(--step-1);
+    margin-bottom: var(--sp-2);
+  }
+
+  .timeline-body p {
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+    line-height: 1.65;
+    max-width: 60ch;
+  }
+
+  /* ── Subteams ────────────────────────────────────────────────────── */
+
+  .subteam-card {
+    padding-top: var(--sp-6);
+  }
+
+  .subteam-num {
+    position: absolute;
+    top: var(--sp-3);
+    right: var(--sp-4);
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    font-weight: 700;
+    line-height: 1;
+    color: rgba(89, 149, 237, 0.18);
+  }
+
+  .subteam-card h3 {
+    font-size: var(--step-1);
+    margin-bottom: var(--sp-3);
+    color: var(--accent);
+  }
+
+  .subteam-card p {
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+    line-height: 1.6;
+  }
+</style>
