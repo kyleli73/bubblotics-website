@@ -2,71 +2,106 @@
 /*
  * Team mark.
  *
- * [PLACEHOLDER] This is a stand-in, not the real Bubblotics logo. The
- * branding guide lists the logo section as "*todo", so nothing official
- * exists to drop in yet.
+ * Renders the real logo from src/assets/brand/logo.png as soon as that file
+ * exists. Until then it falls back to a placeholder, so the site never shows
+ * a broken image. See src/lib/brand.ts for the one-step instructions.
  *
- * When the real artwork arrives:
- *   1. Save it as public/images/logo.svg (SVG keeps it sharp at any size).
- *   2. Replace the <svg> below with <img src={url('/images/logo.svg')} …>.
- *   3. Delete the <style> block.
- * Nothing else on the site needs to change. The guide's three variants
- * (symbol only / number and name / name only) map onto the `variant` prop.
- *
- * The placeholder is three overlapping bubbles: the largest carries the
- * team number, matching the guide's rule that the number is always solid
- * against a contrasting background.
+ * The branding guide lists three approved variants. `variant` maps onto them:
+ *   'mark'   symbol only
+ *   'full'   symbol plus the name and number
  */
 
+import { Image } from 'astro:assets';
+import { logo, logoIsVector } from '../lib/brand';
+
 interface Props {
-  /** 'mark' is the symbol alone, 'full' adds the wordmark beside it. */
   variant?: 'mark' | 'full';
   size?: number;
   class?: string;
 }
 
-const { variant = 'full', size = 40, class: className = '' } = Astro.props;
+const { variant = 'full', size = 46, class: className = '' } = Astro.props;
+
+const alt = 'Bubblotics, Team 35858';
 ---
 
 <span class={`logo ${className}`} data-variant={variant}>
-  <svg
-    class="logo-mark"
-    width={size}
-    height={size}
-    viewBox="0 0 48 48"
-    role="img"
-    aria-label="Bubblotics"
-  >
-    <defs>
-      <linearGradient id="bl-g1" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="#8AB6F4"></stop>
-        <stop offset="100%" stop-color="#5995ED"></stop>
-      </linearGradient>
-      <radialGradient id="bl-shine" cx="32%" cy="28%" r="60%">
-        <stop offset="0%" stop-color="#FCFAF9" stop-opacity="0.85"></stop>
-        <stop offset="60%" stop-color="#FCFAF9" stop-opacity="0"></stop>
-      </radialGradient>
-    </defs>
+  {
+    logo ? (
+      logoIsVector ? (
+        /*
+         * SVG is already resolution independent, so it is served as-is.
+         * Running it through the image pipeline would only rasterise it.
+         */
+        <img
+          class="logo-mark"
+          src={logo.src}
+          alt={alt}
+          width={size}
+          height={size}
+          loading="eager"
+        />
+      ) : (
+        /*
+         * A raster logo is resized at build time. `densities` emits a 2x
+         * copy as well, so the mark stays crisp on a phone or a Retina
+         * display without shipping the full-size original to everyone.
+         */
+        <Image
+          class="logo-mark"
+          src={logo}
+          alt={alt}
+          width={size}
+          height={size}
+          densities={[1, 2]}
+          loading="eager"
+        />
+      )
+    ) : (
+      /*
+       * ── PLACEHOLDER ──────────────────────────────────────────────────
+       * Only renders while src/assets/brand/logo.png is missing. Add that
+       * file and this disappears on its own.
+       */
+      <svg
+        class="logo-mark logo-placeholder"
+        width={size}
+        height={size}
+        viewBox="0 0 48 48"
+        role="img"
+        aria-label={alt}
+      >
+        <defs>
+          <linearGradient id="bl-g1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#8AB6F4" />
+            <stop offset="100%" stop-color="#5995ED" />
+          </linearGradient>
+          <radialGradient id="bl-shine" cx="32%" cy="28%" r="60%">
+            <stop offset="0%" stop-color="#FCFAF9" stop-opacity="0.85" />
+            <stop offset="60%" stop-color="#FCFAF9" stop-opacity="0" />
+          </radialGradient>
+        </defs>
 
-    <!-- Two small satellite bubbles -->
-    <circle cx="38.5" cy="11.5" r="7" fill="#FEC601" opacity="0.9"></circle>
-    <circle cx="10" cy="12.5" r="4.5" fill="#5995ED" opacity="0.55"></circle>
-
-    <!-- Main bubble carrying the team number -->
-    <circle cx="21" cy="28" r="18" fill="url(#bl-g1)"></circle>
-    <circle cx="21" cy="28" r="18" fill="url(#bl-shine)"></circle>
-    <text
-      x="21"
-      y="28"
-      text-anchor="middle"
-      dominant-baseline="central"
-      fill="#102542"
-      font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
-      font-size="11.5"
-      font-weight="700"
-      letter-spacing="-0.4">35858</text
-    >
-  </svg>
+        <circle cx="38.5" cy="11.5" r="7" fill="#FEC601" opacity="0.9" />
+        <circle cx="10" cy="12.5" r="4.5" fill="#5995ED" opacity="0.55" />
+        <circle cx="21" cy="28" r="18" fill="url(#bl-g1)" />
+        <circle cx="21" cy="28" r="18" fill="url(#bl-shine)" />
+        <text
+          x="21"
+          y="28"
+          text-anchor="middle"
+          dominant-baseline="central"
+          fill="#102542"
+          font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+          font-size="11.5"
+          font-weight="700"
+          letter-spacing="-0.4"
+        >
+          35858
+        </text>
+      </svg>
+    )
+  }
 
   {
     variant === 'full' && (
@@ -89,12 +124,15 @@ const { variant = 'full', size = 40, class: className = '' } = Astro.props;
 
   .logo-mark {
     flex-shrink: 0;
+    /* The artwork is square with the two bubbles filling most of the frame.
+       `contain` keeps it from being cropped at any size it is asked for. */
+    object-fit: contain;
     transition: transform var(--dur) var(--ease);
   }
 
-  /* The mark lifts when you hover anywhere on the header link. */
-  :global(a:hover) > .logo .logo-mark,
-  :global(a:hover).logo .logo-mark {
+  /* The mark tips and lifts when you hover the header link, like a bubble
+     catching a draft. */
+  :global(a:hover) > .logo .logo-mark {
     transform: translateY(-2px) rotate(-4deg);
   }
 

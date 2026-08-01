@@ -16,6 +16,7 @@ import UpdateCard from '../components/UpdateCard.astro';
 import CtaBand from '../components/CtaBand.astro';
 import Icon from '../components/Icon.astro';
 import Gallery from '../components/Gallery.astro';
+import Logo from '../components/Logo.astro';
 import { team, subteams } from '../data/site';
 import { url } from '../lib/paths';
 
@@ -43,6 +44,18 @@ const posts = (await getCollection('updates', ({ data }) => !data.draft))
     </div>
 
     <div class="shell hero-inner">
+      <!--
+        The team mark, large, above the headline. It carries the number and
+        the bubble motif on its own, so it does most of the work of
+        establishing who this is before anyone reads a word.
+
+        aria-hidden because the <h1> underneath already says "Bubblotics".
+        Without it a screen reader announces the team name twice in a row.
+      -->
+      <div class="hero-mark" data-hero-item aria-hidden="true">
+        <Logo variant="mark" size={132} />
+      </div>
+
       <p class="hero-badge" data-hero-item>
         <Icon name="location" size={14} />
         {team.location}
@@ -276,6 +289,50 @@ const posts = (await getCollection('updates', ({ data }) => !data.draft))
       rgba(254, 198, 1, 0.15),
       transparent 62%
     );
+  }
+
+  /* ── Hero mark ───────────────────────────────────────────────────── */
+
+  .hero-mark {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--sp-5);
+    /* Bobs gently, the way a bubble sits in still air. Slow and small on
+       purpose: at this size anything faster reads as a glitch. */
+    animation: float 6.5s var(--ease-io) infinite;
+  }
+
+  /* A soft light behind the mark so it sits in the scene rather than on
+     top of it. drop-shadow follows the artwork's actual silhouette, which
+     box-shadow cannot do. */
+  .hero-mark :global(.logo-mark) {
+    filter: drop-shadow(0 0 32px rgba(89, 149, 237, 0.45))
+      drop-shadow(0 12px 28px rgba(7, 15, 28, 0.6));
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-11px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-mark {
+      animation: none;
+    }
+  }
+
+  /* The mark competes with the headline for vertical space on a short
+     screen, and the headline is what matters. */
+  @media (max-height: 700px) {
+    .hero-mark :global(.logo-mark) {
+      width: 88px;
+      height: 88px;
+    }
   }
 
   .hero-badge {

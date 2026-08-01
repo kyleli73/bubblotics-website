@@ -16,13 +16,14 @@ site. You do not need to understand the code.
 4. [Adding a blog post](#adding-a-blog-post)
 5. [Adding a robot page](#adding-a-robot-page)
 6. [Adding an Onshape CAD viewer](#adding-an-onshape-cad-viewer)
-7. [Adding photos](#adding-photos)
-8. [Updating awards, sponsors, and contact info](#updating-awards-sponsors-and-contact-info)
-9. [Publishing changes](#publishing-changes)
-10. [First-time GitHub Pages setup](#first-time-github-pages-setup)
-11. [Finding every placeholder](#finding-every-placeholder)
-12. [Design and brand notes](#design-and-brand-notes)
-13. [When something breaks](#when-something-breaks)
+7. [Adding the logo](#adding-the-logo)
+8. [Adding photos](#adding-photos)
+9. [Updating awards, sponsors, and contact info](#updating-awards-sponsors-and-contact-info)
+10. [Publishing changes](#publishing-changes)
+11. [First-time GitHub Pages setup](#first-time-github-pages-setup)
+12. [Finding every placeholder](#finding-every-placeholder)
+13. [Design and brand notes](#design-and-brand-notes)
+14. [When something breaks](#when-something-breaks)
 
 ---
 
@@ -269,6 +270,38 @@ the flagship robot only.
 
 ---
 
+## Adding the logo
+
+Save the logo file as:
+
+```
+src/assets/brand/logo.png
+```
+
+`.svg`, `.webp`, `.jpg`, and `.avif` also work. SVG is best if you have a
+vector version, because it stays perfectly sharp at every size.
+
+That is the whole process. The header, the footer, the home page hero, the
+browser tab icon, and the image that appears when someone shares a link all
+switch over to it on the next save. There is no list to update and no other
+file to edit.
+
+Until that file exists the site uses a plain placeholder mark, so it never
+renders as a broken image.
+
+**Export it large and with a transparent background.** The mark is displayed
+at about 46px in the header and 132px in the hero, and Astro resizes it at
+build time, so a 1024px or larger export costs nothing. The site background
+is dark navy, so a white box baked into the file will be very obvious.
+
+It goes in `src/assets/` rather than `public/` because Astro processes
+`src/assets/` — a 2000px logo is automatically resized down to the size it is
+actually shown at, and a 2x copy is emitted for Retina screens. Put in
+`public/` instead, every visitor would download the full-size original just to
+render a thumbnail.
+
+---
+
 ## Adding photos
 
 Drop image files into `src/assets/gallery/`. That is the whole process. They
@@ -428,8 +461,8 @@ The most important ones to fill in first:
 - `src/content/robots/*.md` — the two robot files are entirely templates
 - `src/assets/gallery/` — empty; the gallery shows placeholder tiles until
   photos are added
-- `src/components/Logo.astro` — a stand-in mark, because the branding guide
-  lists the logo as still to do
+- `src/assets/brand/logo.png` — **not added yet.** See
+  [Adding the logo](#adding-the-logo) below
 
 ---
 

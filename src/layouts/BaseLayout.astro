@@ -8,10 +8,12 @@
  */
 
 import '../styles/global.css';
+import { getImage } from 'astro:assets';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { team } from '../data/site';
 import { url } from '../lib/paths';
+import { logo, logoIsVector } from '../lib/brand';
 
 interface Props {
   title: string;
@@ -33,10 +35,42 @@ const pageTitle = bareTitle ? title : `${title} | ${team.name} · Team ${team.nu
 
 // Astro.site comes from `site` in astro.config.mjs. Social platforms need a
 // full https:// URL for preview images, not a relative path.
-const canonical = new URL(Astro.url.pathname, Astro.site ?? 'http://localhost');
-const previewImage = image
-  ? new URL(url(image), Astro.site ?? 'http://localhost').href
-  : undefined;
+const origin = Astro.site ?? 'http://localhost';
+const canonical = new URL(Astro.url.pathname, origin);
+
+/*
+ * ── Favicon ────────────────────────────────────────────────────────────
+ * Derived from the team logo rather than maintained as a separate file, so
+ * there is no second copy to forget about when the logo changes.
+ *
+ * A raster logo is resized down to 64px at build time (a browser tab icon
+ * renders at 16-32px, so anything larger is wasted bytes on every single
+ * page load). An SVG is linked directly, since it scales on its own.
+ *
+ * With no logo added yet, this falls back to the placeholder in public/.
+ */
+const faviconHref = logo
+  ? logoIsVector
+    ? logo.src
+    : (await getImage({ src: logo, width: 64, height: 64, format: 'png' })).src
+  : url('/favicon.svg');
+
+const faviconType = logo && logoIsVector ? 'image/svg+xml' : logo ? 'image/png' : 'image/svg+xml';
+
+/*
+ * ── Link preview image ─────────────────────────────────────────────────
+ * What shows when someone shares a page in iMessage, Discord, or Slack. A
+ * page can pass its own via the `image` prop; otherwise the logo stands in,
+ * scaled to 1200x630, the size every social platform crops to.
+ */
+let previewImage: string | undefined;
+
+if (image) {
+  previewImage = new URL(url(image), origin).href;
+} else if (logo && !logoIsVector) {
+  const og = await getImage({ src: logo, width: 1200, height: 630, fit: 'contain', format: 'png' });
+  previewImage = new URL(og.src, origin).href;
+}
 ---
 
 <!doctype html>
@@ -48,11 +82,9 @@ const previewImage = image
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical.href} />
 
-    <!--
-      [PLACEHOLDER] Replace with the real favicon once the logo exists.
-      An .svg favicon scales to every size a browser might ask for.
-    -->
-    <link rel="icon" type="image/svg+xml" href={url('/favicon.svg')} />
+    <!-- Generated from the team logo. See the note above. -->
+    <link rel="icon" type={faviconType} href={faviconHref} />
+    <link rel="apple-touch-icon" href={faviconHref} />
 
     <!-- The browser chrome colour on mobile, matched to the page. -->
     <meta name="theme-color" content="#102542" />
