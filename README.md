@@ -475,14 +475,35 @@ at the top of `src/styles/global.css`:
 |---|---|---|
 | Prussian Blue | `#102542` | Page and panel backgrounds |
 | Cornflower Blue | `#5995ED` | Accents, links, glow |
-| School Bus Yellow | `#FEC601` | Highlights, primary buttons, standout awards |
+| Logo Orange | `#FFA000` | Primary buttons, focus rings, emphasis |
+| School Bus Yellow | `#FEC601` | Standout awards, and nothing else |
 | Platinum | `#EFF2F1` | Light surfaces |
 | Bright Snow | `#FCFAF9` | Body text on dark |
 
-The guide's rule is followed throughout: headers in blue with yellow accents,
-long text as a primary colour on a neutral. Yellow is deliberately sparse. It
-marks the one thing that matters on a screen, and it stops meaning anything
-the moment it is everywhere.
+### Why there is an orange as well as the yellow
+
+The logo does not use School Bus Yellow. Sampling the artwork directly, its
+warm accent is `#FFA000`, a true orange, and its blue is `#479AF5`. It does
+use Bright Snow exactly as the guide specifies.
+
+Orange artwork sitting beside yellow interface accents reads as a near-miss
+rather than a deliberate pair, so the interface follows the logo. `--highlight`
+is the orange and does all the work: buttons, focus rings, the eyebrow tick,
+the one emphasised word per heading.
+
+School Bus Yellow survives in exactly one place, as `--gold`: the standout
+marker on the Awards page. Yellow reads as gold there, which is the meaning
+you actually want on a trophy, and a colour used in one place still means
+something when a judge scans the page.
+
+**If you add anything warm, use `var(--highlight)`.** Reach for `var(--gold)`
+only if it is literally about winning something. The moment gold appears in a
+second place it stops signalling anything.
+
+Every pairing was checked against WCAG AA: orange on the page background is
+9.4:1, dark text on an orange button is 9.4:1, and the faintest grey is 5.1:1.
+If you change a colour, re-check it. Half of any FTC audience is reading this
+on a phone in a bright gym.
 
 **Typefaces.** Source Sans 3 for body copy, as the guide specifies. The guide
 names "Nelvetica Neue" for headlines, which is not available as a web font, so

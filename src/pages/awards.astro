@@ -4,7 +4,7 @@
  *
  * Grouped by season, newest first, in the "Legacy" style: every competition
  * attended gets a block, with the awards under it. Standout results are
- * flagged in yellow so a judge or sponsor scanning the page finds them
+ * flagged in gold so a judge or sponsor scanning the page finds them
  * immediately.
  *
  * All of the data comes from the `seasons` array in src/data/site.ts.
@@ -252,16 +252,19 @@ const totalEvents = seasons.reduce((n, s) => n + s.competitions.length, 0);
     margin-top: 1px;
   }
 
-  /* The gold treatment. Kept for results that genuinely stand out, because
-     highlighting everything highlights nothing. */
+  /* The gold treatment, and the ONLY place School Bus Yellow appears on the
+     site. Everything else warm uses the logo's orange.
+     Two reasons to keep this one exception: yellow reads as gold, which is
+     literally what a trophy is, and a colour used in exactly one place still
+     means something when a judge scans the page. */
   .award.standout .award-icon {
-    background: var(--highlight);
+    background: var(--gold);
     color: var(--ink-inverse);
-    box-shadow: var(--glow-yellow);
+    box-shadow: var(--glow-gold);
   }
 
   .award.standout strong {
-    color: var(--highlight);
+    color: var(--gold);
   }
 
   .award-text {
