@@ -34,7 +34,24 @@ const matches = import.meta.glob<{ default: ImageMetadata }>(
   { eager: true }
 );
 
-const found = Object.values(matches)[0]?.default;
+/*
+ * If more than one logo.* somehow ends up in the folder, prefer the best
+ * format rather than whichever the glob happened to list first. Relying on
+ * glob order would mean a stray logo.png silently beating the SVG, and the
+ * only symptom would be a slightly softer logo that nobody thinks to
+ * investigate.
+ */
+const PREFERENCE = ['.svg', '.avif', '.webp', '.png', '.jpg', '.jpeg'];
+
+const found = Object.entries(matches)
+  .sort(([a], [b]) => {
+    const rank = (p: string) => {
+      const i = PREFERENCE.findIndex((ext) => p.toLowerCase().endsWith(ext));
+      return i === -1 ? PREFERENCE.length : i;
+    };
+    return rank(a) - rank(b);
+  })
+  .map(([, mod]) => mod.default)[0];
 
 /** The logo, or undefined if it has not been added yet. */
 export const logo: ImageMetadata | undefined = found;

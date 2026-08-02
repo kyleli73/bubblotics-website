@@ -1,47 +1,51 @@
 # Brand assets
 
-## Files in here
+`logo.svg` is the team mark. It is the only file the site needs.
 
-| File | What it is |
-|---|---|
-| `logo.png` | **The one the site uses.** Transparent background. |
-| `logo-source-black-background.png` | The original as supplied, untouched. Kept for reference. |
+## Replacing it
 
-## Why there are two
-
-The logo was originally exported as RGB with **no alpha channel**, so its
-background was baked in as solid black rather than being transparent.
-
-The site background is dark navy (`#070F1C`), not black. A black-backed image
-on a navy page shows as a visible dark square around the mark. It is subtle
-enough to miss on a laptop and obvious on a phone in a bright room.
-
-So `logo.png` was regenerated as RGBA with the pure-black pixels keyed to
-transparent. Only exact `(0, 0, 0)` was removed, which was 64.2% of the image.
-The darkest colour in the artwork itself is a navy, well clear of zero, so
-nothing in the mark was altered.
-
-**If you re-export the logo, export it with a transparent background** and
-simply overwrite `logo.png`. Then none of the above applies. In Illustrator or
-Figma that means turning off any artboard or background fill before exporting
-PNG. Better still, export SVG.
-
-## Replacing the logo
-
-Save it here as `logo.png`. `.svg`, `.webp`, `.jpg`, and `.avif` also work.
+Save the new file here as `logo.svg`. `.png`, `.webp`, `.avif`, and `.jpg`
+also work; if more than one `logo.*` is present the SVG wins, then AVIF,
+WebP, PNG, JPG.
 
 That is the whole process. The header, the footer, the home page hero, the
 browser tab icon, and the link-preview image all switch over automatically.
 There is no list to update and no other file to edit.
 
-**SVG is the best format if you have a vector version.** It stays perfectly
-sharp at any size, the file is far smaller, and there is no background to key
-out. The current PNG is 2000x2000 and 404 KB; the same mark as SVG would
-likely be under 20 KB.
+## Two things that were wrong with the original exports
 
-If you only have raster, export at 1024px or larger with a transparent
-background. Astro resizes it at build time, so a large source costs nothing at
-page load.
+Both the first PNG and the first SVG had the same two problems. If you
+re-export, avoid them and there is nothing else to do:
+
+**1. A baked-in black background.** Both files painted a solid black
+rectangle across the whole canvas rather than leaving it transparent. The
+site background is dark navy (`#070F1C`), not black, so the mark showed up
+inside a visible dark square. In the SVG this was one `fill="#000000"` path
+tracing the full viewBox; it was removed. When exporting, turn off any
+artboard or background fill.
+
+**2. The artwork only filled about half the canvas.** It sat in a 1095x1095
+square with roughly 200 units of empty space above and below, while the mark
+itself is landscape, about 1.31:1. Anything sizing it to a square box then
+letterboxed it, so it rendered much smaller than the space it occupied. Fixed
+by cropping the `viewBox` to the artwork (verified with `getBBox()` in a
+browser: nothing is clipped on any side). When exporting, trim to the
+artwork bounds.
+
+## Colours in the mark
+
+Sampled from the artwork, and these drive the site palette:
+
+| Hex | Where |
+|---|---|
+| `#FFA101` | The 35858 numerals and the band |
+| `#4598F4` | The swoosh and dot pattern |
+| `#092745` | The robot body and halftone |
+| `#FBF9F8` | Highlights (Bright Snow, matching the guide) |
+
+Note the mark uses a true **orange**, not the branding guide's School Bus
+Yellow `#FEC601`. The site follows the mark. See the "Design and brand notes"
+section of the main README for why, and for the one place yellow survives.
 
 ## Other brand files
 

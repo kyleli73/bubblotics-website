@@ -272,27 +272,24 @@ the flagship robot only.
 
 ## Adding the logo
 
-Save the logo file as:
+The logo is already in place at `src/assets/brand/logo.svg`. To replace it,
+overwrite that file.
 
-```
-src/assets/brand/logo.png
-```
-
-`.svg`, `.webp`, `.jpg`, and `.avif` also work. SVG is best if you have a
-vector version, because it stays perfectly sharp at every size.
+`.png`, `.webp`, `.jpg`, and `.avif` also work. If more than one `logo.*` is
+present the SVG wins. Export with a **transparent background** and **trimmed
+to the artwork**; see `src/assets/brand/README.md` for why both of those
+caught us out on the first export.
 
 That is the whole process. The header, the footer, the home page hero, the
 browser tab icon, and the image that appears when someone shares a link all
 switch over to it on the next save. There is no list to update and no other
 file to edit.
 
-Until that file exists the site uses a plain placeholder mark, so it never
-renders as a broken image.
+If the file is ever missing the site falls back to a plain placeholder mark,
+so it never renders as a broken image.
 
-**Export it large and with a transparent background.** The mark is displayed
-at about 46px in the header and 132px in the hero, and Astro resizes it at
-build time, so a 1024px or larger export costs nothing. The site background
-is dark navy, so a white box baked into the file will be very obvious.
+If you only have raster, export at 1024px or larger. Astro resizes it at
+build time, so a large source costs nothing at page load.
 
 It goes in `src/assets/` rather than `public/` because Astro processes
 `src/assets/` — a 2000px logo is automatically resized down to the size it is
@@ -461,8 +458,7 @@ The most important ones to fill in first:
 - `src/content/robots/*.md` — the two robot files are entirely templates
 - `src/assets/gallery/` — empty; the gallery shows placeholder tiles until
   photos are added
-- `src/assets/brand/logo.png` — **not added yet.** See
-  [Adding the logo](#adding-the-logo) below
+- `src/assets/brand/logo.svg` — done, the real mark is in place
 
 ---
 
