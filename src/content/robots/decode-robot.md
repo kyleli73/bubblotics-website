@@ -76,8 +76,8 @@ specs:
 # See the README, "Adding a hologram CAD viewer", for export steps and how
 # to keep the file small.
 #
-# hologramModel: '/models/decode-robot.glb'
-# hologramCaption: '[PLACEHOLDER] e.g. "Competition configuration. Fasteners hidden for clarity."'
+hologramModel: '/models/assembly-1.glb'
+hologramCaption: '[PLACEHOLDER] Describe what this assembly shows.'
 
 # YouTube video ID only, not the full URL. From
 # https://youtube.com/watch?v=dQw4w9WgXcQ the ID is dQw4w9WgXcQ.

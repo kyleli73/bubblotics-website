@@ -296,7 +296,28 @@ Use both. They do different jobs.
    machining, not for a web viewer, and multiplies the file size for detail
    no one will see at this scale.
 
-### Step 2 — check the size
+### Step 2 — run it through the optimiser
+
+```bash
+node scripts/optimize-gltf.mjs "Assembly 1.gltf" public/models/robot.glb
+```
+
+Onshape's `.gltf` is correct but wildly inefficient for the web: the geometry
+is base64 text inside JSON, and the file is shattered into hundreds of tiny
+primitives. A real 1,114-triangle export arrived as 629 KB with 244
+primitives and 976 accessors. The optimiser converts it to a binary `.glb`
+and, where it can, merges primitives sharing a material.
+
+**Onshape compresses geometry with Draco by default.** That is a good thing
+(it is why these files are small), and the viewer ships a decoder in
+`public/draco/`. The optimiser detects Draco and passes the compressed
+geometry through untouched rather than mangling it.
+
+If you ever see the viewer load with working controls and correct part names
+but an **empty viewport**, that is the signature of Draco geometry that
+failed to decode. Check `public/draco/` still exists.
+
+### Step 3 — check the size
 
 **Aim for under 5 MB, treat 10 MB as a hard ceiling.** Everyone who scrolls
 to that section downloads the whole thing, often on venue wifi.
@@ -307,9 +328,18 @@ If it is too big, run it through [gltf-transform](https://gltf-transform.dev):
 npx @gltf-transform/cli optimize big.glb robot.glb --compress draco
 ```
 
-That routinely cuts a model by 80-90% with no visible difference.
+That routinely cuts a model by 80-90%, but it needs a download and does far
+more than the built-in script. Try the built-in one first.
 
-### Step 3 — drop it in
+**The built-in optimiser does not reduce triangle count**, and past a few
+hundred thousand triangles that is the only thing that helps. Fix it in
+Onshape instead: hide fasteners and internal parts, and export at Coarse
+tessellation. For scale, one export in this project's history was 224 MB with
+3 million triangles, and another 454 MB with 10 million. Neither belongs on a
+web page; the same assembly with fasteners hidden and coarse tessellation is
+typically under 5 MB.
+
+### Step 4 — drop it in
 
 Save it to `public/models/`, then add to the robot's markdown:
 

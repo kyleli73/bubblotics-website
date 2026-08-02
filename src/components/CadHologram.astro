@@ -30,6 +30,7 @@
  */
 
 import Icon from './Icon.astro';
+import { url } from '../lib/paths';
 
 interface Props {
   /** Path under public/, e.g. '/models/voyager.glb'. */
@@ -66,6 +67,7 @@ const { model, name, caption } = Astro.props;
       data-hologram
       data-model={model}
       data-name={name}
+      data-draco={url('/draco/')}
       data-reveal="scale"
     >
       <!--
@@ -469,6 +471,9 @@ const { model, name, caption } = Astro.props;
     const { GLTFLoader } = await import(
       'three/examples/jsm/loaders/GLTFLoader.js'
     );
+    const { DRACOLoader } = await import(
+      'three/examples/jsm/loaders/DRACOLoader.js'
+    );
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -586,8 +591,31 @@ const { model, name, caption } = Astro.props;
     /* ── Load the model ────────────────────────────────────────────── */
     say(root, 'Loading model…');
 
+    /*
+     * Draco support.
+     *
+     * Onshape exports with KHR_draco_mesh_compression turned on by default,
+     * which is genuinely good: it is why a 3,000-triangle assembly is tens of
+     * kilobytes rather than hundreds. But the browser cannot read it without
+     * this decoder, and the failure is silent. GLTFLoader still builds the
+     * scene graph, so the part names and the controls all appear correctly
+     * and the viewport is simply empty. That is a miserable thing to debug,
+     * which is why the decoder is wired in unconditionally.
+     *
+     * The decoder itself lives in public/draco/ and is fetched lazily by
+     * DRACOLoader, only if a model actually turns out to be compressed.
+     */
+    const draco = new DRACOLoader();
+    // Path comes from Astro via a data attribute, so it respects the site's
+    // base path (/bubblotics-website/) without any string surgery here.
+    draco.setDecoderPath(root.dataset.draco!);
+    draco.setDecoderConfig({ type: 'wasm' });
+
+    const loader = new GLTFLoader();
+    loader.setDRACOLoader(draco);
+
     const gltf = await new Promise<any>((resolve, reject) => {
-      new GLTFLoader().load(
+      loader.load(
         modelUrl,
         resolve,
         (evt) => {
@@ -607,26 +635,52 @@ const { model, name, caption } = Astro.props;
 
     const model = gltf.scene as any;
 
-    // Swap every material for the hologram one, and collect the named parts
-    // so they can be listed and isolated.
-    const parts: { name: string; objects: any[] }[] = [];
-    const byName = new Map<string, any[]>();
-
+    // Swap every material for the hologram one, and collect the meshes so
+    // they can be listed and isolated.
+    const meshes: any[] = [];
     model.traverse((child: any) => {
       if (!child.isMesh) return;
       child.material = holoMaterial;
       child.renderOrder = 1;
-
-      // Onshape exports tend to name meshes after the part studio item.
-      // Group by the leading token so "Intake-Roller-1" and "Intake-Plate-2"
-      // land under one "Intake" entry rather than fifty separate chips.
-      const raw: string = child.name || 'Part';
-      const group = raw.split(/[-_.\s]/)[0] || raw;
-      if (!byName.has(group)) byName.set(group, []);
-      byName.get(group)!.push(child);
+      meshes.push(child);
     });
 
-    for (const [name, objects] of byName) parts.push({ name, objects });
+    /*
+     * Naming the subsystem buttons.
+     *
+     * Ideally parts are named "Intake-Roller", "Drivetrain-Wheel" and so on,
+     * in which case grouping by the leading token gives a handful of tidy
+     * subsystem buttons instead of fifty individual chips.
+     *
+     * But Onshape's defaults are "Part 1", "Part 2", "Part 3". Grouping those
+     * by leading token yields a single button labelled "Part", which is
+     * worse than useless. So: try the token grouping, and only keep it if it
+     * actually distinguishes anything. Otherwise fall back to full names, and
+     * if even those do not separate the model, hide the list entirely rather
+     * than show one button that does nothing.
+     */
+    const clean = (s: string) =>
+      (s || 'Part').replace(/^occurrence of\s+/i, '').replace(/_mesh$/, '').trim();
+
+    const groupBy = (fn: (name: string) => string) => {
+      const map = new Map<string, any[]>();
+      for (const mesh of meshes) {
+        const key = fn(clean(mesh.name)) || 'Part';
+        if (!map.has(key)) map.set(key, []);
+        map.get(key)!.push(mesh);
+      }
+      return map;
+    };
+
+    const byToken = groupBy((n) => n.split(/[-_.\s]/)[0]);
+    const byFull = groupBy((n) => n);
+
+    // Prefer the tidier token grouping, but only when it separates the model
+    // into at least two meaningful pieces.
+    const chosen = byToken.size >= 2 ? byToken : byFull;
+
+    const parts: { name: string; objects: any[] }[] = [];
+    for (const [name, objects] of chosen) parts.push({ name, objects });
 
     /* ── Frame it ──────────────────────────────────────────────────────
        Models arrive at wildly different scales and origins depending on how
