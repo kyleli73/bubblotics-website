@@ -1,33 +1,50 @@
 # Brand assets
 
-## The logo — save it here
+## Files in here
 
-Save the team logo in this folder as:
+| File | What it is |
+|---|---|
+| `logo.png` | **The one the site uses.** Transparent background. |
+| `logo-source-black-background.png` | The original as supplied, untouched. Kept for reference. |
 
-    logo.png
+## Why there are two
 
-`.svg`, `.webp`, `.jpg`, and `.avif` also work. SVG is best if you have a
-vector version, because it stays perfectly sharp at every size.
+The logo was originally exported as RGB with **no alpha channel**, so its
+background was baked in as solid black rather than being transparent.
 
-**That is the whole process.** The header, the footer, the home page hero,
-the browser tab icon, and the image that shows when someone shares a link
-all switch over to it automatically. There is no list to update and no
-other file to edit.
+The site background is dark navy (`#070F1C`), not black. A black-backed image
+on a navy page shows as a visible dark square around the mark. It is subtle
+enough to miss on a laptop and obvious on a phone in a bright room.
 
-Until this file exists, the site uses a plain placeholder mark, so nothing
-ever renders as a broken image.
+So `logo.png` was regenerated as RGBA with the pure-black pixels keyed to
+transparent. Only exact `(0, 0, 0)` was removed, which was 64.2% of the image.
+The darkest colour in the artwork itself is a navy, well clear of zero, so
+nothing in the mark was altered.
 
-## Which file to export
+**If you re-export the logo, export it with a transparent background** and
+simply overwrite `logo.png`. Then none of the above applies. In Illustrator or
+Figma that means turning off any artboard or background fill before exporting
+PNG. Better still, export SVG.
 
-The mark is used at roughly 46px in the header and 132px in the hero, and
-Astro resizes it at build time, so export generously:
+## Replacing the logo
 
-- **SVG** — ideal. Any size, smallest file.
-- **PNG** — export at 1024px or larger, with a **transparent background**.
-  The site is dark navy; a white box around the logo will be obvious.
+Save it here as `logo.png`. `.svg`, `.webp`, `.jpg`, and `.avif` also work.
+
+That is the whole process. The header, the footer, the home page hero, the
+browser tab icon, and the link-preview image all switch over automatically.
+There is no list to update and no other file to edit.
+
+**SVG is the best format if you have a vector version.** It stays perfectly
+sharp at any size, the file is far smaller, and there is no background to key
+out. The current PNG is 2000x2000 and 404 KB; the same mark as SVG would
+likely be under 20 KB.
+
+If you only have raster, export at 1024px or larger with a transparent
+background. Astro resizes it at build time, so a large source costs nothing at
+page load.
 
 ## Other brand files
 
-Sponsor-facing artwork, print versions, and anything else that is served
-untouched rather than resized belongs in `public/images/` instead. Files in
-`src/assets/` get processed by the build; files in `public/` do not.
+Sponsor-facing artwork, print versions, and anything else that should be
+served untouched rather than resized belongs in `public/images/` instead.
+Files in `src/assets/` are processed by the build; files in `public/` are not.

@@ -94,6 +94,60 @@ function initSmoothScroll(): Lenis | null {
   gsap.ticker.add((time: number) => lenis.raf(time * 1000)); // s -> ms
   gsap.ticker.lagSmoothing(0);
 
+  /*
+   * ── In-page anchor links ────────────────────────────────────────────
+   * Lenis owns the scroll position: every frame it writes its own target
+   * back to the document. That means anything moving the page by another
+   * route (window.scrollTo, scrollIntoView, or the browser's own jump to
+   * a #hash) is silently undone on the very next frame.
+   *
+   * The skip link at the top of every page is exactly that: href="#main",
+   * and it is the first thing a keyboard user tabs to. Left alone it would
+   * appear to do nothing, which is worse than not having one at all.
+   *
+   * So same-page hash links are intercepted and handed to Lenis, which is
+   * the only thing allowed to move the page.
+   */
+  document.addEventListener('click', (e) => {
+    const link = (e.target as HTMLElement)?.closest?.('a[href^="#"]');
+    if (!link) return;
+
+    const hash = link.getAttribute('href');
+    if (!hash || hash === '#') return;
+
+    const target = document.querySelector(hash);
+    if (!target) return;
+
+    e.preventDefault();
+
+    // Offset by the sticky header, or the target lands underneath it.
+    const headerH =
+      parseInt(
+        getComputedStyle(document.documentElement).getPropertyValue('--header-h')
+      ) || 0;
+
+    lenis.scrollTo(target as HTMLElement, { offset: -headerH - 16 });
+
+    // Moving the page does not move keyboard focus. Without this, the next
+    // Tab press continues from the top of the document rather than from
+    // where the reader is now, which defeats the point of a skip link.
+    const focusable = target as HTMLElement;
+    if (!focusable.hasAttribute('tabindex')) {
+      focusable.setAttribute('tabindex', '-1');
+    }
+    focusable.focus({ preventScroll: true });
+
+    // Keep the URL honest so the link is still shareable and the back
+    // button behaves.
+    history.pushState(null, '', hash);
+  });
+
+  /*
+   * Exposed for debugging and for any future code that needs to move the
+   * page. Anything calling window.scrollTo directly will be overridden.
+   */
+  (window as unknown as { lenis: Lenis }).lenis = lenis;
+
   return lenis;
 }
 

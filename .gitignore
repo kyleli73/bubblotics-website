@@ -20,3 +20,6 @@ node_modules/
 # Logs
 npm-debug.log*
 yarn-error.log*
+
+# Local dev server config for the Claude Code preview pane
+.claude/

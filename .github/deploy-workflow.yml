@@ -57,16 +57,30 @@ jobs:
         with:
           # Astro 5 needs Node 18.20.8 or newer. 20 is the current LTS.
           node-version: 20
-          # Caches node_modules between runs, which takes the install from
-          # about a minute down to a few seconds.
-          cache: npm
 
       - name: Install dependencies
-        # `npm ci` installs exactly what package-lock.json specifies, and
-        # fails if the lockfile and package.json disagree. `npm install`
-        # would quietly upgrade things and could break a build that worked
-        # locally. Always `ci` in automation.
-        run: npm ci
+        # `npm ci` is the right command in automation: it installs exactly
+        # what package-lock.json specifies and fails loudly if the lockfile
+        # and package.json disagree. `npm install` would quietly upgrade
+        # things and could break a build that worked locally.
+        #
+        # But `npm ci` REQUIRES a lockfile, and this repo may not have one
+        # yet: it was authored on a very slow connection where npm could not
+        # finish resolving the tree. GitHub's runners have no such problem.
+        #
+        # So: use `npm ci` when a lockfile exists, and fall back to
+        # `npm install` when it does not. That means the site can deploy
+        # today, and tightens up automatically the moment a lockfile is
+        # committed. Nothing needs to change here when that happens.
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "Lockfile found, using npm ci (exact, reproducible install)."
+            npm ci
+          else
+            echo "No lockfile yet, falling back to npm install."
+            echo "Commit package-lock.json when you can, so builds become reproducible."
+            npm install --no-audit --no-fund
+          fi
 
       - name: Build the site
         run: npm run build
