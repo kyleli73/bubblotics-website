@@ -165,6 +165,26 @@ const navCols = [nav.slice(0, half), nav.slice(half)];
     padding: 0;
   }
 
+  /*
+   * The divider under the footer columns.
+   *
+   * The global reset zeroes every margin, so this rule sat flush against
+   * whatever ended lowest in the tallest column. On desktop that is the row
+   * of social icons, and a hairline touching the bottom of a circle reads as
+   * a line cutting through it.
+   *
+   * More space above than below on purpose: above it separates the three
+   * content columns, below it only precedes the copyright and trademark
+   * note, which belongs closer to the line it sits under.
+   *
+   * Written as a margin on the rule rather than padding on the columns so
+   * the clearance holds no matter which column happens to be tallest, which
+   * changes between desktop and mobile as the grid restacks.
+   */
+  .rule {
+    margin-block: var(--sp-7) var(--sp-6);
+  }
+
   .social {
     display: grid;
     place-items: center;
@@ -246,7 +266,8 @@ const navCols = [nav.slice(0, half), nav.slice(half)];
     display: flex;
     flex-direction: column;
     gap: var(--sp-3);
-    margin-top: var(--sp-5);
+    /* No top margin: the rule above owns the spacing on both of its sides,
+       so the gap is defined in one place instead of being the sum of two. */
     font-size: 0.78rem;
     color: var(--ink-faint);
     line-height: 1.5;
