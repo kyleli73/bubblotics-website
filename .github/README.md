@@ -1,38 +1,34 @@
-# Why the deploy workflow is not active yet
+# GitHub Actions
 
-`deploy-workflow.yml` in this folder is the GitHub Actions pipeline that
-builds the site and publishes it to GitHub Pages on every push to `main`.
+`workflows/deploy.yml` builds the site and publishes it to GitHub Pages on
+every push to `main`. It is active and you should not need to touch it.
 
-It is sitting here rather than in `.github/workflows/` because **GitHub
-refuses a push that creates or changes anything under `.github/workflows/`
-unless the Personal Access Token doing the push has the `workflow` scope.**
-The token used for the first push did not have it, and the whole push was
-rejected because of this one file.
+Live site: https://kyleli73.github.io/bubblotics-website/
 
-## Turning it on (about a minute)
+## If a push is ever rejected with "without `workflow` scope"
 
-1. Go to https://github.com/settings/tokens
-2. Click the token you used to push.
-3. Tick the **`workflow`** checkbox (leave `repo` ticked) and click
-   **Update token**. The token value does not change, so nothing else
-   needs re-entering.
-4. Then, locally:
+GitHub refuses any push that creates or changes a file under
+`.github/workflows/` unless the Personal Access Token has the **`workflow`**
+scope, and it rejects the *whole* push, not just that one file. This caught
+us once during setup, and it will catch the next person who makes a fresh
+token.
 
-       cd "/Users/kyleli/Bubblotics Website"
-       mkdir -p .github/workflows
-       git mv .github/deploy-workflow.yml .github/workflows/deploy.yml
-       git commit -m "Enable the GitHub Pages deploy workflow"
-       git push
+Fix: go to https://github.com/settings/tokens, click the token, tick
+**`workflow`** (leave `repo` ticked), and Update token. The token value does
+not change, so nothing needs re-entering anywhere.
 
-5. Finally, in the repo: **Settings → Pages → Source → GitHub Actions**.
+## If the site stops updating
 
-From then on, every push to `main` rebuilds and republishes the site by
-itself, and nobody needs Node installed to change a blog post: editing the
-markdown on github.com is enough.
+Check the **Actions** tab. A red X means the build failed; click into the run
+to see the error. The usual cause is a typo in the frontmatter block at the
+top of a markdown file: a missing quote, a malformed date, or a tab where
+spaces belong. The error names the file.
 
-## Why this is worth doing
+A failed build never replaces the live site, so a bad commit takes your
+change offline, not the whole website.
 
-Without it, publishing means someone builds the site locally and commits the
-output. That requires Node, a working `npm install`, and remembering to
-rebuild. For a team that turns over every year, the workflow is the version
-that survives.
+## Pages settings
+
+Repo → Settings → Pages → Source must stay on **GitHub Actions**. If someone
+switches it to "Deploy from a branch", this workflow still runs but nothing
+it produces gets published, and the site silently stops updating.
