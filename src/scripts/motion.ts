@@ -211,6 +211,19 @@ function initReveals() {
    ───────────────────────────────────────────────────────────────────────── */
 
 function initCounters() {
+  /*
+   * WARNING: this selector is global, and the effect is destructive. Any
+   * element anywhere carrying `data-count` gets its entire contents replaced
+   * with a number, every frame.
+   *
+   * That is not hypothetical. The bubble field briefly used `data-count` to
+   * pass its bubble quantity, and this loop quietly overwrote the canvas and
+   * every fallback element inside it with the digit "22". The hero looked
+   * empty and nothing errored.
+   *
+   * If you need to store a count on an element for some other purpose, give
+   * the attribute a distinct name.
+   */
   document.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
     const target = Number(el.dataset.count ?? 0);
     const suffix = el.dataset.countSuffix ?? '';

@@ -2,20 +2,23 @@
 /*
  * Floating bubble field.
  *
- * The team's visual signature. A set of translucent circles that drift
- * upward behind the hero, each with a light highlight in the top-left so it
- * reads as a bubble rather than a flat dot.
+ * The team's visual signature, and now interactive: bubbles drift away from
+ * the cursor, and clicking one pops it.
  *
- * Built with CSS animations rather than a canvas or a particle library:
- *   - No JavaScript, so it renders before the page has finished loading.
- *   - The browser runs it on the compositor, so it costs almost nothing.
- *   - It stops dead for anyone who has asked for reduced motion.
+ * ── Why there are two layers ───────────────────────────────────────────
+ * A <canvas> can draw a far more convincing soap bubble than CSS can (real
+ * rim iridescence, a wobbling non-rigid outline, two separate reflections),
+ * and it is the only practical way to make them respond to a pointer. But
+ * canvas draws nothing at all without JavaScript.
  *
- * `count` and `tone` let each page use the same effect at a different
- * intensity, so the hero can be lively while a sponsor page stays calm.
+ * So the CSS bubbles are still here underneath. They render immediately,
+ * they work with JavaScript disabled, and they are what someone who has
+ * asked for reduced motion keeps. When the canvas boots it hides them and
+ * takes over. Nobody ever sees an empty hero.
  */
 
 interface Props {
+  /** Roughly how many bubbles. Scaled down automatically on small screens. */
   count?: number;
   /** 'full' for the home hero, 'subtle' for interior pages. */
   tone?: 'full' | 'subtle';
@@ -25,40 +28,42 @@ interface Props {
 const { count = 18, tone = 'full', class: className = '' } = Astro.props;
 
 /*
- * Positions are computed once at build time, not in the browser. Every
- * visitor sees the same arrangement, and there is no layout shift while JS
- * boots. The values below are deterministic-looking but hand-tuned enough
- * to avoid the even spacing that makes generated layouts look generated.
+ * Fallback positions, computed at build time so every visitor gets the same
+ * arrangement with no layout shift while JS boots.
  */
 const bubbles = Array.from({ length: count }, (_, i) => {
   const golden = 0.6180339887;
-  const x = ((i * golden * 100) % 100).toFixed(2); // spread across the width
+  const x = ((i * golden * 100) % 100).toFixed(2);
   const size = 14 + ((i * 37) % 100) * (tone === 'full' ? 1.15 : 0.7);
   const duration = 16 + ((i * 23) % 22);
-  const delay = -((i * 7.3) % 24); // negative: already mid-flight on load
-  const drift = ((i % 5) - 2) * 26; // sideways wander, px
+  const delay = -((i * 7.3) % 24);
+  const drift = ((i % 5) - 2) * 26;
   const opacity = (tone === 'full' ? 0.5 : 0.28) - ((i % 4) * 0.06);
 
   return { x, size, duration, delay, drift, opacity };
 });
 ---
 
-<div class={`bubbles ${className}`} aria-hidden="true">
-  {
-    bubbles.map((b) => (
-      <span
-        class="bubble"
-        style={`
-          --x: ${b.x}%;
-          --size: ${b.size}px;
-          --dur: ${b.duration}s;
-          --delay: ${b.delay}s;
-          --drift: ${b.drift}px;
-          --op: ${b.opacity};
-        `}
-      />
-    ))
-  }
+<div class={`bubbles ${className}`} data-bubbles data-bubble-count={count} data-tone={tone} aria-hidden="true">
+  <canvas class="bubble-canvas" data-bubble-canvas></canvas>
+
+  <div class="bubble-fallback" data-bubble-fallback>
+    {
+      bubbles.map((b) => (
+        <span
+          class="bubble"
+          style={`
+            --x: ${b.x}%;
+            --size: ${b.size}px;
+            --dur: ${b.duration}s;
+            --delay: ${b.delay}s;
+            --drift: ${b.drift}px;
+            --op: ${b.opacity};
+          `}
+        />
+      ))
+    }
+  </div>
 </div>
 
 <style>
@@ -66,11 +71,10 @@ const bubbles = Array.from({ length: count }, (_, i) => {
     position: absolute;
     inset: 0;
     overflow: hidden;
+    /* pointer-events stay off on the wrapper so the bubbles never block a
+       button underneath. The canvas listens on the window instead. */
     pointer-events: none;
-    /* Sits behind content but above the page background wash. */
     z-index: 0;
-    /* Fades out toward the bottom so bubbles dissolve into the next
-       section instead of stopping at a hard edge. */
     -webkit-mask-image: linear-gradient(
       to bottom,
       transparent,
@@ -87,6 +91,34 @@ const bubbles = Array.from({ length: count }, (_, i) => {
     );
   }
 
+  .bubble-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    opacity: 0;
+    transition: opacity 600ms var(--ease);
+  }
+
+  /* Set by the script once the first frame has been drawn, so the canvas
+     fades in rather than popping. */
+  .bubble-canvas.ready {
+    opacity: 1;
+  }
+
+  .bubble-fallback {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* Hidden once the canvas is running. */
+  .bubble-fallback.retired {
+    display: none;
+  }
+
+  /* ── CSS fallback bubbles ────────────────────────────────────────── */
+
   .bubble {
     position: absolute;
     left: var(--x);
@@ -95,10 +127,6 @@ const bubbles = Array.from({ length: count }, (_, i) => {
     height: var(--size);
     border-radius: 50%;
     opacity: 0;
-
-    /* A bubble is mostly its edge. The radial gradient keeps the middle
-       almost clear, the inset shadow draws the rim, and the ::before dot
-       is the specular highlight where the light hits it. */
     background: radial-gradient(
       circle at 32% 28%,
       rgba(252, 250, 249, 0.34),
@@ -110,8 +138,6 @@ const bubbles = Array.from({ length: count }, (_, i) => {
       inset -2px -3px 8px rgba(16, 37, 66, 0.5),
       inset 2px 3px 10px rgba(252, 250, 249, 0.18),
       0 0 18px rgba(89, 149, 237, 0.16);
-    backdrop-filter: blur(1px);
-
     animation: rise var(--dur) linear var(--delay) infinite;
     will-change: transform, opacity;
   }
@@ -128,9 +154,6 @@ const bubbles = Array.from({ length: count }, (_, i) => {
     filter: blur(0.5px);
   }
 
-  /* Every fifth bubble picks up the yellow accent. Sparse on purpose: the
-     brand's yellow is a highlight colour, and a field of yellow bubbles
-     would read as a different team entirely. */
   .bubble:nth-child(5n) {
     background: radial-gradient(
       circle at 32% 28%,
@@ -153,8 +176,6 @@ const bubbles = Array.from({ length: count }, (_, i) => {
     12% {
       opacity: var(--op);
     }
-    /* The horizontal offset reverses partway up so the path curves
-       instead of running dead straight. Real bubbles wobble. */
     50% {
       transform: translate3d(var(--drift), -55vh, 0) scale(1);
     }
@@ -170,10 +191,379 @@ const bubbles = Array.from({ length: count }, (_, i) => {
   @media (prefers-reduced-motion: reduce) {
     .bubble {
       animation: none;
-      /* Held still, low opacity: the texture survives, the movement
-         does not. */
       opacity: calc(var(--op) * 0.5);
       transform: translate3d(0, -40vh, 0);
     }
+    /* Reduced motion keeps the still CSS layer and never starts the canvas. */
+    .bubble-canvas {
+      display: none;
+    }
   }
 </style>
+
+<script>
+  /*
+   * ═══════════════════════════════════════════════════════════════════════
+   *  INTERACTIVE BUBBLE FIELD
+   * ═══════════════════════════════════════════════════════════════════════
+   *
+   * What makes a drawn circle read as a soap bubble rather than a dot:
+   *
+   *   1. It is mostly empty. The centre is nearly transparent; almost all of
+   *      the visible colour sits in a thin band at the rim.
+   *   2. The rim is iridescent. A soap film is only a few hundred nanometres
+   *      thick, so light reflecting off its front and back surfaces
+   *      interferes and different wavelengths cancel at different angles.
+   *      That is why real bubbles show pink, gold, and cyan smeared around
+   *      the edge. A conic gradient on the rim stroke imitates it.
+   *   3. There are two reflections, not one: a hard specular highlight where
+   *      the light source is, and a softer bounce opposite it.
+   *   4. It is not rigid. Surface tension lets a bubble wobble as it moves,
+   *      so the outline breathes between slightly wide and slightly tall.
+   *
+   * Interaction: bubbles are pushed away from the pointer, and clicking pops
+   * one into a ring of fragments.
+   */
+
+  type Bubble = {
+    x: number; y: number;      // position, css px
+    r: number;                 // radius
+    vx: number; vy: number;    // velocity
+    drift: number;             // horizontal sway amplitude
+    phase: number;             // sway offset so they don't move in lockstep
+    wobble: number;            // wobble speed
+    hue: number;               // 0 = blue bubble, 1 = warm/orange bubble
+    alpha: number;
+  };
+
+  type Shard = {
+    x: number; y: number; vx: number; vy: number; life: number; r: number; hue: number;
+  };
+
+  const fields = document.querySelectorAll<HTMLElement>('[data-bubbles]');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (!reduced) {
+    fields.forEach(setup);
+  }
+
+  function setup(root: HTMLElement) {
+    const canvas = root.querySelector<HTMLCanvasElement>('[data-bubble-canvas]');
+    const fallback = root.querySelector<HTMLElement>('[data-bubble-fallback]');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return; // very old browser: keep the CSS bubbles
+
+    const tone = root.dataset.tone === 'subtle' ? 'subtle' : 'full';
+    const baseCount = Number(root.dataset.bubbleCount ?? 18);
+
+    let w = 0, h = 0, dpr = 1;
+    let bubbles: Bubble[] = [];
+    let shards: Shard[] = [];
+    let running = false;
+    let raf = 0;
+    let t = 0;
+
+    // Pointer position in canvas space, and whether it is actually over us.
+    const pointer = { x: -9999, y: -9999, active: false };
+
+    const rand = (a: number, b: number) => a + Math.random() * (b - a);
+
+    function count() {
+      /*
+       * Fewer bubbles on a phone. Each one costs several gradient fills per
+       * frame, and a mid-range phone rendering 20 of them at 3x pixel ratio
+       * will drop frames, which is far more noticeable than having 12.
+       */
+      if (w < 600) return Math.round(baseCount * 0.5);
+      if (w < 1000) return Math.round(baseCount * 0.75);
+      return baseCount;
+    }
+
+    function spawn(atBottom: boolean): Bubble {
+      const big = tone === 'full';
+      const r = rand(big ? 8 : 6, big ? 62 : 34);
+      return {
+        x: rand(0, w),
+        // atBottom: entering from below. Otherwise scatter for the first frame
+        // so the field starts populated rather than filling up over 20s.
+        y: atBottom ? h + r + rand(0, h * 0.4) : rand(-r, h + r),
+        r,
+        vx: rand(-0.08, 0.08),
+        // Bigger bubbles rise faster, as they do in water.
+        vy: -rand(0.10, 0.30) * (0.6 + r / 60),
+        drift: rand(6, 26),
+        phase: rand(0, Math.PI * 2),
+        wobble: rand(0.4, 1.1),
+        // Roughly one in five picks up the brand orange. Sparse on purpose:
+        // a field of orange bubbles would read as a different team.
+        hue: Math.random() < 0.2 ? 1 : 0,
+        alpha: (big ? rand(0.45, 0.9) : rand(0.25, 0.5)),
+      };
+    }
+
+    function resize() {
+      const rect = root.getBoundingClientRect();
+      w = rect.width;
+      h = rect.height;
+      if (w === 0 || h === 0) return;
+
+      // Cap at 2x. Beyond that the extra pixels are invisible and the fill
+      // cost is real, especially on phones that report 3x.
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const target = count();
+      if (bubbles.length === 0) {
+        bubbles = Array.from({ length: target }, () => spawn(false));
+      } else if (bubbles.length > target) {
+        bubbles.length = target;
+      } else {
+        while (bubbles.length < target) bubbles.push(spawn(true));
+      }
+    }
+
+    function drawBubble(b: Bubble) {
+      const c = ctx!;
+
+      // Wobble: surface tension lets the outline breathe. Tiny values;
+      // anything above about 6% reads as a jelly, not a bubble.
+      const wob = Math.sin(t * b.wobble + b.phase) * 0.045;
+      const rx = b.r * (1 + wob);
+      const ry = b.r * (1 - wob);
+
+      c.save();
+      c.translate(b.x, b.y);
+      c.globalAlpha = b.alpha;
+
+      // ── 1. Body: nearly hollow, with the colour concentrated at the rim
+      const body = c.createRadialGradient(0, 0, b.r * 0.1, 0, 0, b.r);
+      if (b.hue === 1) {
+        body.addColorStop(0, 'rgba(255, 236, 200, 0.015)');
+        body.addColorStop(0.65, 'rgba(255, 190, 90, 0.05)');
+        body.addColorStop(0.9, 'rgba(255, 176, 60, 0.16)');
+        body.addColorStop(1, 'rgba(255, 200, 120, 0.05)');
+      } else {
+        body.addColorStop(0, 'rgba(200, 226, 255, 0.015)');
+        body.addColorStop(0.65, 'rgba(120, 175, 245, 0.05)');
+        body.addColorStop(0.9, 'rgba(137, 186, 255, 0.17)');
+        body.addColorStop(1, 'rgba(180, 214, 255, 0.05)');
+      }
+      c.beginPath();
+      c.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+      c.fillStyle = body;
+      c.fill();
+
+      // ── 2. Iridescent rim (thin-film interference)
+      // Only drawn above a few px, where it is actually visible; below that
+      // it is wasted work on the most numerous bubbles.
+      if (b.r > 9 && typeof c.createConicGradient === 'function') {
+        const iri = c.createConicGradient(b.phase, 0, 0);
+        const a = b.alpha * 0.5;
+        iri.addColorStop(0.00, `rgba(255, 214, 235, ${a * 0.9})`);
+        iri.addColorStop(0.18, `rgba(255, 242, 200, ${a * 0.7})`);
+        iri.addColorStop(0.38, `rgba(190, 255, 235, ${a * 0.8})`);
+        iri.addColorStop(0.58, `rgba(175, 205, 255, ${a * 0.95})`);
+        iri.addColorStop(0.78, `rgba(226, 196, 255, ${a * 0.65})`);
+        iri.addColorStop(1.00, `rgba(255, 214, 235, ${a * 0.9})`);
+        c.beginPath();
+        c.ellipse(0, 0, rx * 0.97, ry * 0.97, 0, 0, Math.PI * 2);
+        c.lineWidth = Math.max(0.7, b.r * 0.055);
+        c.strokeStyle = iri;
+        c.stroke();
+      }
+
+      // ── 3. Fresnel edge: a bubble is brightest where you see through the
+      // most film, which is at the very edge.
+      c.beginPath();
+      c.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+      c.lineWidth = Math.max(0.5, b.r * 0.02);
+      c.strokeStyle = `rgba(236, 245, 255, ${b.alpha * 0.42})`;
+      c.stroke();
+
+      // ── 4. Specular highlight, upper-left, where the key light is
+      const hx = -rx * 0.34, hy = -ry * 0.36, hr = b.r * 0.26;
+      const spec = c.createRadialGradient(hx, hy, 0, hx, hy, hr);
+      spec.addColorStop(0, `rgba(255, 255, 255, ${b.alpha * 0.85})`);
+      spec.addColorStop(0.5, `rgba(255, 255, 255, ${b.alpha * 0.22})`);
+      spec.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      c.beginPath();
+      c.ellipse(hx, hy, hr, hr * 0.82, -0.5, 0, Math.PI * 2);
+      c.fillStyle = spec;
+      c.fill();
+
+      // ── 5. Bounce light, opposite and much dimmer. This is the detail
+      // that stops it looking like a flat disc with a dot on it.
+      if (b.r > 12) {
+        const bx = rx * 0.32, by = ry * 0.38, br = b.r * 0.3;
+        const bounce = c.createRadialGradient(bx, by, 0, bx, by, br);
+        bounce.addColorStop(0, `rgba(190, 220, 255, ${b.alpha * 0.2})`);
+        bounce.addColorStop(1, 'rgba(190, 220, 255, 0)');
+        c.beginPath();
+        c.ellipse(bx, by, br, br * 0.7, 0.4, 0, Math.PI * 2);
+        c.fillStyle = bounce;
+        c.fill();
+      }
+
+      c.restore();
+    }
+
+    function pop(b: Bubble) {
+      // A popping bubble throws its film outward as droplets.
+      const n = Math.min(14, Math.round(b.r / 3) + 5);
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + rand(-0.2, 0.2);
+        const speed = rand(0.6, 2.4) * (0.5 + b.r / 50);
+        shards.push({
+          x: b.x + Math.cos(a) * b.r * 0.8,
+          y: b.y + Math.sin(a) * b.r * 0.8,
+          vx: Math.cos(a) * speed,
+          vy: Math.sin(a) * speed - 0.3,
+          life: 1,
+          r: rand(0.8, 2.6),
+          hue: b.hue,
+        });
+      }
+    }
+
+    function step() {
+      const c = ctx!;
+      t += 0.016;
+      c.clearRect(0, 0, w, h);
+
+      for (const b of bubbles) {
+        // Sway: a slow sine on top of the base velocity, so the path curves
+        // instead of running dead straight.
+        b.x += b.vx + Math.sin(t * 0.5 + b.phase) * (b.drift * 0.004);
+        b.y += b.vy;
+
+        // ── Pointer repulsion ────────────────────────────────────────
+        if (pointer.active) {
+          const dx = b.x - pointer.x;
+          const dy = b.y - pointer.y;
+          const d2 = dx * dx + dy * dy;
+          const reach = 150 + b.r;
+          if (d2 < reach * reach && d2 > 0.01) {
+            const d = Math.sqrt(d2);
+            // Falls off with distance so the effect has a soft edge rather
+            // than a visible circular boundary.
+            const force = (1 - d / reach) * 0.9;
+            b.vx += (dx / d) * force * 0.35;
+            b.vy += (dy / d) * force * 0.35;
+          }
+        }
+
+        // Damping pulls the bubble back to its natural drift after a shove,
+        // otherwise one pass of the cursor sends it off forever.
+        b.vx *= 0.965;
+        const targetVy = -0.10 * (0.6 + b.r / 60) - 0.06;
+        b.vy += (targetVy - b.vy) * 0.02;
+
+        // Recycle off the top, or off the sides after a hard shove.
+        if (b.y < -b.r * 2 || b.x < -b.r * 3 || b.x > w + b.r * 3) {
+          Object.assign(b, spawn(true));
+        }
+
+        drawBubble(b);
+      }
+
+      // ── Shards from popped bubbles ──────────────────────────────────
+      for (let i = shards.length - 1; i >= 0; i--) {
+        const s = shards[i];
+        s.x += s.vx;
+        s.y += s.vy;
+        s.vy += 0.012;  // slight gravity
+        s.vx *= 0.98;
+        s.life -= 0.022;
+        if (s.life <= 0) { shards.splice(i, 1); continue; }
+
+        c.beginPath();
+        c.arc(s.x, s.y, s.r * s.life, 0, Math.PI * 2);
+        c.fillStyle = s.hue === 1
+          ? `rgba(255, 200, 120, ${s.life * 0.75})`
+          : `rgba(190, 220, 255, ${s.life * 0.75})`;
+        c.fill();
+      }
+
+      raf = requestAnimationFrame(step);
+    }
+
+    function start() {
+      if (running) return;
+      running = true;
+      raf = requestAnimationFrame(step);
+    }
+
+    function stop() {
+      running = false;
+      cancelAnimationFrame(raf);
+    }
+
+    /* ── Pointer tracking ──────────────────────────────────────────────
+       Listened for on the window rather than the canvas, because the
+       wrapper is pointer-events:none so it never blocks the buttons
+       underneath it. Coordinates are converted into canvas space. */
+    const onMove = (e: PointerEvent) => {
+      const rect = root.getBoundingClientRect();
+      pointer.x = e.clientX - rect.left;
+      pointer.y = e.clientY - rect.top;
+      pointer.active =
+        pointer.x > -100 && pointer.x < w + 100 &&
+        pointer.y > -100 && pointer.y < h + 100;
+    };
+
+    const onLeave = () => { pointer.active = false; };
+
+    const onDown = (e: PointerEvent) => {
+      const rect = root.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+
+      // Pop the bubble under the pointer, if any. Nearest wins when they
+      // overlap, so the topmost-looking one is the one that goes.
+      let hit: Bubble | null = null;
+      let best = Infinity;
+      for (const b of bubbles) {
+        const d = Math.hypot(b.x - px, b.y - py);
+        if (d < b.r && d < best) { best = d; hit = b; }
+      }
+      if (hit) {
+        pop(hit);
+        Object.assign(hit, spawn(true));
+      }
+    };
+
+    window.addEventListener('pointermove', onMove, { passive: true });
+    window.addEventListener('pointerdown', onDown, { passive: true });
+    document.addEventListener('pointerleave', onLeave);
+
+    /* ── Only animate when actually on screen ─────────────────────────
+       A hero scrolled well out of view should not be burning a frame
+       budget, and neither should a background tab. */
+    const io = new IntersectionObserver(
+      (entries) => { entries[0].isIntersecting ? start() : stop(); },
+      { threshold: 0 }
+    );
+    io.observe(root);
+
+    document.addEventListener('visibilitychange', () => {
+      document.hidden ? stop() : (io.takeRecords(), start());
+    });
+
+    let resizeTimer: number;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(resize, 150);
+    });
+
+    resize();
+    if (w > 0 && h > 0) {
+      canvas.classList.add('ready');
+      fallback?.classList.add('retired');
+      start();
+    }
+  }
+</script>
