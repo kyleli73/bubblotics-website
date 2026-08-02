@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
+import { defineConfig, passthroughImageService } from 'astro/config';
 
 /*
  * ─────────────────────────────────────────────────────────────────────────
@@ -39,6 +39,32 @@ export default defineConfig({
   build: {
     format: 'directory',
   },
+
+  /*
+   * ── Image processing ─────────────────────────────────────────────────
+   * By default Astro uses Sharp to resize images, convert them to WebP, and
+   * generate the 2x versions for Retina screens. That is what keeps a
+   * 2000px logo from being sent whole to a phone, and it is what you want
+   * in production.
+   *
+   * Sharp ships a ~9 MB native binary. On a slow or unreliable connection
+   * that download can fail partway and leave a truncated file, and the only
+   * symptom is every image 404ing with "Could not find Sharp".
+   *
+   * So there is an escape hatch. Set NO_SHARP=1 and Astro serves images
+   * untouched instead:
+   *
+   *     NO_SHARP=1 npm run dev
+   *
+   * The site works, images just aren't optimised, and the original file
+   * size is what reaches the browser. Fine for building pages locally,
+   * not something to deploy.
+   *
+   * The GitHub Actions build does NOT set this, so the published site
+   * always gets fully optimised images regardless of whose laptop the
+   * content was written on.
+   */
+  image: process.env.NO_SHARP ? { service: passthroughImageService() } : {},
 
   // Astro ships zero JavaScript unless a component asks for it. The only JS on
   // this site is the animation bundle in BaseLayout, which is deliberate.

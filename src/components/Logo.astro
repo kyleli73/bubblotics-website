@@ -23,6 +23,22 @@ interface Props {
 const { variant = 'full', size = 46, class: className = '' } = Astro.props;
 
 const alt = 'Bubblotics, Team 35858';
+
+/*
+ * `size` means HEIGHT, not width.
+ *
+ * The mark is landscape (two bubbles side by side, roughly 1.32:1), not
+ * square. Asking for a square box would letterbox it: the image would be
+ * scaled down until its width fitted, leaving it visually much smaller than
+ * the space it occupies and with dead air above and below.
+ *
+ * So height is fixed and width follows the artwork's real proportions. Both
+ * are still written into the HTML, which is what lets the browser reserve
+ * the right space before the image loads and stops the header jumping.
+ */
+const aspect = logo ? logo.width / logo.height : 1;
+const markHeight = size;
+const markWidth = Math.round(size * aspect);
 ---
 
 <span class={`logo ${className}`} data-variant={variant}>
@@ -37,8 +53,8 @@ const alt = 'Bubblotics, Team 35858';
           class="logo-mark"
           src={logo.src}
           alt={alt}
-          width={size}
-          height={size}
+          width={markWidth}
+          height={markHeight}
           loading="eager"
         />
       ) : (
@@ -51,8 +67,8 @@ const alt = 'Bubblotics, Team 35858';
           class="logo-mark"
           src={logo}
           alt={alt}
-          width={size}
-          height={size}
+          width={markWidth}
+          height={markHeight}
           densities={[1, 2]}
           loading="eager"
         />
