@@ -1,0 +1,799 @@
+---
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ *  HOLOGRAM CAD VIEWER
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * Renders a robot's exported geometry as a translucent, glowing hologram you
+ * can rotate, explode, and pick apart subsystem by subsystem.
+ *
+ * This is the "Tier 3" viewer. The Onshape embed (see the CAD section on the
+ * robot page) is simpler and stays in sync with the live document by itself.
+ * This one takes a static export, but in exchange it can be styled, lit, and
+ * animated to match the site instead of showing Onshape's own interface.
+ *
+ * ── Adding a model ─────────────────────────────────────────────────────
+ * Export the assembly from Onshape as glTF, save it to public/models/, and
+ * point at it from the robot's markdown:
+ *
+ *     hologramModel: '/models/voyager.glb'
+ *
+ * The README has the full export walkthrough, including how to keep the file
+ * small enough to be worth downloading.
+ *
+ * ── Performance ────────────────────────────────────────────────────────
+ * Three.js is roughly 170 KB gzipped before any model data. Shipping that to
+ * every visitor of every page, most of whom never scroll to a robot page,
+ * would be indefensible. So both the library and the model load lazily, only
+ * once this section is close to the viewport, via a dynamic import that Vite
+ * splits into its own chunk.
+ */
+
+import Icon from './Icon.astro';
+
+interface Props {
+  /** Path under public/, e.g. '/models/voyager.glb'. */
+  model: string;
+  /** Robot name, used in labels and the accessible description. */
+  name: string;
+  caption?: string;
+}
+
+const { model, name, caption } = Astro.props;
+---
+
+<section class="section hologram-section" id="hologram">
+  <div class="holo-ambience" aria-hidden="true"></div>
+
+  <div class="shell">
+    <div class="section-head">
+      <p class="eyebrow" data-reveal="fade">
+        <Icon name="cube" size={14} />
+        Hologram
+      </p>
+      <h2 data-reveal>
+        Take <span class="accent-word">{name}</span> apart
+      </h2>
+      <p data-reveal data-reveal-delay="0.06">
+        The real assembly geometry, rendered as a hologram. Drag to orbit,
+        scroll to zoom, and pull the subsystems apart to see how it goes
+        together.
+      </p>
+    </div>
+
+    <div
+      class="holo"
+      data-hologram
+      data-model={model}
+      data-name={name}
+      data-reveal="scale"
+    >
+      <!--
+        The canvas is created by the script rather than written here, so a
+        visitor whose JavaScript fails never sees an empty black rectangle
+        where a robot should be. They get the message below instead.
+      -->
+      <div class="holo-stage" data-holo-stage>
+        <div class="holo-status" data-holo-status>
+          <span class="holo-spinner" aria-hidden="true"></span>
+          <p data-holo-message>Preparing the hologram…</p>
+        </div>
+      </div>
+
+      <!-- Controls. Hidden until the model is actually loaded. -->
+      <div class="holo-controls" data-holo-controls hidden>
+        <div class="holo-group">
+          <label class="holo-label" for="holo-explode">Exploded view</label>
+          <input
+            id="holo-explode"
+            class="holo-range"
+            type="range"
+            min="0"
+            max="100"
+            value="0"
+            data-holo-explode
+          />
+        </div>
+
+        <div class="holo-actions">
+          <button type="button" class="holo-btn" data-holo-reset>
+            Reset view
+          </button>
+          <button
+            type="button"
+            class="holo-btn"
+            data-holo-spin
+            aria-pressed="true"
+          >
+            Pause spin
+          </button>
+        </div>
+      </div>
+
+      <!-- Subsystem list, filled in from the model's own part names. -->
+      <div class="holo-parts" data-holo-parts hidden>
+        <p class="holo-parts-title">Subsystems</p>
+        <ul data-holo-parts-list></ul>
+      </div>
+    </div>
+
+    {caption && <p class="holo-caption">{caption}</p>}
+
+    <p class="holo-note faint">
+      Not loading? The model file may be missing, or WebGL may be unavailable
+      on this device. The Onshape viewer above works either way.
+    </p>
+  </div>
+</section>
+
+<style>
+  .hologram-section {
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* The glow the hologram appears to cast into the page. */
+  .holo-ambience {
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    width: min(1200px, 130vw);
+    aspect-ratio: 1.3;
+    transform: translateX(-50%);
+    background:
+      radial-gradient(ellipse at 45% 45%, rgba(89, 149, 237, 0.26), transparent 60%),
+      radial-gradient(ellipse at 62% 58%, rgba(255, 160, 0, 0.1), transparent 55%);
+    filter: blur(12px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .hologram-section :global(.shell) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .holo {
+    position: relative;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--glass-border);
+    background:
+      radial-gradient(ellipse at 50% 120%, rgba(89, 149, 237, 0.16), transparent 60%),
+      rgba(7, 15, 28, 0.72);
+    backdrop-filter: blur(var(--glass-blur));
+    overflow: hidden;
+    box-shadow: var(--shadow-lg), var(--glow);
+  }
+
+  .holo-stage {
+    position: relative;
+    width: 100%;
+    /* Tall enough to actually manipulate a model on a laptop, capped so it
+       never eats the whole screen on a phone. */
+    height: clamp(360px, 62vh, 680px);
+  }
+
+  .holo-stage :global(canvas) {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    /* grab / grabbing makes it obvious the thing is draggable. */
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .holo-stage :global(canvas:active) {
+    cursor: grabbing;
+  }
+
+  /* ── Loading and error states ────────────────────────────────────── */
+
+  .holo-status {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--sp-4);
+    text-align: center;
+    padding: var(--sp-5);
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+  }
+
+  .holo-status[hidden] {
+    display: none;
+  }
+
+  .holo-spinner {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid var(--line-strong);
+    border-top-color: var(--accent);
+    animation: holo-spin 900ms linear infinite;
+  }
+
+  @keyframes holo-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .holo-spinner {
+      animation: none;
+      border-top-color: var(--line-strong);
+    }
+  }
+
+  /* ── Controls ────────────────────────────────────────────────────── */
+
+  .holo-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    padding: var(--sp-4) var(--sp-5);
+    border-top: 1px solid var(--glass-border);
+    background: rgba(7, 15, 28, 0.5);
+  }
+
+  .holo-controls[hidden] {
+    display: none;
+  }
+
+  .holo-group {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    flex: 1 1 260px;
+  }
+
+  .holo-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+
+  .holo-range {
+    flex: 1;
+    min-width: 120px;
+    accent-color: var(--highlight);
+    /* 44px tall hit area even though the track is thin. */
+    height: 44px;
+  }
+
+  .holo-actions {
+    display: flex;
+    gap: var(--sp-2);
+  }
+
+  .holo-btn {
+    min-height: 40px;
+    padding: var(--sp-2) var(--sp-4);
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    background: rgba(89, 149, 237, 0.1);
+    color: var(--ink);
+    font-size: var(--step--1);
+    font-weight: 600;
+    transition:
+      background var(--dur-fast) var(--ease),
+      color var(--dur-fast) var(--ease);
+  }
+
+  .holo-btn:hover {
+    background: var(--highlight);
+    border-color: var(--highlight);
+    color: var(--ink-inverse);
+  }
+
+  /* ── Subsystem list ──────────────────────────────────────────────── */
+
+  .holo-parts {
+    padding: var(--sp-4) var(--sp-5) var(--sp-5);
+    border-top: 1px solid var(--glass-border);
+  }
+
+  .holo-parts[hidden] {
+    display: none;
+  }
+
+  .holo-parts-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: var(--sp-3);
+  }
+
+  .holo-parts ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .holo-parts button {
+    min-height: 36px;
+    padding: var(--sp-1) var(--sp-3);
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    background: rgba(89, 149, 237, 0.08);
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+    font-weight: 600;
+    transition:
+      background var(--dur-fast) var(--ease),
+      color var(--dur-fast) var(--ease),
+      border-color var(--dur-fast) var(--ease);
+  }
+
+  .holo-parts button:hover {
+    color: var(--ink);
+    border-color: var(--accent);
+  }
+
+  /* aria-pressed doubles as the styling hook, so the visual state and the
+     state announced to a screen reader can never disagree. */
+  .holo-parts button[aria-pressed='true'] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink-inverse);
+  }
+
+  .holo-caption {
+    margin-top: var(--sp-4);
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+  }
+
+  .holo-note {
+    margin-top: var(--sp-3);
+    font-size: var(--step--1);
+  }
+</style>
+
+<script>
+  /*
+   * Hologram viewer runtime.
+   *
+   * Everything below runs only when a [data-hologram] element scrolls near
+   * the viewport, and imports Three.js dynamically at that moment so the
+   * library never lands in the main bundle.
+   */
+
+  const roots = document.querySelectorAll<HTMLElement>('[data-hologram]');
+
+  roots.forEach((root) => {
+    let started = false;
+
+    const launch = () => {
+      if (started) return;
+      started = true;
+      io.disconnect();
+      boot(root).catch((err) => {
+        console.error('[hologram]', err);
+        fail(root, 'The hologram could not be loaded.');
+      });
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) launch();
+      },
+      // Start fetching a little before it is actually on screen, so the
+      // model is often ready by the time the reader arrives.
+      { rootMargin: '400px' }
+    );
+
+    io.observe(root);
+
+    /*
+     * Belt and braces: check the position directly as well.
+     *
+     * IntersectionObserver does not deliver callbacks while the document is
+     * hidden, so a page opened in a background tab, restored from the
+     * back-forward cache, or loaded with the window minimised can sit with
+     * the viewer stuck on "Preparing the hologram…" even though the section
+     * is plainly in view. This costs one layout read and removes that whole
+     * class of failure.
+     */
+    const near = () => {
+      const r = root.getBoundingClientRect();
+      return r.top < window.innerHeight + 400 && r.bottom > -400;
+    };
+
+    if (near()) launch();
+    else {
+      // If it was not in view at load, re-check when the tab becomes
+      // visible, for the same reason.
+      document.addEventListener('visibilitychange', function onVis() {
+        if (!document.hidden && near()) {
+          document.removeEventListener('visibilitychange', onVis);
+          launch();
+        }
+      });
+    }
+  });
+
+  function statusEls(root: HTMLElement) {
+    return {
+      status: root.querySelector<HTMLElement>('[data-holo-status]'),
+      message: root.querySelector<HTMLElement>('[data-holo-message]'),
+      spinner: root.querySelector<HTMLElement>('.holo-spinner'),
+    };
+  }
+
+  function say(root: HTMLElement, text: string) {
+    statusEls(root).message!.textContent = text;
+  }
+
+  function fail(root: HTMLElement, text: string) {
+    const { message, spinner } = statusEls(root);
+    if (message) message.textContent = text;
+    if (spinner) spinner.remove();
+  }
+
+  async function boot(root: HTMLElement) {
+    const stage = root.querySelector<HTMLElement>('[data-holo-stage]')!;
+    const modelUrl = root.dataset.model!;
+    const name = root.dataset.name ?? 'the robot';
+
+    // WebGL can be missing entirely (old device, hardware acceleration off,
+    // some locked-down school machines). Check before loading 170 KB.
+    const probe = document.createElement('canvas');
+    const hasWebGL = !!(
+      probe.getContext('webgl2') || probe.getContext('webgl')
+    );
+    if (!hasWebGL) {
+      fail(root, 'This device does not support WebGL, so the hologram cannot render.');
+      return;
+    }
+
+    say(root, 'Loading 3D engine…');
+
+    // Dynamic imports: these become their own chunks, fetched only here.
+    const THREE = await import('three');
+    const { OrbitControls } = await import(
+      'three/examples/jsm/controls/OrbitControls.js'
+    );
+    const { GLTFLoader } = await import(
+      'three/examples/jsm/loaders/GLTFLoader.js'
+    );
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ── Scene ─────────────────────────────────────────────────────── */
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      stage.clientWidth / stage.clientHeight,
+      0.01,
+      1000
+    );
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true, // let the panel's own background show through
+      powerPreference: 'high-performance',
+    });
+    renderer.setSize(stage.clientWidth, stage.clientHeight);
+    // Capped at 2 for the same reason as the bubbles: a 3x phone pays triple
+    // the fragment cost for pixels nobody can distinguish.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    stage.appendChild(renderer.domElement);
+    renderer.domElement.setAttribute(
+      'aria-label',
+      `Interactive 3D model of ${name}. Drag to rotate, scroll to zoom.`
+    );
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;       // momentum, so it feels weighted
+    controls.dampingFactor = 0.06;
+    controls.enablePan = false;          // panning mostly just loses the model
+    controls.autoRotate = !reduced;
+    controls.autoRotateSpeed = 0.9;
+
+    // Two rim lights. The hologram material is mostly emissive, but a little
+    // real lighting keeps the surfaces from reading as flat.
+    scene.add(new THREE.AmbientLight(0x8fb6ff, 0.6));
+    const key = new THREE.DirectionalLight(0xbcd8ff, 1.4);
+    key.position.set(3, 5, 4);
+    scene.add(key);
+    const rim = new THREE.DirectionalLight(0xffa000, 0.7);
+    rim.position.set(-4, -2, -3);
+    scene.add(rim);
+
+    /* ── The hologram material ─────────────────────────────────────────
+       A Fresnel term is what sells it: surfaces facing you are nearly
+       transparent, surfaces angled away glow at the edges. That is how you
+       see a shape's silhouette and its internal structure at the same time,
+       which is exactly the "hologram" read.
+
+       Scanlines are added in world space rather than screen space so they sit
+       on the object and travel with it as it rotates, instead of sliding
+       across the screen like a filter laid on top. */
+    const holoMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uCore: { value: new THREE.Color(0x2f6fbf) },
+        uRim: { value: new THREE.Color(0x9ed0ff) },
+        uAccent: { value: new THREE.Color(0xffa000) },
+        uOpacity: { value: 1 },
+      },
+      vertexShader: /* glsl */ `
+        varying vec3 vNormalW;
+        varying vec3 vViewDir;
+        varying vec3 vPosW;
+        void main() {
+          vec4 worldPos = modelMatrix * vec4(position, 1.0);
+          vPosW = worldPos.xyz;
+          vNormalW = normalize(mat3(modelMatrix) * normal);
+          vViewDir = normalize(cameraPosition - worldPos.xyz);
+          gl_Position = projectionMatrix * viewMatrix * worldPos;
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        uniform float uTime;
+        uniform vec3 uCore;
+        uniform vec3 uRim;
+        uniform vec3 uAccent;
+        uniform float uOpacity;
+        varying vec3 vNormalW;
+        varying vec3 vViewDir;
+        varying vec3 vPosW;
+
+        void main() {
+          vec3 n = normalize(vNormalW);
+          // Two-sided: back faces are visible through the front, which is
+          // what makes the internals readable.
+          if (!gl_FrontFacing) n = -n;
+
+          float fres = 1.0 - clamp(dot(n, normalize(vViewDir)), 0.0, 1.0);
+          fres = pow(fres, 2.2);
+
+          // Travelling scanline band, in world space so it rides the model.
+          float scan = sin(vPosW.y * 90.0 - uTime * 2.2) * 0.5 + 0.5;
+          scan = smoothstep(0.72, 1.0, scan) * 0.22;
+
+          vec3 col = mix(uCore, uRim, fres);
+          col += uAccent * scan;
+
+          // Nearly clear head-on, bright at grazing angles.
+          float alpha = (0.10 + fres * 0.85 + scan * 0.35) * uOpacity;
+
+          gl_FragColor = vec4(col, clamp(alpha, 0.0, 1.0));
+        }
+      `,
+      transparent: true,
+      side: THREE.DoubleSide,
+      // Without this, transparent surfaces hide the ones behind them and the
+      // interior disappears, which defeats the whole effect.
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+
+    /* ── Load the model ────────────────────────────────────────────── */
+    say(root, 'Loading model…');
+
+    const gltf = await new Promise<any>((resolve, reject) => {
+      new GLTFLoader().load(
+        modelUrl,
+        resolve,
+        (evt) => {
+          if (evt.total) {
+            const pct = Math.round((evt.loaded / evt.total) * 100);
+            say(root, `Loading model… ${pct}%`);
+          }
+        },
+        () =>
+          reject(
+            new Error(
+              `Could not fetch ${modelUrl}. Check the file exists in public/.`
+            )
+          )
+      );
+    });
+
+    const model = gltf.scene as any;
+
+    // Swap every material for the hologram one, and collect the named parts
+    // so they can be listed and isolated.
+    const parts: { name: string; objects: any[] }[] = [];
+    const byName = new Map<string, any[]>();
+
+    model.traverse((child: any) => {
+      if (!child.isMesh) return;
+      child.material = holoMaterial;
+      child.renderOrder = 1;
+
+      // Onshape exports tend to name meshes after the part studio item.
+      // Group by the leading token so "Intake-Roller-1" and "Intake-Plate-2"
+      // land under one "Intake" entry rather than fifty separate chips.
+      const raw: string = child.name || 'Part';
+      const group = raw.split(/[-_.\s]/)[0] || raw;
+      if (!byName.has(group)) byName.set(group, []);
+      byName.get(group)!.push(child);
+    });
+
+    for (const [name, objects] of byName) parts.push({ name, objects });
+
+    /* ── Frame it ──────────────────────────────────────────────────────
+       Models arrive at wildly different scales and origins depending on how
+       they were exported. Rather than trust that, measure the bounding box,
+       recentre on the origin, and pull the camera back to fit. */
+    const box = new THREE.Box3().setFromObject(model);
+    const size = box.getSize(new THREE.Vector3());
+    const centre = box.getCenter(new THREE.Vector3());
+    model.position.sub(centre);
+
+    const radius = Math.max(size.x, size.y, size.z) * 0.5 || 1;
+    const dist = radius / Math.tan((camera.fov * Math.PI) / 360);
+    camera.position.set(dist * 0.9, dist * 0.55, dist * 1.15);
+    camera.near = radius / 100;
+    camera.far = radius * 100;
+    camera.updateProjectionMatrix();
+    controls.target.set(0, 0, 0);
+    controls.minDistance = radius * 0.8;
+    controls.maxDistance = radius * 6;
+    controls.update();
+
+    scene.add(model);
+
+    // Remember each part's home position and the direction it should fly
+    // when exploded: outward from the model's centre.
+    const homes = new Map<any, { pos: any; dir: any }>();
+    model.traverse((child: any) => {
+      if (!child.isMesh) return;
+      const c = new THREE.Box3()
+        .setFromObject(child)
+        .getCenter(new THREE.Vector3());
+      const dir = c.clone().normalize();
+      if (dir.lengthSq() === 0) dir.set(0, 1, 0); // part sitting dead centre
+      homes.set(child, { pos: child.position.clone(), dir });
+    });
+
+    /* ── Ready ─────────────────────────────────────────────────────── */
+    statusEls(root).status!.hidden = true;
+
+    const controlsEl = root.querySelector<HTMLElement>('[data-holo-controls]')!;
+    const partsEl = root.querySelector<HTMLElement>('[data-holo-parts]')!;
+    controlsEl.hidden = false;
+
+    // ── Exploded view
+    const explodeInput = root.querySelector<HTMLInputElement>('[data-holo-explode]')!;
+    explodeInput.addEventListener('input', () => {
+      const amount = Number(explodeInput.value) / 100;
+      homes.forEach(({ pos, dir }, mesh) => {
+        mesh.position.copy(pos).addScaledVector(dir, amount * radius * 1.1);
+      });
+    });
+
+    // ── Reset
+    root.querySelector('[data-holo-reset]')!.addEventListener('click', () => {
+      explodeInput.value = '0';
+      explodeInput.dispatchEvent(new Event('input'));
+      camera.position.set(dist * 0.9, dist * 0.55, dist * 1.15);
+      controls.target.set(0, 0, 0);
+      controls.update();
+      // Un-isolate everything.
+      partsEl
+        .querySelectorAll<HTMLButtonElement>('button[aria-pressed="true"]')
+        .forEach((b) => b.setAttribute('aria-pressed', 'false'));
+      model.traverse((c: any) => {
+        if (c.isMesh) c.visible = true;
+      });
+    });
+
+    // ── Spin toggle
+    const spinBtn = root.querySelector<HTMLButtonElement>('[data-holo-spin]')!;
+    if (reduced) {
+      spinBtn.setAttribute('aria-pressed', 'false');
+      spinBtn.textContent = 'Start spin';
+    }
+    spinBtn.addEventListener('click', () => {
+      controls.autoRotate = !controls.autoRotate;
+      spinBtn.setAttribute('aria-pressed', String(controls.autoRotate));
+      spinBtn.textContent = controls.autoRotate ? 'Pause spin' : 'Start spin';
+    });
+
+    // Stop auto-rotating the moment someone takes hold of it. Fighting a
+    // user's drag is the fastest way to make a viewer feel broken.
+    controls.addEventListener('start', () => {
+      if (controls.autoRotate) {
+        controls.autoRotate = false;
+        spinBtn.setAttribute('aria-pressed', 'false');
+        spinBtn.textContent = 'Start spin';
+      }
+    });
+
+    // ── Subsystem isolation
+    if (parts.length > 1) {
+      const list = root.querySelector<HTMLElement>('[data-holo-parts-list]')!;
+      partsEl.hidden = false;
+
+      parts.forEach((part) => {
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = part.name;
+        btn.setAttribute('aria-pressed', 'false');
+
+        btn.addEventListener('click', () => {
+          const on = btn.getAttribute('aria-pressed') === 'true';
+
+          // Clear any other isolation first, so the buttons behave like
+          // radio buttons rather than accumulating.
+          list
+            .querySelectorAll<HTMLButtonElement>('button')
+            .forEach((b) => b.setAttribute('aria-pressed', 'false'));
+
+          if (on) {
+            model.traverse((c: any) => {
+              if (c.isMesh) c.visible = true;
+            });
+          } else {
+            btn.setAttribute('aria-pressed', 'true');
+            model.traverse((c: any) => {
+              if (c.isMesh) c.visible = part.objects.includes(c);
+            });
+          }
+        });
+
+        li.appendChild(btn);
+        list.appendChild(li);
+      });
+    }
+
+    /* ── Render loop ───────────────────────────────────────────────── */
+    const clock = new THREE.Clock();
+    let running = true;
+
+    function frame() {
+      if (!running) return;
+      holoMaterial.uniforms.uTime.value = clock.getElapsedTime();
+      controls.update();
+      renderer.render(scene, camera);
+      requestAnimationFrame(frame);
+    }
+    frame();
+
+    // Only render while on screen. A WebGL loop left running in a scrolled
+    // past section is one of the easiest ways to flatten a laptop battery.
+    const visIO = new IntersectionObserver(
+      (entries) => {
+        const wasRunning = running;
+        running = entries[0].isIntersecting && !document.hidden;
+        if (running && !wasRunning) frame();
+      },
+      { threshold: 0 }
+    );
+    visIO.observe(root);
+
+    document.addEventListener('visibilitychange', () => {
+      const wasRunning = running;
+      running = !document.hidden;
+      if (running && !wasRunning) frame();
+    });
+
+    let resizeTimer: number;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        camera.aspect = stage.clientWidth / stage.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(stage.clientWidth, stage.clientHeight);
+      }, 150);
+    });
+  }
+</script>

@@ -56,6 +56,20 @@ const robots = defineCollection({
       onshapeEmbedUrl: z.string().url().optional(),
       onshapeCaption: z.string().optional(),
 
+      // Path to an exported glTF/GLB model under public/, e.g.
+      // '/models/voyager.glb'. Supplying this adds the hologram viewer:
+      // a translucent, glowing render of the real geometry that can be
+      // orbited, exploded, and picked apart subsystem by subsystem.
+      //
+      // Independent of onshapeEmbedUrl. A robot can have both (the Onshape
+      // embed is always current; the hologram is a styled snapshot), either,
+      // or neither. Each section only renders if its field is present.
+      //
+      // See the README, "Adding a hologram CAD viewer", for the export steps
+      // and how to keep the file small enough to be worth downloading.
+      hologramModel: z.string().optional(),
+      hologramCaption: z.string().optional(),
+
       // Optional YouTube embed ID (just the ID, not the full URL) for a
       // reveal video or match highlight.
       videoId: z.string().optional(),

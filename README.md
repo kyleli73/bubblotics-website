@@ -16,14 +16,15 @@ site. You do not need to understand the code.
 4. [Adding a blog post](#adding-a-blog-post)
 5. [Adding a robot page](#adding-a-robot-page)
 6. [Adding an Onshape CAD viewer](#adding-an-onshape-cad-viewer)
-7. [Adding the logo](#adding-the-logo)
-8. [Adding photos](#adding-photos)
-9. [Updating awards, sponsors, and contact info](#updating-awards-sponsors-and-contact-info)
-10. [Publishing changes](#publishing-changes)
-11. [First-time GitHub Pages setup](#first-time-github-pages-setup)
-12. [Finding every placeholder](#finding-every-placeholder)
-13. [Design and brand notes](#design-and-brand-notes)
-14. [When something breaks](#when-something-breaks)
+7. [Adding a hologram CAD viewer](#adding-a-hologram-cad-viewer)
+8. [Adding the logo](#adding-the-logo)
+9. [Adding photos](#adding-photos)
+10. [Updating awards, sponsors, and contact info](#updating-awards-sponsors-and-contact-info)
+11. [Publishing changes](#publishing-changes)
+12. [First-time GitHub Pages setup](#first-time-github-pages-setup)
+13. [Finding every placeholder](#finding-every-placeholder)
+14. [Design and brand notes](#design-and-brand-notes)
+15. [When something breaks](#when-something-breaks)
 
 ---
 
@@ -41,13 +42,14 @@ page, edit it, then hand-edit the index too, and the nav bar would be
 duplicated across fifteen files. By season three that is a real burden on
 whoever inherits this.
 
-The full dependency list is four packages:
+The full dependency list is five packages:
 
 | Package | What it does |
 |---|---|
 | `astro` | Builds the site |
 | `gsap` | Scroll animations and the counting stat numbers |
 | `lenis` | Smooth scrolling |
+| `three` | The hologram CAD viewer (loaded only on robot pages that have a model) |
 | `@fontsource-variable/source-sans-3` | The body typeface from the branding guide |
 
 ---
@@ -63,7 +65,7 @@ Then, in a terminal, from this folder:
 npm install
 ```
 
-That downloads the four packages above. It takes a minute or two, and you only
+That downloads the five packages above. It takes a minute or two, and you only
 have to do it once (or again after someone changes `package.json`).
 
 ```bash
@@ -259,14 +261,87 @@ Open the page in a **private/incognito window**, where you are not logged into
 Onshape. If you see the model, visitors will too. If you see a sign-in screen,
 sharing did not save correctly. Go back to step 2.
 
-### Want the fully custom "hologram" look?
+---
 
-Transparent glowing materials, click-to-isolate subsystems, an animated
-exploded view. That needs exporting the geometry from Onshape as `.glb` and
-rendering it with Three.js, which is considerably more work and one more thing
-to keep in sync every time the CAD changes. The Onshape embed gets you most of
-the way for a fraction of the effort. Ask before building it, and build it for
-the flagship robot only.
+## Adding a hologram CAD viewer
+
+The second, fancier CAD view: your real geometry rendered as a translucent
+glowing hologram that visitors can orbit, pull apart with an exploded-view
+slider, and isolate subsystem by subsystem.
+
+**It is built and ready.** It needs one thing from you: an exported `.glb`.
+
+### How it differs from the Onshape embed
+
+Use both. They do different jobs.
+
+| | Onshape embed | Hologram |
+|---|---|---|
+| Stays current when CAD changes | Yes, automatically | No, it is a snapshot |
+| Looks like our site | No, Onshape's own UI | Yes, fully styled |
+| Needs the doc public | Yes | No |
+| Needs a re-export | Never | Every time the CAD changes meaningfully |
+| Extra download for visitors | Onshape's viewer app | ~170 KB of code plus your model |
+
+### Step 1 — export from Onshape
+
+1. Open the **assembly** (not a part studio).
+2. **Hide anything invisible in the final render**: fasteners, bearings,
+   internal gearing. They can be most of the file size and nobody can see
+   them.
+3. Right-click the assembly tab at the bottom → **Export**.
+4. Format **glTF**, and choose **binary (.glb)** if offered — one file
+   instead of a folder of loose pieces.
+5. Set resolution/tessellation to **Coarse** or **Medium**. Fine is meant for
+   machining, not for a web viewer, and multiplies the file size for detail
+   no one will see at this scale.
+
+### Step 2 — check the size
+
+**Aim for under 5 MB, treat 10 MB as a hard ceiling.** Everyone who scrolls
+to that section downloads the whole thing, often on venue wifi.
+
+If it is too big, run it through [gltf-transform](https://gltf-transform.dev):
+
+```bash
+npx @gltf-transform/cli optimize big.glb robot.glb --compress draco
+```
+
+That routinely cuts a model by 80-90% with no visible difference.
+
+### Step 3 — drop it in
+
+Save it to `public/models/`, then add to the robot's markdown:
+
+```yaml
+hologramModel: '/models/voyager.glb'
+hologramCaption: 'Competition configuration. Fasteners hidden for clarity.'
+```
+
+The path starts at `/models/` with no `public` in it. Leave the field out and
+the whole hologram section simply does not appear.
+
+### Naming parts so the subsystem buttons work
+
+The viewer builds its subsystem list from the mesh names in the file, grouped
+by the first word. Parts named `Intake-Roller-1`, `Intake-Plate-2`,
+`Drivetrain-Wheel-3` produce two buttons: **Intake** and **Drivetrain**.
+
+Parts named `Part1`, `Part2`, `Part3` produce one useless **Part** button.
+Name things properly in Onshape before exporting. It is good CAD practice
+anyway, and here it is the difference between a feature and a dud.
+
+### What it does automatically
+
+- **Loads lazily.** Three.js and the model are only fetched when a reader
+  scrolls near the section, so other pages pay nothing.
+- **Frames any model.** Exports arrive at wildly different scales and origins,
+  so the viewer measures the bounding box, recentres, and positions the camera
+  to fit. You do not need to prepare the model.
+- **Degrades honestly.** No WebGL, a missing file, or a failed load each show
+  a plain message rather than an empty black box.
+- **Stops when off screen** so it is not draining a laptop battery from a
+  section nobody is looking at.
 
 ---
 

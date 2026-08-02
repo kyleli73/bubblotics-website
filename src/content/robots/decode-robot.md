@@ -65,6 +65,20 @@ specs:
 # onshapeEmbedUrl: 'https://cad.onshape.com/documents/XXXX/w/XXXX/e/XXXX'
 # onshapeCaption: '[PLACEHOLDER] Note what the viewer is showing, e.g. "Full competition assembly as of provincials."'
 
+# ── Hologram viewer ────────────────────────────────────────────────────
+# A translucent, glowing render of the real geometry that visitors can
+# orbit, explode, and pick apart subsystem by subsystem.
+#
+# This needs an exported .glb saved to public/models/. It is a snapshot, so
+# it does not update when the CAD changes; the Onshape embed above does.
+# Having both is the ideal: one is always current, one looks like the future.
+#
+# See the README, "Adding a hologram CAD viewer", for export steps and how
+# to keep the file small.
+#
+# hologramModel: '/models/decode-robot.glb'
+# hologramCaption: '[PLACEHOLDER] e.g. "Competition configuration. Fasteners hidden for clarity."'
+
 # YouTube video ID only, not the full URL. From
 # https://youtube.com/watch?v=dQw4w9WgXcQ the ID is dQw4w9WgXcQ.
 # videoId: 'XXXXXXXXXXX'

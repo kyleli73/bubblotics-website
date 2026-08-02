@@ -25,6 +25,7 @@ import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Bubbles from '../../components/Bubbles.astro';
 import CtaBand from '../../components/CtaBand.astro';
+import CadHologram from '../../components/CadHologram.astro';
 import Icon from '../../components/Icon.astro';
 import { url } from '../../lib/paths';
 
@@ -195,6 +196,21 @@ const { Content } = await render(robot);
           </p>
         </div>
       </section>
+    )
+  }
+
+  <!-- ═══ HOLOGRAM ═══════════════════════════════════════════════════
+       Only renders when `hologramModel` points at an exported .glb. This is
+       the styled, custom-rendered view; the Onshape embed above is the
+       always-current one. A robot can have both, either, or neither.
+  ══════════════════════════════════════════════════════════════════════ -->
+  {
+    d.hologramModel && (
+      <CadHologram
+        model={url(d.hologramModel)}
+        name={d.name}
+        caption={d.hologramCaption}
+      />
     )
   }
 
