@@ -23,11 +23,16 @@ import { defineConfig, passthroughImageService } from 'astro/config';
  * Set the two values below to match your repo, then commit.
  */
 
-// [PLACEHOLDER] Change to your real Pages URL once you know it.
-const SITE = 'https://bubblotics.github.io';
+// The GitHub Pages origin for the account that owns the repo.
+const SITE = 'https://kyleli73.github.io';
 
-// [PLACEHOLDER] '/bubblotics-website' for a project site, '/' for a user site
-// or custom domain. Must match your GitHub repo name exactly, including case.
+// The repo is a PROJECT site (github.com/kyleli73/bubblotics-website), so the
+// published pages live under /bubblotics-website/ rather than at the domain
+// root. This must match the repo name exactly, including case.
+//
+// If you later point a custom domain at the site (bubblotics.ca or similar),
+// change this to '/' and update SITE. Nothing else needs to change: every
+// internal link goes through url() in src/lib/paths.ts, which reads this.
 const BASE = '/bubblotics-website';
 
 export default defineConfig({
