@@ -80,6 +80,24 @@ const { model, name, caption } = Astro.props;
           <span class="holo-spinner" aria-hidden="true"></span>
           <p data-holo-message>Preparing the hologram…</p>
         </div>
+
+        <!--
+          Callout overlay, in the style of an engineering drawing: a label in
+          the margin, a thin leader line, and a dot on the part it names.
+
+          Both layers are built by the script and repositioned every frame,
+          because the anchor points are 3D positions projected to the screen.
+          They have to move as the model rotates or the lines point at
+          nothing.
+
+          aria-hidden: the same information is in the numbered subsystem
+          index below, which is real markup and reachable by keyboard. This
+          is the decorative duplicate.
+        -->
+        <svg class="holo-leaders" data-holo-leaders aria-hidden="true"></svg>
+        <div class="holo-callouts" data-holo-callouts aria-hidden="true"></div>
+
+        <p class="holo-hint" data-holo-hint hidden>Drag &middot; Scroll &middot; Click a part</p>
       </div>
 
       <!-- Controls. Hidden until the model is actually loaded. -->
@@ -112,7 +130,12 @@ const { model, name, caption } = Astro.props;
         </div>
       </div>
 
-      <!-- Subsystem list, filled in from the model's own part names. -->
+      <!--
+        Numbered subsystem index, filled in from the model's own part names.
+        Numbered rather than a row of pills because this is meant to read as
+        an engineering binder's parts list, and because the numbers tie each
+        entry to its callout on the drawing above.
+      -->
       <div class="holo-parts" data-holo-parts hidden>
         <p class="holo-parts-title">Subsystems</p>
         <ul data-holo-parts-list></ul>
@@ -229,6 +252,114 @@ const { model, name, caption } = Astro.props;
     }
   }
 
+  /* ── Callouts, engineering-drawing style ─────────────────────────── */
+
+  .holo-leaders,
+  .holo-callouts {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    /* Above the canvas, below the loading state. */
+    z-index: 2;
+  }
+
+  .holo-leaders {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* The thin line from label to part, and the dot where it lands. */
+  .holo-leaders :global(.leader) {
+    fill: none;
+    stroke: rgba(158, 208, 255, 0.42);
+    stroke-width: 1;
+    transition: stroke var(--dur-fast) var(--ease);
+  }
+
+  .holo-leaders :global(.leader-dot) {
+    fill: none;
+    stroke: rgba(158, 208, 255, 0.75);
+    stroke-width: 1.25;
+    transition:
+      stroke var(--dur-fast) var(--ease),
+      r var(--dur-fast) var(--ease);
+  }
+
+  /* Active is set from the subsystem index on hover or focus. */
+  .holo-leaders :global(.is-active .leader),
+  .holo-leaders :global(.is-active .leader-dot) {
+    stroke: var(--highlight);
+  }
+
+  /*
+   * :global is required on everything below. These elements are created by
+   * the script, so they never receive Astro's data-astro-cid scoping
+   * attribute, and a scoped selector would silently fail to match. The
+   * symptom was a two-line callout rendering as one run-together line.
+   */
+  .holo-callouts :global(.holo-callout) {
+    position: absolute;
+    /* Positioned by transform from the script; top/left stay at 0 so the
+       transform is the single source of truth for placement. */
+    top: 0;
+    left: 0;
+    max-width: 190px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    transition: opacity var(--dur) var(--ease);
+  }
+
+  .holo-callouts :global(.holo-callout-num) {
+    font-family: var(--font-display);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+  }
+
+  .holo-callouts :global(.holo-callout-name) {
+    font-size: 0.76rem;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: 0.04em;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+  }
+
+  .holo-callouts :global(.holo-callout.is-active .holo-callout-num),
+  .holo-callouts :global(.holo-callout.is-active .holo-callout-name) {
+    color: var(--highlight);
+  }
+
+  /* Callouts crowd badly on a narrow screen, and the model is small there
+     anyway. The numbered index below carries the same information. */
+  @media (max-width: 720px) {
+    .holo-leaders,
+    .holo-callouts {
+      display: none;
+    }
+  }
+
+  .holo-hint {
+    position: absolute;
+    left: 50%;
+    bottom: var(--sp-4);
+    transform: translateX(-50%);
+    z-index: 2;
+    pointer-events: none;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .holo-hint[hidden] {
+    display: none;
+  }
+
   /* ── Controls ────────────────────────────────────────────────────── */
 
   .holo-controls {
@@ -315,41 +446,60 @@ const { model, name, caption } = Astro.props;
     margin-bottom: var(--sp-3);
   }
 
+  /* A parts list, not a row of chips: numbered rows in columns, the way an
+     assembly drawing indexes its callouts. */
   .holo-parts ul {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-2);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+    gap: 2px var(--sp-4);
     list-style: none;
     padding: 0;
     margin: 0;
   }
 
   .holo-parts button {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-3);
+    width: 100%;
     min-height: 36px;
-    padding: var(--sp-1) var(--sp-3);
-    border-radius: var(--radius-pill);
-    border: 1px solid var(--line-strong);
-    background: rgba(89, 149, 237, 0.08);
+    padding: var(--sp-2) var(--sp-2);
+    text-align: left;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: none;
     color: var(--ink-muted);
     font-size: var(--step--1);
     font-weight: 600;
+    letter-spacing: 0.03em;
     transition:
-      background var(--dur-fast) var(--ease),
       color var(--dur-fast) var(--ease),
       border-color var(--dur-fast) var(--ease);
   }
 
+  .holo-parts :global(.holo-num) {
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
   .holo-parts button:hover {
     color: var(--ink);
-    border-color: var(--accent);
+    border-bottom-color: var(--line-strong);
   }
 
   /* aria-pressed doubles as the styling hook, so the visual state and the
      state announced to a screen reader can never disagree. */
   .holo-parts button[aria-pressed='true'] {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--ink-inverse);
+    color: var(--highlight);
+    border-bottom-color: var(--highlight);
+  }
+
+  .holo-parts button[aria-pressed='true'] :global(.holo-num) {
+    color: var(--highlight);
   }
 
   .holo-caption {
@@ -659,8 +809,27 @@ const { model, name, caption } = Astro.props;
      * if even those do not separate the model, hide the list entirely rather
      * than show one button that does nothing.
      */
-    const clean = (s: string) =>
-      (s || 'Part').replace(/^occurrence of\s+/i, '').replace(/_mesh$/, '').trim();
+    const clean = (s: string) => {
+      let n = (s || 'Part')
+        .replace(/^occurrence of\s+/i, '')
+        .replace(/_mesh$/, '')
+        .trim();
+
+      /*
+       * Three.js sanitises glTF names (spaces become underscores) and then
+       * appends _1, _2, _3 to every repeat so each object is uniquely named.
+       * An assembly with eight copies of "Part 3" arrives as Part_3,
+       * Part_3_1 ... Part_3_7, which would list the same component eight
+       * times and produce eight callouts pointing at eight identical
+       * brackets.
+       *
+       * A name ending in TWO underscore-number groups is base plus dedupe
+       * index, so drop the last one. A single group is part of the real name
+       * ("Part 3") and is kept.
+       */
+      n = n.replace(/^(.+_\d+)_\d+$/, '$1');
+      return n.replace(/_/g, ' ').trim();
+    };
 
     const groupBy = (fn: (name: string) => string) => {
       const map = new Map<string, any[]>();
@@ -771,17 +940,160 @@ const { model, name, caption } = Astro.props;
       }
     });
 
+    /* ── Callouts ──────────────────────────────────────────────────────
+     * A label in the margin, a leader line, and a dot on the part, like an
+     * annotated assembly drawing. The anchor is each subsystem's world-space
+     * centre, projected to screen coordinates every frame so the lines keep
+     * pointing at the right place as the model turns.
+     *
+     * Labels sit in two fixed columns rather than floating next to their
+     * anchors. Floating labels overlap constantly on a rotating model, and
+     * an overlapping label is worse than a longer leader line. This is also
+     * how real drawings do it.
+     */
+    const leadersSvg = root.querySelector<SVGSVGElement>('[data-holo-leaders]')!;
+    const calloutLayer = root.querySelector<HTMLElement>('[data-holo-callouts]')!;
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+
+    // Cap the number shown. Past about eight the drawing turns into a mess of
+    // crossing lines, and the numbered index below lists everything anyway.
+    const callouts = parts.slice(0, 8).map((part, i) => {
+      const group = document.createElementNS(SVG_NS, 'g');
+      const line = document.createElementNS(SVG_NS, 'polyline');
+      line.setAttribute('class', 'leader');
+      const dot = document.createElementNS(SVG_NS, 'circle');
+      dot.setAttribute('class', 'leader-dot');
+      dot.setAttribute('r', '3');
+      group.append(line, dot);
+      leadersSvg.appendChild(group);
+
+      const label = document.createElement('div');
+      label.className = 'holo-callout';
+      label.innerHTML =
+        `<span class="holo-callout-num">${String(i + 1).padStart(2, '0')}</span>` +
+        `<span class="holo-callout-name"></span>`;
+      label.querySelector('.holo-callout-name')!.textContent = part.name;
+      calloutLayer.appendChild(label);
+
+      // The centre of this subsystem, in the model's own coordinates.
+      const box = new THREE.Box3();
+      part.objects.forEach((o: any) => box.expandByObject(o));
+      const anchor = box.getCenter(new THREE.Vector3());
+
+      return { part, group, line, dot, label, anchor, index: i };
+    });
+
+    const projected = new THREE.Vector3();
+
+    function layoutCallouts() {
+      const w = stage.clientWidth;
+      const h = stage.clientHeight;
+      leadersSvg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+
+      // Project every anchor first, so sides and vertical order can be
+      // decided from the actual on-screen positions.
+      const points = callouts.map((c) => {
+        /*
+         * Recomputed from the live world bounding box rather than the anchor
+         * captured at load, so the leader follows a part as the exploded-view
+         * slider pushes it outward.
+         */
+        const box = new THREE.Box3();
+        c.part.objects.forEach((o: any) => box.expandByObject(o));
+        box.getCenter(projected);
+        const p = projected.project(camera);
+        return {
+          c,
+          x: (p.x * 0.5 + 0.5) * w,
+          y: (-p.y * 0.5 + 0.5) * h,
+          behind: p.z > 1,
+        };
+      });
+
+      /*
+       * Split into two even columns by horizontal order rather than by which
+       * half of the canvas each anchor happens to fall in. A robot sitting
+       * slightly off-centre puts nearly every anchor on one side, and all the
+       * labels then stack into one overlapping column while the other margin
+       * sits empty.
+       */
+      const byX = [...points].sort((a, b) => a.x - b.x);
+      const half = Math.ceil(byX.length / 2);
+      const left = byX.slice(0, half).sort((a, b) => a.y - b.y);
+      const right = byX.slice(half).sort((a, b) => a.y - b.y);
+
+      const MARGIN = 14;
+      const SLOT = 46;
+
+      const place = (list: typeof points, side: 'left' | 'right') => {
+        // Spread the labels down the column so they never overlap, then
+        // centre the stack vertically.
+        const total = list.length * SLOT;
+        let top = Math.max(MARGIN, (h - total) / 2);
+
+        list.forEach((p) => {
+          const labelW = 170;
+          const x = side === 'left' ? MARGIN : w - MARGIN - labelW;
+          const y = top;
+          top += SLOT;
+
+          p.c.label.style.transform = `translate(${x}px, ${y}px)`;
+          p.c.label.style.width = `${labelW}px`;
+          p.c.label.style.textAlign = side === 'left' ? 'left' : 'right';
+          p.c.label.style.alignItems = side === 'left' ? 'flex-start' : 'flex-end';
+          // Anything facing away from the camera is faded rather than hidden,
+          // so labels do not pop in and out while the model spins.
+          p.c.label.style.opacity = p.behind ? '0.25' : '1';
+          p.c.group.style.opacity = p.behind ? '0.25' : '1';
+
+          // Leader: out from the label, a short horizontal run, then a
+          // straight shot to the part. Three points, like a drawing.
+          const startX = side === 'left' ? x + labelW * 0.02 : x + labelW;
+          const startY = y + 22;
+          const elbowX = side === 'left' ? startX + 28 : startX - 28;
+
+          p.c.line.setAttribute(
+            'points',
+            `${startX},${startY} ${elbowX},${startY} ${p.x},${p.y}`
+          );
+          p.c.dot.setAttribute('cx', String(p.x));
+          p.c.dot.setAttribute('cy', String(p.y));
+        });
+      };
+
+      place(left, 'left');
+      place(right, 'right');
+    }
+
+    const setCalloutActive = (index: number, on: boolean) => {
+      const c = callouts[index];
+      if (!c) return;
+      c.label.classList.toggle('is-active', on);
+      c.group.classList.toggle('is-active', on);
+    };
+
+    root.querySelector<HTMLElement>('[data-holo-hint]')!.hidden = false;
+
     // ── Subsystem isolation
     if (parts.length > 1) {
       const list = root.querySelector<HTMLElement>('[data-holo-parts-list]')!;
       partsEl.hidden = false;
 
-      parts.forEach((part) => {
+      parts.forEach((part, partIndex) => {
         const li = document.createElement('li');
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.textContent = part.name;
+        btn.innerHTML = `<span class="holo-num">${String(partIndex + 1).padStart(2, '0')}</span><span></span>`;
+        btn.lastElementChild!.textContent = part.name;
         btn.setAttribute('aria-pressed', 'false');
+
+        // Hovering or focusing a row lights up its callout on the drawing.
+        // Focus as well as hover, so this works from the keyboard too.
+        const hi = (on: boolean) => setCalloutActive(partIndex, on);
+        btn.addEventListener('pointerenter', () => hi(true));
+        btn.addEventListener('pointerleave', () => hi(false));
+        btn.addEventListener('focus', () => hi(true));
+        btn.addEventListener('blur', () => hi(false));
 
         btn.addEventListener('click', () => {
           const on = btn.getAttribute('aria-pressed') === 'true';
@@ -818,6 +1130,10 @@ const { model, name, caption } = Astro.props;
       holoMaterial.uniforms.uTime.value = clock.getElapsedTime();
       controls.update();
       renderer.render(scene, camera);
+      // After render, so the callouts use the camera position that was just
+      // drawn. Doing it before leaves the labels one frame behind the model,
+      // which is visible as the leaders lagging during a drag.
+      layoutCallouts();
       requestAnimationFrame(frame);
     }
     frame();
