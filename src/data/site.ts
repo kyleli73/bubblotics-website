@@ -292,6 +292,7 @@ export const nav = [
   { label: 'Home', href: '/' },
   { label: 'Our Story', href: '/about/' },
   { label: 'Robots', href: '/robots/' },
+  { label: 'Software', href: '/software/' },
   { label: 'Awards', href: '/awards/' },
   { label: 'Gallery', href: '/gallery/' },
   { label: 'Updates', href: '/updates/' },

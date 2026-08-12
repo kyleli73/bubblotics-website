@@ -3,37 +3,49 @@ import { defineConfig, passthroughImageService } from 'astro/config';
 
 /*
  * ─────────────────────────────────────────────────────────────────────────
- *  READ THIS BEFORE YOUR FIRST DEPLOY
+ *  WHERE THE SITE LIVES
  * ─────────────────────────────────────────────────────────────────────────
  *
- * GitHub Pages serves a repo at one of two kinds of URL, and Astro needs to
- * know which one so it can write correct links into the built HTML.
+ * GitHub Pages serves a repo at one of two kinds of URL, and Astro has to
+ * know which, so it can write correct links into the built HTML:
  *
- *   1. PROJECT SITE (the common case)
- *      https://<user>.github.io/<repo-name>/
- *      Every page lives under a subfolder, so `base` must be '/<repo-name>'.
+ *   1. PROJECT SITE      https://kyleli73.github.io/bubblotics-website/
+ *      Everything sits under a subfolder, so `base` must be the repo name.
  *
- *   2. USER SITE or CUSTOM DOMAIN
- *      https://<user>.github.io/   or   https://bubblotics.ca/
- *      Pages live at the root, so `base` must be '/'.
+ *   2. CUSTOM DOMAIN     https://bubblotics.ca/
+ *      Everything sits at the root, so `base` must be '/'.
  *
- * Get this wrong and the site loads but every stylesheet, image, and link
- * 404s. It is the single most common GitHub Pages mistake.
+ * Get it wrong and the site loads but every stylesheet, image and link
+ * 404s. It is the most common GitHub Pages mistake there is.
  *
- * Set the two values below to match your repo, then commit.
+ * ── This is decided automatically ──────────────────────────────────────
+ * The switch is the presence of public/CNAME.
+ *
+ * That file is how you tell GitHub Pages to use a custom domain, so it is
+ * already the real signal, and reading it here means the two can never
+ * disagree. Add the file and the build moves to the domain root; delete it
+ * and the build goes back to the project-site subfolder. There is no second
+ * value to remember to change, which is exactly the mistake this avoids.
+ *
+ * To move to the custom domain:
+ *   1. Point the DNS at GitHub Pages (see README).
+ *   2. echo bubblotics.ca > public/CNAME
+ *   3. Commit. That is the whole switch.
  */
 
-// The GitHub Pages origin for the account that owns the repo.
-const SITE = 'https://kyleli73.github.io';
+import { existsSync, readFileSync } from 'node:fs';
 
-// The repo is a PROJECT site (github.com/kyleli73/bubblotics-website), so the
-// published pages live under /bubblotics-website/ rather than at the domain
-// root. This must match the repo name exactly, including case.
-//
-// If you later point a custom domain at the site (bubblotics.ca or similar),
-// change this to '/' and update SITE. Nothing else needs to change: every
-// internal link goes through url() in src/lib/paths.ts, which reads this.
-const BASE = '/bubblotics-website';
+const CNAME_PATH = new URL('./public/CNAME', import.meta.url);
+
+const customDomain = existsSync(CNAME_PATH)
+  ? readFileSync(CNAME_PATH, 'utf8').trim().split(/\s+/)[0]
+  : null;
+
+const SITE = customDomain
+  ? `https://${customDomain}`
+  : 'https://kyleli73.github.io';
+
+const BASE = customDomain ? '/' : '/bubblotics-website';
 
 export default defineConfig({
   site: SITE,

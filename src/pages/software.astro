@@ -1,0 +1,301 @@
+---
+/*
+ * Software.
+ *
+ * The tools the team has written. Structured like an engineering index
+ * rather than a marketing page: numbered entries, the problem each one
+ * solves, and the decisions behind them, because that is what a judge
+ * actually asks about.
+ */
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import CtaBand from '../components/CtaBand.astro';
+import Icon from '../components/Icon.astro';
+import { software, softwareIdeas } from '../data/software';
+import { team } from '../data/site';
+
+const statusLabel: Record<string, string> = {
+  live: 'Live',
+  'in-progress': 'In progress',
+  planned: 'Planned',
+};
+---
+
+<BaseLayout
+  title="Software"
+  description={`Tools built in-house by ${team.name}: offline-first match scouting, analytics, and the alliance picklist.`}
+>
+  <PageHero
+    eyebrow="Software"
+    title="Tools we <span class='accent-word'>wrote ourselves</span>"
+    lead="Scouting, analytics, and the alliance picklist. Built by students on the team, for problems we actually hit at competitions."
+  />
+
+  <section class="section section-tight">
+    <div class="shell">
+      {
+        software.map((app, i) => (
+          <article class="app" data-reveal="left">
+            <div class="app-head">
+              <span class="app-num">{String(i + 1).padStart(2, '0')}</span>
+              <div class="app-title">
+                <h2>{app.name}</h2>
+                <p class="app-tagline">{app.tagline}</p>
+              </div>
+              <span class:list={['tag', `is-${app.status}`]}>
+                {statusLabel[app.status]}
+              </span>
+            </div>
+
+            <div class="app-body">
+              <div class="app-main">
+                <p class="app-problem">{app.problem}</p>
+
+                <ul class="app-highlights">
+                  {app.highlights.map((h) => (
+                    <li>
+                      <span class="hl-icon">
+                        <Icon name="check" size={14} />
+                      </span>
+                      <span>
+                        <strong>{h.title}</strong>
+                        {h.body}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                {(app.url || app.repo) && (
+                  <div class="cluster app-actions">
+                    {app.url && (
+                      <a href={app.url} class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
+                        Open the app
+                        <Icon name="arrowUpRight" size={15} />
+                      </a>
+                    )}
+                    {app.repo && (
+                      <a href={app.repo} class="btn btn-ghost btn-sm" target="_blank" rel="noopener noreferrer">
+                        <Icon name="github" size={15} />
+                        Source
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <aside class="app-meta">
+                <p class="meta-label">Season</p>
+                <p class="meta-value">{app.period}</p>
+
+                <p class="meta-label">Built with</p>
+                <ul class="stack">
+                  {app.stack.map((s) => (
+                    <li class="tag">{s}</li>
+                  ))}
+                </ul>
+              </aside>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  {
+    softwareIdeas.length > 0 && (
+      <section class="section section-tight">
+        <div class="shell">
+          <div class="section-head">
+            <p class="eyebrow" data-reveal="fade">On the list</p>
+            <h2 data-reveal>Scoped, not built</h2>
+            <p data-reveal data-reveal-delay="0.06">
+              Things we have specced out and intend to build. Listed
+              separately on purpose: nothing here exists yet.
+            </p>
+          </div>
+
+          <div class="grid grid-3" data-reveal data-stagger>
+            {softwareIdeas.map((idea) => (
+              <article class="card idea">
+                <h3>{idea.name}</h3>
+                <p>{idea.body}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <CtaBand
+    eyebrow="Talk shop"
+    title="Want the details?"
+    body="Happy to walk another team through how any of this works, or to share what we learned building it. Email us."
+    primaryLabel="Contact us"
+    primaryHref="/contact/"
+    secondaryLabel="See the robots"
+    secondaryHref="/robots/"
+  />
+</BaseLayout>
+
+<style>
+  .app + .app {
+    margin-top: var(--sp-8);
+    padding-top: var(--sp-8);
+    border-top: 1px solid var(--line);
+  }
+
+  .app-head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    gap: var(--sp-4);
+    padding-bottom: var(--sp-5);
+    margin-bottom: var(--sp-5);
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .app-num {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 700;
+    line-height: 1;
+    color: rgba(89, 149, 237, 0.35);
+  }
+
+  .app-title h2 {
+    font-size: var(--step-2);
+    line-height: 1.1;
+    text-transform: none;
+    letter-spacing: -0.01em;
+  }
+
+  .app-tagline {
+    margin-top: var(--sp-2);
+    color: var(--ink-muted);
+    font-size: var(--step-0);
+  }
+
+  /* Status is colour-coded, but the word is always there too: colour alone
+     is not a label for anyone who cannot distinguish these hues. */
+  .tag.is-live {
+    border-color: rgba(120, 220, 150, 0.45);
+    background: rgba(120, 220, 150, 0.12);
+    color: #8fe6b0;
+  }
+
+  .tag.is-in-progress {
+    border-color: rgba(255, 161, 1, 0.45);
+    background: rgba(255, 161, 1, 0.12);
+    color: var(--highlight);
+  }
+
+  .tag.is-planned {
+    color: var(--ink-faint);
+  }
+
+  .app-body {
+    display: grid;
+    gap: var(--sp-6);
+  }
+
+  @media (min-width: 900px) {
+    .app-body {
+      grid-template-columns: 1fr 240px;
+      gap: var(--sp-8);
+    }
+  }
+
+  .app-problem {
+    color: var(--ink-muted);
+    font-size: var(--step-1);
+    line-height: 1.6;
+    max-width: 62ch;
+  }
+
+  .app-highlights {
+    list-style: none;
+    padding: 0;
+    margin: var(--sp-6) 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+  }
+
+  .app-highlights li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-3);
+    max-width: 68ch;
+  }
+
+  .hl-icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    margin-top: 2px;
+    border-radius: 50%;
+    background: rgba(89, 149, 237, 0.16);
+    color: var(--accent);
+  }
+
+  .app-highlights strong {
+    display: block;
+    color: var(--ink);
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .app-highlights span span,
+  .app-highlights li > span:last-child {
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+    line-height: 1.65;
+  }
+
+  .app-actions {
+    margin-top: var(--sp-6);
+  }
+
+  .meta-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: var(--sp-2);
+  }
+
+  .meta-label + .meta-value {
+    margin-bottom: var(--sp-5);
+  }
+
+  .meta-value {
+    color: var(--ink);
+    font-weight: 600;
+    font-size: var(--step--1);
+  }
+
+  .stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .idea h3 {
+    font-size: var(--step-1);
+    margin-bottom: var(--sp-3);
+  }
+
+  .idea p {
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+    line-height: 1.65;
+  }
+</style>

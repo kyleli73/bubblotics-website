@@ -7,7 +7,7 @@
  * once you move down the page. That transition is handled in the header's
  * own script at the bottom of this file.
  *
- * Nine nav items is a lot for a phone, so below 1024px the whole thing
+ * Ten nav items is a lot even for a laptop, so below 1180px the whole thing
  * collapses into a full-screen panel.
  */
 
@@ -237,7 +237,13 @@ const currentPath = Astro.url.pathname;
     transform: none;
   }
 
-  @media (min-width: 1024px) {
+  /*
+   * 1180px, not the usual 1024. Ten nav items plus the Sponsor Us button
+   * need about 1160px before the button gets pushed out of the header.
+   * If you add another nav item, re-measure: the failure is silent, the
+   * button just vanishes.
+   */
+  @media (min-width: 1180px) {
     .desktop-nav {
       display: block;
     }
@@ -446,7 +452,7 @@ const currentPath = Astro.url.pathname;
 
     // Crossing into desktop layout with the panel open would leave the
     // body unscrollable and no visible way to close it.
-    const desktop = window.matchMedia('(min-width: 1024px)');
+    const desktop = window.matchMedia('(min-width: 1180px)');
     desktop.addEventListener('change', (e) => {
       if (e.matches && panel.classList.contains('open')) setOpen(false);
     });
