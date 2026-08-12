@@ -13,6 +13,7 @@ import PageHero from '../components/PageHero.astro';
 import CtaBand from '../components/CtaBand.astro';
 import Icon from '../components/Icon.astro';
 import { software, softwareIdeas } from '../data/software';
+import { url } from '../lib/paths';
 import { team } from '../data/site';
 
 const statusLabel: Record<string, string> = {
@@ -69,7 +70,19 @@ const statusLabel: Record<string, string> = {
                 {(app.url || app.repo) && (
                   <div class="cluster app-actions">
                     {app.url && (
-                      <a href={app.url} class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
+                      /*
+                       * A url starting with "/" is somewhere on this site, so
+                       * it has to go through url() to pick up the base path.
+                       * Written literally it would point at the domain root
+                       * and 404 while the site is still served from a
+                       * subfolder.
+                       */
+                      <a
+                        href={app.url.startsWith('/') ? url(app.url) : app.url}
+                        class="btn btn-primary btn-sm"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         Open the app
                         <Icon name="arrowUpRight" size={15} />
                       </a>

@@ -37,9 +37,10 @@ export const software: SoftwareEntry[] = [
     tagline: 'Offline-first match scouting, analytics, and alliance picklist.',
     status: 'in-progress',
     period: '2025-26 season',
-    // [PLACEHOLDER] Fill these in once the app is deployed and the source is
-    // public. Leave them out and the buttons simply do not render.
-    // url: 'https://scout.bubblotics.ca',
+    // Served from this same site at /scout/. See
+    // scripts/sync-scouting-app.sh for how the build gets here.
+    url: '/scout/',
+    // [PLACEHOLDER] Add once the source is public.
     // repo: 'https://github.com/kyleli73/bubblotics-scouting',
     problem:
       'Scouting data is only worth anything if it is complete and trustworthy, and both fail in the same place: a noisy venue with no usable wifi. Scouts miss matches, entries get lost on a dropped connection, and by alliance selection nobody knows which numbers to believe. This app is built so neither happens.',

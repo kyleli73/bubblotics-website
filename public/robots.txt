@@ -1,0 +1,7 @@
+# The scouting app is served from /scout/ but is not meant to be found by
+# search. It has no login, so anyone who has the URL can use it, and it
+# should not turn up in results for people who were not given the link.
+User-agent: *
+Disallow: /scout/
+
+Sitemap: https://bubblotics.ca/sitemap-index.xml
