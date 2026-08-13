@@ -161,41 +161,75 @@ export const subteams = [
 /*
  * Outreach events. Newest first.
  */
+/*
+ * Outreach.
+ *
+ * ── A point of care ────────────────────────────────────────────────────
+ * The awards below belong to the FLL teams, not to Bubblotics. We mentor
+ * them; they won them. The copy says so explicitly and the page groups them
+ * under the teams' own names, because quietly absorbing someone else's
+ * trophies into your own record is exactly the kind of thing that makes a
+ * judge stop trusting a page.
+ */
 export const outreach = [
-  /*
-   * Mentoring is the real outreach story right now. Several members came up
-   * through FLL themselves, which is worth saying: judges consistently rate
-   * "we went back and taught the programme we came from" above a one-off
-   * demo day.
-   */
   {
     title: 'Mentoring five FIRST LEGO League teams',
-    date: 'Ongoing, 2025-26 season',
+    date: 'Ongoing, 2025-26 UNEARTHED season',
     audience: 'Five FLL teams across Aurora, Newmarket, Richmond Hill and Markham',
     description:
-      'We mentor the five FIRST LEGO League teams run by SolversMind Robotics, helping younger students with robot design, programming and the presentations judges ask them for. Several of us competed in FLL ourselves, which is where we learned most of what we bring to this team.',
-    image: null as string | null,
-  },
-  {
-    // [PLACEHOLDER] Kyle: fill in the other four team numbers and names.
-    // Only 52777 Solvers of X&Y is confirmed, so it is the only one named.
-    title: '[PLACEHOLDER] The teams we mentor',
-    date: '2025-26 season',
-    audience: 'FLL Team 52777 "Solvers of X&Y", plus four more',
-    description:
-      '[PLACEHOLDER] Add the numbers and names of the other four FLL teams, and one line each on what you help them with. Team 52777 Solvers of X&Y placed first in Ontario and took the Robot Design Finalist Award at the World Championship in Houston.',
-    image: null as string | null,
-  },
-  {
-    // [PLACEHOLDER] Delete this entry if there is nothing to put in it yet.
-    title: '[PLACEHOLDER: A demo or school visit]',
-    date: '[PLACEHOLDER: Month 2026]',
-    audience: '[PLACEHOLDER: Who was there, and roughly how many]',
-    description:
-      '[PLACEHOLDER] Once the team runs its own outreach event, describe it here: what you did, who it reached, and what came of it.',
+      'We mentor the five FIRST LEGO League teams run by SolversMind Robotics, working with younger students on robot design, programming, and the explanations judges ask them for. Several of us competed in FLL ourselves, so this is the programme that got us here rather than a side project. The results below are theirs, not ours.',
     image: null as string | null,
   },
 ];
+
+/*
+ * The FLL teams we mentor, and what they achieved in the 2025-26 UNEARTHED
+ * season. Source: solversmind.ca.
+ *
+ * [PLACEHOLDER] Only 52777 publishes a team number on the SolversMind site.
+ * Add the other four numbers when you have them.
+ */
+export type FllTeam = {
+  name: string;
+  number?: string;
+  awards: string[];
+};
+
+export const fllTeams: FllTeam[] = [
+  {
+    name: 'Solvers of X & Y',
+    number: '52777',
+    awards: [
+      "Champion's Award, 1st place (Regional)",
+      "Champion's Award, 1st place (Provincial)",
+      'Robot Design Finalist Award (World Championship)',
+    ],
+  },
+  {
+    name: 'Chrono Solvers',
+    awards: [
+      'Robot Performance Award, 1st place (Regional)',
+      "Champion's Award, 2nd place (Regional)",
+      'Breakthrough Award, 2nd place (Canada Cup)',
+    ],
+  },
+  {
+    name: 'Future Solvers',
+    awards: [
+      'Core Values Award, 1st place (Regional)',
+      'Alliance Challenge Award (Provincial)',
+    ],
+  },
+  {
+    name: 'Unknown Solvers',
+    awards: ['Robot Performance Award, 2nd place (Regional)'],
+  },
+  {
+    name: 'Solvers of Infinity',
+    awards: ['Robot Design Award, 2nd place (Regional)'],
+  },
+];
+
 
 
 /*

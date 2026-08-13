@@ -11,29 +11,32 @@ import PageHero from '../components/PageHero.astro';
 import CtaBand from '../components/CtaBand.astro';
 import Icon from '../components/Icon.astro';
 import Gallery from '../components/Gallery.astro';
-import { outreach, contact } from '../data/site';
+import { outreach, fllTeams, contact, team } from '../data/site';
 
 /*
- * [PLACEHOLDER] Replace with the team's real reach figures. These are the
- * numbers judges ask about, so keep them honest and keep a record of how
- * they were counted.
+ * Real figures only. [PLACEHOLDER] Add students reached and volunteer hours
+ * once the team tracks them; judges do ask how a number was counted, so keep
+ * a record of the method alongside it.
  */
 const impact = [
+  { value: String(fllTeams.length), label: 'FLL teams mentored' },
+  {
+    value: String(fllTeams.reduce((n, t) => n + t.awards.length, 0)),
+    label: 'Awards won by those teams',
+  },
   { value: '[XXX]', label: 'Students reached' },
-  { value: '[XX]', label: 'Events run' },
   { value: '[XXX]', label: 'Volunteer hours' },
-  { value: '[X]', label: 'Teams mentored' },
 ];
 ---
 
 <BaseLayout
   title="Outreach"
-  description="STEM demonstrations, school visits, and community events run by Bubblotics."
+  description="Bubblotics mentors five FIRST LEGO League teams at SolversMind Robotics in Aurora, Ontario."
 >
   <PageHero
     eyebrow="Outreach"
     title="Robotics <span class='accent-word'>past the shop door</span>"
-    lead="A robot that only ever gets seen by people already at a competition has not gone far enough. These are the events where we put it in front of everyone else."
+    lead="Right now our outreach is mentoring: five FIRST LEGO League teams at SolversMind, several of which are where our own members started. As we run our own events, they will be listed here too."
   />
 
   <!-- ═══ IMPACT NUMBERS ═════════════════════════════════════════════ -->
@@ -50,9 +53,9 @@ const impact = [
         }
       </ul>
       <p class="impact-note faint">
-        <span class="ph-tag">[Placeholder]</span> Replace these figures in
-        <code>src/pages/outreach.astro</code>. Keep a record of how each was
-        counted; judges do ask.
+        The awards belong to the teams we mentor, not to us.
+        <span class="ph-tag">[Placeholder]</span> Students reached and
+        volunteer hours still need real numbers.
       </p>
     </div>
   </section>
@@ -104,6 +107,44 @@ const impact = [
     </div>
   </section>
 
+  <!-- ═══ THE TEAMS WE MENTOR ════════════════════════════════════════
+       Their names, their awards, clearly attributed to them.
+  ══════════════════════════════════════════════════════════════════════ -->
+  <section class="section section-tight">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow" data-reveal="fade">Who we work with</p>
+        <h2 data-reveal>The teams we <span class="accent-word">mentor</span></h2>
+        <p data-reveal data-reveal-delay="0.06">
+          Five FIRST LEGO League teams at {team.parentOrg}, and what they
+          achieved in the 2025-26 UNEARTHED season. These are their results,
+          not ours.
+        </p>
+      </div>
+
+      <div class="grid grid-3" data-reveal data-stagger>
+        {
+          fllTeams.map((t) => (
+            <article class="card fll">
+              <div class="fll-head">
+                <h3>{t.name}</h3>
+                {t.number && <span class="tag">#{t.number}</span>}
+              </div>
+              <ul class="fll-awards">
+                {t.awards.map((a) => (
+                  <li>
+                    <Icon name="trophy" size={13} />
+                    {a}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
   <!-- ═══ BOOK US ════════════════════════════════════════════════════ -->
   <section class="section section-tight">
     <div class="shell">
@@ -112,9 +153,10 @@ const impact = [
           <p class="eyebrow">Invite us</p>
           <h2>Want the robot at your school or event?</h2>
           <p class="book-body">
-            We bring a competition robot, a driver station, and students who
-            can explain how all of it works. Classrooms, libraries, community
-            fairs, scout groups. Reach out and tell us the date.
+            We can bring our offseason robot, a driver station, and students
+            who can explain how it works. Classrooms, libraries, community
+            fairs, scout groups. We are a rookie team, so we will be honest
+            about what we can and cannot do yet. Tell us the date.
           </p>
         </div>
 
@@ -258,6 +300,48 @@ const impact = [
     border-radius: var(--radius);
     overflow: hidden;
     border: 1px solid var(--line);
+  }
+
+  .fll {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .fll-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-4);
+  }
+
+  .fll-head h3 {
+    font-size: var(--step-1);
+    line-height: 1.2;
+  }
+
+  .fll-awards {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
+
+  .fll-awards li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-2);
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+    line-height: 1.5;
+  }
+
+  .fll-awards :global(svg) {
+    color: var(--highlight);
+    flex-shrink: 0;
+    margin-top: 3px;
   }
 
   /* ── Book us ─────────────────────────────────────────────────────── */
