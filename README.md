@@ -525,16 +525,28 @@ Only needed once, by whoever creates the repository.
 3. Under "Build and deployment", set **Source** to **GitHub Actions**.
    Not "Deploy from a branch". That is the older method and it ignores the
    workflow in this project entirely.
-4. Open `astro.config.mjs` and set the two values at the top:
+4. The site path is worked out automatically from whether `public/CNAME`
+   exists. No CNAME means the project-site path (`/bubblotics-website`); a
+   CNAME means the domain root. You do not edit `astro.config.mjs`.
 
-```js
-const SITE = 'https://YOUR-USERNAME.github.io';
-const BASE = '/YOUR-REPO-NAME';
-```
+### Moving to a custom domain
 
-`BASE` must match the repository name exactly, including capitalisation. If
-you use a custom domain (`bubblotics.ca`) or a user site
-(`username.github.io` with no repo path), set `BASE` to `'/'` instead.
+1. Point the DNS at GitHub Pages. For an apex domain that is four `A`
+   records and four `AAAA` records, plus a `CNAME` for `www`. The exact
+   values are in GitHub's docs, and there is a ready-to-import zone file in
+   the project history.
+   **Set them to "DNS only" if you use Cloudflare.** With Cloudflare's proxy
+   on, GitHub cannot complete its certificate check and visitors get an SSL
+   error instead of the site.
+2. **Set the domain in Settings → Pages → Custom domain, and save.**
+   This step is required and easy to miss. Because this repo publishes from
+   a GitHub Actions workflow rather than from a branch, GitHub ignores the
+   `CNAME` file completely: *"any existing CNAME file is ignored and is not
+   required"*. The file here only drives this project's own build path.
+3. `echo yourdomain > public/CNAME` and commit, so the build serves from the
+   domain root and every link matches.
+4. Tick **Enforce HTTPS** once the certificate has been issued, which takes
+   a few minutes after step 2.
 
 **Getting `BASE` wrong is the single most common GitHub Pages mistake.** The
 site loads, but every stylesheet, image, and link 404s. If the published site

@@ -21,16 +21,20 @@ import { defineConfig, passthroughImageService } from 'astro/config';
  * ── This is decided automatically ──────────────────────────────────────
  * The switch is the presence of public/CNAME.
  *
- * That file is how you tell GitHub Pages to use a custom domain, so it is
- * already the real signal, and reading it here means the two can never
- * disagree. Add the file and the build moves to the domain root; delete it
- * and the build goes back to the project-site subfolder. There is no second
- * value to remember to change, which is exactly the mistake this avoids.
+ * Add the file and the build moves to the domain root; delete it and the
+ * build goes back to the project-site subfolder. One value, in one place.
  *
- * To move to the custom domain:
+ * IMPORTANT, AND EASY TO GET WRONG: this file does NOT configure GitHub
+ * Pages. That is true when Pages publishes from a branch, but this repo
+ * publishes from a GitHub Actions workflow, and GitHub's docs are explicit
+ * that in that case "any existing CNAME file is ignored and is not
+ * required". The domain has to be set by hand in Settings -> Pages ->
+ * Custom domain. Here the file is purely this build's own switch.
+ *
+ * To move to a custom domain:
  *   1. Point the DNS at GitHub Pages (see README).
- *   2. echo bubblotics.ca > public/CNAME
- *   3. Commit. That is the whole switch.
+ *   2. Set the domain in Settings -> Pages -> Custom domain.
+ *   3. echo yourdomain > public/CNAME and commit, so the build agrees.
  */
 
 import { existsSync, readFileSync } from 'node:fs';
