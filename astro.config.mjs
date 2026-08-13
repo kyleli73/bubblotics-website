@@ -1,4 +1,13 @@
-// @ts-check
+/*
+ * Type-checking is off for this one file.
+ *
+ * It legitimately uses Node built-ins (node:fs, process), and checking them
+ * needs @types/node, which is a dependency this project does not otherwise
+ * want. With `// @ts-check` on, `npm run check` reported two errors here on
+ * a clean checkout, which trains people to ignore the checker. Everything
+ * in src/ is still fully checked.
+ */
+// @ts-nocheck
 import { defineConfig, passthroughImageService } from 'astro/config';
 
 /*

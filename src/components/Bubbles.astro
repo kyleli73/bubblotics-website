@@ -248,12 +248,20 @@ const bubbles = Array.from({ length: count }, (_, i) => {
   }
 
   function setup(root: HTMLElement) {
-    const canvas = root.querySelector<HTMLCanvasElement>('[data-bubble-canvas]');
+    const el = root.querySelector<HTMLCanvasElement>('[data-bubble-canvas]');
     const fallback = root.querySelector<HTMLElement>('[data-bubble-fallback]');
-    if (!canvas) return;
+    if (!el) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = el.getContext('2d');
     if (!ctx) return; // very old browser: keep the CSS bubbles
+
+    /*
+     * Re-bound to a non-nullable const after the guard. The functions below
+     * are closures, and TypeScript cannot carry a null check across a
+     * closure boundary, so referring to the original nullable binding
+     * inside them is an error even though it can never be null by then.
+     */
+    const canvas: HTMLCanvasElement = el;
 
     const tone = root.dataset.tone === 'subtle' ? 'subtle' : 'full';
     const baseCount = Number(root.dataset.bubbleCount ?? 18);

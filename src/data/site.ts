@@ -22,23 +22,35 @@ export const team = {
 
   program: 'FIRST Tech Challenge',
 
-  // [PLACEHOLDER] Add the city. The province is right if you compete at
-  // Ontario provincials, but confirm it.
-  location: '[PLACEHOLDER: City], Ontario, Canada',
+  location: 'Aurora, Ontario, Canada',
 
-  // [PLACEHOLDER] The year the team first competed.
-  rookieYear: '[PLACEHOLDER: 20XX]',
+  /*
+   * The team has not competed yet. BIOBUZZ (2026-27) will be the first
+   * season. Everything on this site is written to say that plainly rather
+   * than imply a history that does not exist: a judge or sponsor who finds
+   * one invented claim stops believing the rest of the page.
+   */
+  rookieYear: '2026-27',
+  rookieSeason: 'BIOBUZZ',
+  hasCompeted: false,
+
+  /** The organisation the team is part of. */
+  parentOrg: 'SolversMind Robotics',
+  parentOrgUrl: 'https://solversmind.ca/',
 
   tagline: 'Engineered to rise.',
 
   // One sentence, used in page metadata and link previews.
   metaDescription:
-    'Bubblotics is FIRST Tech Challenge Team 35858, a student robotics team building competition robots and running STEM outreach in Ontario.',
+    'Bubblotics is FIRST Tech Challenge Team 35858, a rookie student robotics team in Aurora, Ontario, part of SolversMind Robotics. First season: BIOBUZZ 2026-27.',
 
-  // Two to four sentences for the home page "who we are" block.
-  // [PLACEHOLDER] Rewrite in the team's own words.
+  /*
+   * Home page "who we are" block. Written for a team whose first season has
+   * not started, so it talks about what is being built rather than about
+   * results that do not exist yet.
+   */
   blurb:
-    'We are a student-run FIRST Tech Challenge team designing, building, and programming a new competition robot every season. Our work runs from CAD and machining through autonomous software and scouting analytics, and it carries into the classrooms and community events where we introduce younger students to engineering. Every season we set out to build something that holds up under pressure and to bring more people with us while we do it.',
+    'We are a rookie FIRST Tech Challenge team of fifteen students in Aurora, Ontario, part of SolversMind Robotics. BIOBUZZ will be our first competition season. We are spending the run-up building the things a team needs before its first match: an offseason robot to learn on, our own scouting software, and four subteams that each know what they are responsible for. Between now and then we mentor five FIRST LEGO League teams, which is where several of us started.',
 };
 
 /*
@@ -48,11 +60,15 @@ export const team = {
  * `suffix` ("+", "%") and any wording in `label`.
  */
 export const stats = [
-  // [PLACEHOLDER] Replace all four with real figures.
-  { value: 4, suffix: '', label: 'Seasons competed' },
-  { value: 12, suffix: '', label: 'Awards won' },
-  { value: 45, suffix: '+', label: 'Members and alumni' },
-  { value: 2, suffix: '', label: 'Championship appearances' },
+  /*
+   * Only things that are true today. A rookie team's honest figures are
+   * seasons: 0, awards: 0, championships: 0, and three counters animating
+   * up to zero is a worse look than not having them. These are the numbers
+   * that are actually non-zero and actually mean something.
+   */
+  { value: 15, suffix: '', label: 'Students on the team' },
+  { value: 5, suffix: '', label: 'FLL teams we mentor' },
+  { value: 4, suffix: '', label: 'Subteams' },
 ];
 
 /*
@@ -88,50 +104,31 @@ export type SeasonEntry = {
 };
 
 export const seasons: SeasonEntry[] = [
-  // [PLACEHOLDER] This entire array is invented. Replace it with the team's
-  // real competition history. Delete any season that doesn't apply.
-  {
-    year: '2025-26',
-    game: 'DECODE',
-    robot: '[PLACEHOLDER: Robot name]',
-    robotSlug: 'decode-robot',
-    competitions: [
-      {
-        event: '[PLACEHOLDER: Qualifier name]',
-        location: '[PLACEHOLDER: City, ON]',
-        date: '[PLACEHOLDER: Month 20XX]',
-        record: '[PLACEHOLDER: 0-0-0]',
-        awards: [
-          {
-            award: '[PLACEHOLDER: Award name]',
-            detail: '[PLACEHOLDER: One line on why it was won.]',
-            standout: true,
-          },
-        ],
-      },
-      {
-        event: '[PLACEHOLDER: Ontario Provincial Championship]',
-        location: '[PLACEHOLDER: City, ON]',
-        date: '[PLACEHOLDER: Month 20XX]',
-        awards: [{ award: '[PLACEHOLDER: Award name]' }],
-      },
-    ],
-  },
-  {
-    year: '2024-25',
-    game: 'INTO THE DEEP',
-    robot: '[PLACEHOLDER: Robot name]',
-    robotSlug: 'into-the-deep-robot',
-    competitions: [
-      {
-        event: '[PLACEHOLDER: Qualifier name]',
-        location: '[PLACEHOLDER: City, ON]',
-        date: '[PLACEHOLDER: Month 20XX]',
-        awards: [{ award: '[PLACEHOLDER: Award name]' }],
-      },
-    ],
-  },
+  /*
+   * Empty on purpose. Bubblotics has not competed yet, so there is no
+   * record to show. The Awards page reads this and renders a rookie state
+   * rather than an empty table.
+   *
+   * After your first event, add an entry like this:
+   *
+   *   {
+   *     year: '2026-27',
+   *     game: 'BIOBUZZ',
+   *     robot: 'Robot name',
+   *     robotSlug: 'robot-name',
+   *     competitions: [
+   *       {
+   *         event: 'Ontario qualifier name',
+   *         location: 'City, ON',
+   *         date: 'Month 2027',
+   *         record: '7-3-0, ranked 4th of 36',
+   *         awards: [{ award: 'Award name', detail: 'Why.', standout: true }],
+   *       },
+   *     ],
+   *   },
+   */
 ];
+
 
 /*
  * Subteams for the About page. The split below is typical for an FTC team of
@@ -165,30 +162,41 @@ export const subteams = [
  * Outreach events. Newest first.
  */
 export const outreach = [
-  // [PLACEHOLDER] Replace with real events.
+  /*
+   * Mentoring is the real outreach story right now. Several members came up
+   * through FLL themselves, which is worth saying: judges consistently rate
+   * "we went back and taught the programme we came from" above a one-off
+   * demo day.
+   */
   {
-    title: '[PLACEHOLDER: Elementary school STEM demo]',
-    date: '[PLACEHOLDER: Month 20XX]',
-    audience: '[PLACEHOLDER: ~80 students, grades 4-6]',
+    title: 'Mentoring five FIRST LEGO League teams',
+    date: 'Ongoing, 2025-26 season',
+    audience: 'Five FLL teams across Aurora, Newmarket, Richmond Hill and Markham',
     description:
-      '[PLACEHOLDER: What the team did, who it reached, and what came of it. Two or three sentences.]',
+      'We mentor the five FIRST LEGO League teams run by SolversMind Robotics, helping younger students with robot design, programming and the presentations judges ask them for. Several of us competed in FLL ourselves, which is where we learned most of what we bring to this team.',
     image: null as string | null,
   },
   {
-    title: '[PLACEHOLDER: Community robotics showcase]',
-    date: '[PLACEHOLDER: Month 20XX]',
-    audience: '[PLACEHOLDER: Open to the public]',
-    description: '[PLACEHOLDER: Description of the event.]',
+    // [PLACEHOLDER] Kyle: fill in the other four team numbers and names.
+    // Only 52777 Solvers of X&Y is confirmed, so it is the only one named.
+    title: '[PLACEHOLDER] The teams we mentor',
+    date: '2025-26 season',
+    audience: 'FLL Team 52777 "Solvers of X&Y", plus four more',
+    description:
+      '[PLACEHOLDER] Add the numbers and names of the other four FLL teams, and one line each on what you help them with. Team 52777 Solvers of X&Y placed first in Ontario and took the Robot Design Finalist Award at the World Championship in Houston.',
     image: null as string | null,
   },
   {
-    title: '[PLACEHOLDER: FLL team mentorship]',
-    date: '[PLACEHOLDER: Ongoing]',
-    audience: '[PLACEHOLDER: 2 rookie FIRST LEGO League teams]',
-    description: '[PLACEHOLDER: Description of the mentorship.]',
+    // [PLACEHOLDER] Delete this entry if there is nothing to put in it yet.
+    title: '[PLACEHOLDER: A demo or school visit]',
+    date: '[PLACEHOLDER: Month 2026]',
+    audience: '[PLACEHOLDER: Who was there, and roughly how many]',
+    description:
+      '[PLACEHOLDER] Once the team runs its own outreach event, describe it here: what you did, who it reached, and what came of it.',
     image: null as string | null,
   },
 ];
+
 
 /*
  * Sponsors, grouped by tier. An empty `members` array renders as a clearly
@@ -211,40 +219,45 @@ export type SponsorTier = {
 
 export const sponsorTiers: SponsorTier[] = [
   {
-    name: 'Title',
-    // [PLACEHOLDER] Set real amounts, or delete the line if the team would
-    // rather not publish them.
-    contribution: '[PLACEHOLDER: $2,500+]',
+    name: 'Founding partner',
+    /*
+     * No dollar figures anywhere yet, by the team's decision. An amount you
+     * have to walk back later is worse than no amount, and a rookie team
+     * does not have a season's real costs to quote from.
+     */
+    contribution: 'Our home organisation',
     benefits: [
-      'Largest logo placement on the robot and team apparel',
-      'Named recognition in the engineering portfolio and at every event',
-      'Featured placement on this website',
+      'Provides our workspace, tools and mentorship',
+      'Runs the FLL programme most of our members came up through',
+      'Named on every page of this site',
     ],
-    members: [],
+    members: [
+      {
+        name: 'SolversMind Robotics',
+        url: 'https://solversmind.ca/',
+        // [PLACEHOLDER] Save their logo to public/images/sponsors/ and add:
+        // logo: '/images/sponsors/solversmind.png',
+      },
+    ],
   },
   {
-    name: 'Gold',
-    contribution: '[PLACEHOLDER: $1,000+]',
+    name: 'Season sponsor',
+    contribution: 'Open',
     benefits: [
-      'Logo on the robot and team apparel',
-      'Recognition in the engineering portfolio',
+      'Logo on the robot and on team apparel',
+      'Named in our engineering portfolio and at every event we attend',
       'Logo on this website',
     ],
     members: [],
   },
   {
-    name: 'Silver',
-    contribution: '[PLACEHOLDER: $500+]',
-    benefits: ['Logo on team apparel', 'Logo on this website'],
-    members: [],
-  },
-  {
-    name: 'Community',
-    contribution: '[PLACEHOLDER: Any amount, or an in-kind donation]',
+    name: 'Community supporter',
+    contribution: 'Any amount, or an in-kind donation of parts or machining',
     benefits: ['Named on this website', 'Thanked in our season recap'],
     members: [],
   },
 ];
+
 
 /*
  * Contact and social. Confirmed by the team:

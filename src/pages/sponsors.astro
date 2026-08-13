@@ -23,13 +23,16 @@ const hasAnySponsor = sponsorTiers.some((t) => t.members.length > 0);
  * specific list than to "support our team", so replace these with the team's
  * real costs.
  */
-const costs = [
-  { item: 'Season registration and event fees', amount: '[PLACEHOLDER: $X,XXX]' },
-  { item: 'Robot parts, motors, and control system', amount: '[PLACEHOLDER: $X,XXX]' },
-  { item: 'Tooling, spares, and consumables', amount: '[PLACEHOLDER: $XXX]' },
-  { item: 'Travel to provincials and beyond', amount: '[PLACEHOLDER: $X,XXX]' },
-  { item: 'Outreach kits and demo materials', amount: '[PLACEHOLDER: $XXX]' },
-];
+/*
+ * No cost breakdown yet, by the team's decision. A rookie team has not run a
+ * season, so any figure here would be a guess, and a number you have to walk
+ * back in front of a sponsor is worse than no number.
+ *
+ * When you do have real costs, put them back and re-add the "Where the money
+ * goes" section: a specific list is far more persuasive than "support our
+ * team".
+ */
+
 
 const why = [
   {
@@ -57,7 +60,7 @@ const why = [
   <PageHero
     eyebrow="Sponsors"
     title="Back the <span class='accent-word'>team</span>"
-    lead="Every part on our robot was paid for by someone who decided a student team was worth backing. Here is exactly where that money goes and what we can offer in return."
+    lead="We are a rookie team heading into our first season. Sponsorship is what turns that into a robot, a registration fee, and a way to get to events."
   />
 
   <!-- ═══ CURRENT SPONSORS ═══════════════════════════════════════════ -->
@@ -71,9 +74,10 @@ const why = [
         {
           !hasAnySponsor && (
             <p data-reveal data-reveal-delay="0.06">
-              We are building our first roster of sponsors. Whoever comes on
-              board first gets top placement here, on the robot, and on
-              everything we wear.
+              SolversMind Robotics is our home organisation and provides our
+              space, tools and mentorship. Beyond that we are building our
+              first roster of sponsors, and whoever comes on board first gets
+              top placement here, on the robot, and on everything we wear.
             </p>
           )
         }
@@ -151,34 +155,6 @@ const why = [
             </article>
           ))
         }
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══ WHERE THE MONEY GOES ═══════════════════════════════════════ -->
-  <section class="section section-tight">
-    <div class="shell">
-      <div class="budget-layout">
-        <div class="section-head">
-          <p class="eyebrow" data-reveal="fade">Transparency</p>
-          <h2 data-reveal>Where the money goes</h2>
-          <p data-reveal data-reveal-delay="0.06">
-            A season costs what it costs. Here is the breakdown, so you know
-            exactly what you would be funding.
-          </p>
-        </div>
-
-        <ul class="budget" data-reveal="left">
-          {
-            costs.map((c) => (
-              <li>
-                <span class="budget-item">{c.item}</span>
-                <span class="budget-dots" aria-hidden="true" />
-                <span class="budget-amount">{c.amount}</span>
-              </li>
-            ))
-          }
-        </ul>
       </div>
     </div>
   </section>
@@ -368,60 +344,6 @@ const why = [
     color: var(--ink-muted);
     font-size: var(--step--1);
     line-height: 1.65;
-  }
-
-  /* ── Budget ──────────────────────────────────────────────────────── */
-
-  .budget-layout {
-    display: grid;
-    gap: var(--sp-6);
-  }
-
-  @media (min-width: 900px) {
-    .budget-layout {
-      grid-template-columns: 0.85fr 1.15fr;
-      gap: var(--sp-8);
-      align-items: start;
-    }
-
-    .budget-layout .section-head {
-      margin-bottom: 0;
-    }
-  }
-
-  .budget {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  .budget li {
-    display: flex;
-    align-items: baseline;
-    gap: var(--sp-3);
-    padding-block: var(--sp-3);
-    border-bottom: 1px solid var(--line);
-  }
-
-  .budget-item {
-    color: var(--ink-muted);
-    font-size: var(--step--1);
-  }
-
-  /* A dotted leader line, like a table of contents. Pushes the amount to
-     the right edge and ties the two together across the gap. */
-  .budget-dots {
-    flex: 1;
-    border-bottom: 1px dotted var(--line-strong);
-    min-width: var(--sp-4);
-  }
-
-  .budget-amount {
-    font-family: var(--font-display);
-    font-weight: 700;
-    color: var(--highlight);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
   }
 
   /* ── Final CTA ───────────────────────────────────────────────────── */

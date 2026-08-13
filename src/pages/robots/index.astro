@@ -30,9 +30,9 @@ const rest = all.filter((r) => r.id !== featured?.id);
   description="Every competition robot Bubblotics has built, season by season, with design notes and results."
 >
   <PageHero
-    eyebrow="The fleet"
-    title="Every robot, <span class='accent-word'>every season</span>"
-    lead="One game a year, one machine built for it. Each page covers what we designed, why we designed it that way, and how it held up on the field."
+    eyebrow="The build"
+    title="What we have <span class='accent-word'>built so far</span>"
+    lead="We are a rookie team, so this is a short list. It starts with the offseason robot we are learning on, and grows from our first competition season onward."
   />
 
   {
@@ -64,7 +64,7 @@ const rest = all.filter((r) => r.id !== featured?.id);
             </div>
 
             <div class="spotlight-body">
-              <p class="eyebrow">Current season</p>
+              <p class="eyebrow">Current build</p>
               <h2 class="spotlight-name">{featured.data.name}</h2>
               <p class="spotlight-meta">
                 {featured.data.year}
@@ -104,7 +104,7 @@ const rest = all.filter((r) => r.id !== featured?.id);
       {
         rest.length > 0 && (
           <div class="section-head">
-            <p class="eyebrow" data-reveal="fade">Previous seasons</p>
+            <p class="eyebrow" data-reveal="fade">Earlier builds</p>
             <h2 data-reveal>The ones that came before</h2>
           </div>
         )

@@ -15,7 +15,7 @@ import PageHero from '../components/PageHero.astro';
 import CtaBand from '../components/CtaBand.astro';
 import Icon from '../components/Icon.astro';
 import StatStrip from '../components/StatStrip.astro';
-import { seasons } from '../data/site';
+import { seasons, team } from '../data/site';
 import { url } from '../lib/paths';
 
 // Totals are derived, not typed in, so they can never disagree with the list
@@ -34,7 +34,11 @@ const totalEvents = seasons.reduce((n, s) => n + s.competitions.length, 0);
   <PageHero
     eyebrow="Results"
     title="Awards and <span class='accent-word'>results</span>"
-    lead={`${totalAwards} awards across ${totalEvents} events. The full record, season by season, including the ones that did not go our way.`}
+    lead={
+      seasons.length === 0
+        ? `We have not competed yet. ${team.rookieSeason} ${team.rookieYear} will be our first season, and every event and award will be recorded here as it happens, including the ones that do not go our way.`
+        : `${totalAwards} awards across ${totalEvents} events. The full record, season by season, including the ones that did not go our way.`
+    }
   />
 
   <StatStrip />
@@ -118,10 +122,12 @@ const totalEvents = seasons.reduce((n, s) => n + s.competitions.length, 0);
       {
         seasons.length === 0 && (
           <div class="card empty-state">
-            <h3>No results recorded yet</h3>
+            <h3>Our first season starts with {team.rookieSeason}</h3>
             <p>
-              <span class="ph-tag">[Placeholder]</span> Add seasons to the
-              <code>seasons</code> array in <code>src/data/site.ts</code>.
+              Bubblotics is a rookie team. There is nothing in this record yet
+              because we have not been to an event yet, and we would rather
+              show you an empty page than invent one. Check back after our
+              first competition.
             </p>
           </div>
         )
