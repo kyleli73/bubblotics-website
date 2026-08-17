@@ -86,6 +86,21 @@ if (image) {
     <link rel="icon" type={faviconType} href={faviconHref} />
     <link rel="apple-touch-icon" href={faviconHref} />
 
+    <!--
+      Referrer policy, set here because GitHub Pages cannot send response
+      headers and this is one of the few security controls a static page can
+      genuinely set for itself. It stops the full URL of our pages leaking to
+      third parties we link out to; they get the origin only.
+
+      The rest of the usual set (HSTS, X-Frame-Options, X-Content-Type-Options)
+      CANNOT be done this way. frame-ancestors and X-Frame-Options are ignored
+      when they appear in a meta tag, so a meta CSP here would look like
+      clickjacking protection while providing none, which is worse than
+      nothing. Those need real headers, which means putting a proxy in front.
+      See the README, "Security headers".
+    -->
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
     <!-- The browser chrome colour on mobile, matched to the page. -->
     <meta name="theme-color" content="#102542" />
 

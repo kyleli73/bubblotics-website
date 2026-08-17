@@ -24,7 +24,8 @@ site. You do not need to understand the code.
 12. [First-time GitHub Pages setup](#first-time-github-pages-setup)
 13. [Finding every placeholder](#finding-every-placeholder)
 14. [Design and brand notes](#design-and-brand-notes)
-15. [When something breaks](#when-something-breaks)
+15. [Security headers](#security-headers)
+16. [When something breaks](#when-something-breaks)
 
 ---
 
@@ -647,6 +648,63 @@ keep it working.
 nav with a visible focus ring, 44px minimum touch targets, and contrast ratios
 checked against the dark background. If you change a colour, check the
 contrast. Half of any FTC audience is reading this on a phone in a bright gym.
+
+---
+
+## Security headers
+
+The site sends no HTTP security headers. That is not an oversight: **GitHub
+Pages does not let you set response headers at all.** There is no config file
+for it, and a `_headers` file (which works on Netlify and Cloudflare Pages)
+is simply ignored.
+
+What a static page *can* set for itself is in `BaseLayout.astro`:
+
+- **Referrer-Policy**, via `<meta name="referrer">`. Real and effective.
+
+What it **cannot**:
+
+- **HSTS** — header only. No meta equivalent exists.
+- **X-Frame-Options** and CSP `frame-ancestors` — both are ignored inside a
+  meta tag. A meta CSP would *look* like clickjacking protection while
+  providing none, which is worse than having nothing, so we do not ship one.
+- **X-Content-Type-Options** — header only.
+
+### Is this worth fixing?
+
+For this site, honestly: not urgently. It is a static brochure with no login,
+no form that posts anywhere, and no user data. Clickjacking a page of robot
+photos achieves very little.
+
+It becomes worth fixing the moment the site handles data. The scouting app
+did, which is one of the reasons it moved to its own host, where proper
+headers can be set.
+
+### How to fix it, when you want to
+
+DNS is already on Cloudflare, so the plumbing exists:
+
+1. Set the apex and `www` records to **Proxied** (orange cloud).
+2. **SSL/TLS mode must be Full (strict).** Flexible causes an infinite
+   redirect loop with GitHub Pages. This is the step that breaks sites.
+3. Add a Transform Rule -> Modify Response Header, adding:
+
+   ```
+   Strict-Transport-Security: max-age=31536000; includeSubDomains
+   X-Frame-Options: DENY
+   X-Content-Type-Options: nosniff
+   Permissions-Policy: camera=(), microphone=(), geolocation=()
+   ```
+
+Two warnings. Enabling the proxy on a working site can break it, and the
+failure (a redirect loop) is not always immediate. Change one thing, check
+the site, then change the next. And **leave any subdomain pointing at another
+host on DNS-only (grey cloud)** — proxying in front of a provider that issues
+its own certificate causes cert errors.
+
+Skip CSP unless you have time to iterate. This site loads a WebAssembly Draco
+decoder and can embed Onshape and YouTube, and a strict policy will silently
+break one of them.
 
 ---
 
