@@ -21,11 +21,12 @@ site. You do not need to understand the code.
 9. [Adding photos](#adding-photos)
 10. [Updating awards, sponsors, and contact info](#updating-awards-sponsors-and-contact-info)
 11. [Publishing changes](#publishing-changes)
-12. [First-time GitHub Pages setup](#first-time-github-pages-setup)
-13. [Finding every placeholder](#finding-every-placeholder)
-14. [Design and brand notes](#design-and-brand-notes)
-15. [Security headers](#security-headers)
-16. [When something breaks](#when-something-breaks)
+12. [Where the site's settings live](#where-the-sites-settings-live)
+13. [First-time GitHub Pages setup](#first-time-github-pages-setup)
+14. [Finding every placeholder](#finding-every-placeholder)
+15. [Design and brand notes](#design-and-brand-notes)
+16. [Security headers](#security-headers)
+17. [When something breaks](#when-something-breaks)
 
 ---
 
@@ -517,6 +518,18 @@ offline, not the whole website.
 
 ---
 
+## Where the site's settings live
+
+| What | Where |
+|---|---|
+| Source code, deploys | [github.com/kyleli73/bubblotics-website](https://github.com/kyleli73/bubblotics-website) |
+| Build logs | [Actions tab](https://github.com/kyleli73/bubblotics-website/actions) |
+| Custom domain, HTTPS | [Settings → Pages](https://github.com/kyleli73/bubblotics-website/settings/pages) |
+| DNS records | [Cloudflare → DNS](https://dash.cloudflare.com/?to=/:account/bubblotics.ca/dns/records) |
+| Domain renewal, auto-renew | [Cloudflare → Registrar](https://dash.cloudflare.com/?to=/:account/domains) |
+
+---
+
 ## First-time GitHub Pages setup
 
 Only needed once, by whoever creates the repository.
@@ -682,12 +695,18 @@ headers can be set.
 
 ### How to fix it, when you want to
 
-DNS is already on Cloudflare, so the plumbing exists:
+DNS is already on Cloudflare, so the plumbing exists. Everything below is in
+the [bubblotics.ca dashboard](https://dash.cloudflare.com/?to=/:account/bubblotics.ca)
+(these links use `:account`, which Cloudflare resolves for whoever is signed
+in, so no account ID is needed):
 
-1. Set the apex and `www` records to **Proxied** (orange cloud).
-2. **SSL/TLS mode must be Full (strict).** Flexible causes an infinite
-   redirect loop with GitHub Pages. This is the step that breaks sites.
-3. Add a Transform Rule -> Modify Response Header, adding:
+1. In [Cloudflare → DNS → Records](https://dash.cloudflare.com/?to=/:account/bubblotics.ca/dns/records), set the apex and `www` records to
+   **Proxied** (orange cloud).
+2. In [Cloudflare → SSL/TLS](https://dash.cloudflare.com/?to=/:account/bubblotics.ca/ssl-tls), **the encryption mode must be Full
+   (strict).** Flexible causes an infinite redirect loop with GitHub Pages.
+   This is the step that breaks sites.
+3. In [Cloudflare → Rules](https://dash.cloudflare.com/?to=/:account/bubblotics.ca/rules), add a Transform Rule -> Modify Response
+   Header, adding:
 
    ```
    Strict-Transport-Security: max-age=31536000; includeSubDomains
