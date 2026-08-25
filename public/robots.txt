@@ -1,6 +1,7 @@
 # The scouting app is served from /scout/ but is not meant to be found by
-# search. It has no login, so anyone who has the URL can use it, and it
-# should not turn up in results for people who were not given the link.
+# search. It is an internal team tool, it is not linked from anywhere on the
+# site, and it should not turn up in results for people outside the team.
+# Sign-in still guards the data; this just keeps it out of the index.
 User-agent: *
 Disallow: /scout/
 

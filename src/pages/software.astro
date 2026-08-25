@@ -11,9 +11,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
 import CtaBand from '../components/CtaBand.astro';
-import Icon from '../components/Icon.astro';
 import { software, softwareIdeas } from '../data/software';
-import { url } from '../lib/paths';
 import { team } from '../data/site';
 
 const statusLabel: Record<string, string> = {
@@ -30,7 +28,7 @@ const statusLabel: Record<string, string> = {
   <PageHero
     eyebrow="Software"
     title="Tools we <span class='accent-word'>wrote ourselves</span>"
-    lead="Built by students on the team, for problems we actually hit in the shop and at competitions."
+    lead="Built by students on the team, for problems we actually hit in the shop and at competitions. These run internally, so there is nothing to sign up for here."
   />
 
   <section class="section section-tight">
@@ -56,38 +54,6 @@ const statusLabel: Record<string, string> = {
                 </ul>
               )}
 
-              {(app.url || app.repo) && (
-                <div class="cluster app-actions">
-                  {app.url && (
-                    /*
-                     * A url starting with "/" is somewhere on this site, so
-                     * it has to go through url() to pick up the base path.
-                     * Written literally it would point at the domain root
-                     * and 404 while the site is served from a subfolder.
-                     */
-                    <a
-                      href={app.url.startsWith('/') ? url(app.url) : app.url}
-                      class="btn btn-primary btn-sm"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Open
-                      <Icon name="arrowUpRight" size={15} />
-                    </a>
-                  )}
-                  {app.repo && (
-                    <a
-                      href={app.repo}
-                      class="btn btn-ghost btn-sm"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Icon name="github" size={15} />
-                      Source
-                    </a>
-                  )}
-                </div>
-              )}
             </article>
           ))
         }
@@ -136,10 +102,6 @@ const statusLabel: Record<string, string> = {
 
 <style>
   .app {
-    display: flex;
-    flex-direction: column;
-    /* Push the buttons to the bottom so cards of different text lengths
-       still line their actions up across the row. */
     height: 100%;
   }
 
@@ -191,10 +153,6 @@ const statusLabel: Record<string, string> = {
     margin: var(--sp-5) 0 0;
   }
 
-  .app-actions {
-    margin-top: auto;
-    padding-top: var(--sp-5);
-  }
 
   .idea h3 {
     font-size: var(--step-1);
