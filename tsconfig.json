@@ -1,5 +1,13 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"]
+  /*
+   * public/ is shipped verbatim, not compiled. It holds the Draco decoder
+   * wrapper, which is a 100 KB single-line minified Emscripten build. Type
+   * checking it produced hundreds of pointless warnings and eventually ran
+   * the checker out of heap, so `npm run typecheck` failed with an OOM crash
+   * rather than a list of real problems. Nothing in public/ is imported by
+   * our source, so there is nothing to check.
+   */
+  "exclude": ["dist", "public", "scripts"]
 }

@@ -335,18 +335,6 @@ export const activeSocials = contact.socials.filter((s) => s.handle !== null);
  * The header and footer navigation. Add a page here and it appears in both,
  * plus the mobile menu and the footer sitemap.
  */
-/*
- * Extra links for the footer only.
- *
- * Not in the main nav because it already carries ten items, and an eleventh
- * pushes the Sponsor Us button out of the header at laptop widths. The docs
- * are for the team rather than for visitors, so the footer and the Software
- * page are the right places for them.
- */
-export const secondaryNav = [
-  { label: 'Documentation', href: '/docs/' },
-];
-
 export const nav = [
   { label: 'Home', href: '/' },
   { label: 'Our Story', href: '/about/' },

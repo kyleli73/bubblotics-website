@@ -2,10 +2,10 @@
 /*
  * Software.
  *
- * The tools the team has written. Structured like an engineering index
- * rather than a marketing page: numbered entries, the problem each one
- * solves, and the decisions behind them, because that is what a judge
- * actually asks about.
+ * A roster of the tools the team has written: name, one line on what it is
+ * for, and a way in. Modelled on how established teams list their internal
+ * apps, which is a compact index rather than a set of walkthroughs. Someone
+ * skimming this page wants to know what exists, not how to operate it.
  */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -25,99 +25,73 @@ const statusLabel: Record<string, string> = {
 
 <BaseLayout
   title="Software"
-  description={`Tools built in-house by ${team.name}: offline-first match scouting, analytics, and the alliance picklist.`}
+  description={`Tools built in-house by ${team.name}: offline-first match scouting, analytics, and parts inventory.`}
 >
   <PageHero
     eyebrow="Software"
     title="Tools we <span class='accent-word'>wrote ourselves</span>"
-    lead="Scouting, analytics, and the alliance picklist. Built by students on the team, for problems we actually hit at competitions."
+    lead="Built by students on the team, for problems we actually hit in the shop and at competitions."
   />
 
   <section class="section section-tight">
     <div class="shell">
-      {
-        software.map((app, i) => (
-          <article class="app" data-reveal="left">
-            <div class="app-head">
-              <span class="app-num">{String(i + 1).padStart(2, '0')}</span>
-              <div class="app-title">
+      <div class="grid grid-2" data-reveal data-stagger>
+        {
+          software.map((app) => (
+            <article class="card app">
+              <div class="app-head">
                 <h2>{app.name}</h2>
-                <p class="app-tagline">{app.tagline}</p>
-              </div>
-              <span class:list={['tag', `is-${app.status}`]}>
-                {statusLabel[app.status]}
-              </span>
-            </div>
-
-            <div class="app-body">
-              <div class="app-main">
-                <p class="app-problem">{app.problem}</p>
-
-                <ul class="app-highlights">
-                  {app.highlights.map((h) => (
-                    <li>
-                      <span class="hl-icon">
-                        <Icon name="check" size={14} />
-                      </span>
-                      <span>
-                        <strong>{h.title}</strong>
-                        {h.body}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
-                {(app.url || app.repo || app.docs) && (
-                  <div class="cluster app-actions">
-                    {app.url && (
-                      /*
-                       * A url starting with "/" is somewhere on this site, so
-                       * it has to go through url() to pick up the base path.
-                       * Written literally it would point at the domain root
-                       * and 404 while the site is still served from a
-                       * subfolder.
-                       */
-                      <a
-                        href={app.url.startsWith('/') ? url(app.url) : app.url}
-                        class="btn btn-primary btn-sm"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Open the app
-                        <Icon name="arrowUpRight" size={15} />
-                      </a>
-                    )}
-                    {app.docs && (
-                      <a href={url(app.docs)} class="btn btn-ghost btn-sm">
-                        <Icon name="calendar" size={15} />
-                        How to use it
-                      </a>
-                    )}
-                    {app.repo && (
-                      <a href={app.repo} class="btn btn-ghost btn-sm" target="_blank" rel="noopener noreferrer">
-                        <Icon name="github" size={15} />
-                        Source
-                      </a>
-                    )}
-                  </div>
-                )}
+                <span class:list={['tag', `is-${app.status}`]}>
+                  {statusLabel[app.status]}
+                </span>
               </div>
 
-              <aside class="app-meta">
-                <p class="meta-label">Season</p>
-                <p class="meta-value">{app.period}</p>
+              <p class="app-purpose">{app.purpose}</p>
 
-                <p class="meta-label">Built with</p>
+              {app.stack && (
                 <ul class="stack">
                   {app.stack.map((s) => (
                     <li class="tag">{s}</li>
                   ))}
                 </ul>
-              </aside>
-            </div>
-          </article>
-        ))
-      }
+              )}
+
+              {(app.url || app.repo) && (
+                <div class="cluster app-actions">
+                  {app.url && (
+                    /*
+                     * A url starting with "/" is somewhere on this site, so
+                     * it has to go through url() to pick up the base path.
+                     * Written literally it would point at the domain root
+                     * and 404 while the site is served from a subfolder.
+                     */
+                    <a
+                      href={app.url.startsWith('/') ? url(app.url) : app.url}
+                      class="btn btn-primary btn-sm"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Open
+                      <Icon name="arrowUpRight" size={15} />
+                    </a>
+                  )}
+                  {app.repo && (
+                    <a
+                      href={app.repo}
+                      class="btn btn-ghost btn-sm"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Icon name="github" size={15} />
+                      Source
+                    </a>
+                  )}
+                </div>
+              )}
+            </article>
+          ))
+        }
+      </div>
     </div>
   </section>
 
@@ -126,7 +100,9 @@ const statusLabel: Record<string, string> = {
       <section class="section section-tight">
         <div class="shell">
           <div class="section-head">
-            <p class="eyebrow" data-reveal="fade">On the list</p>
+            <p class="eyebrow" data-reveal="fade">
+              On the list
+            </p>
             <h2 data-reveal>Scoped, not built</h2>
             <p data-reveal data-reveal-delay="0.06">
               Things we have specced out and intend to build. Listed
@@ -134,11 +110,11 @@ const statusLabel: Record<string, string> = {
             </p>
           </div>
 
-          <div class="grid grid-3" data-reveal data-stagger>
+          <div class="grid grid-2" data-reveal data-stagger>
             {softwareIdeas.map((idea) => (
               <article class="card idea">
                 <h3>{idea.name}</h3>
-                <p>{idea.body}</p>
+                <p>{idea.purpose}</p>
               </article>
             ))}
           </div>
@@ -159,41 +135,27 @@ const statusLabel: Record<string, string> = {
 </BaseLayout>
 
 <style>
-  .app + .app {
-    margin-top: var(--sp-8);
-    padding-top: var(--sp-8);
-    border-top: 1px solid var(--line);
+  .app {
+    display: flex;
+    flex-direction: column;
+    /* Push the buttons to the bottom so cards of different text lengths
+       still line their actions up across the row. */
+    height: 100%;
   }
 
   .app-head {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: start;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
     gap: var(--sp-4);
-    padding-bottom: var(--sp-5);
-    margin-bottom: var(--sp-5);
-    border-bottom: 1px solid var(--line-strong);
+    margin-bottom: var(--sp-4);
   }
 
-  .app-num {
-    font-family: var(--font-display);
-    font-size: var(--step-2);
-    font-weight: 700;
-    line-height: 1;
-    color: rgba(89, 149, 237, 0.35);
-  }
-
-  .app-title h2 {
-    font-size: var(--step-2);
-    line-height: 1.1;
+  .app-head h2 {
+    font-size: var(--step-1);
+    line-height: 1.15;
     text-transform: none;
     letter-spacing: -0.01em;
-  }
-
-  .app-tagline {
-    margin-top: var(--sp-2);
-    color: var(--ink-muted);
-    font-size: var(--step-0);
   }
 
   /* Status is colour-coded, but the word is always there too: colour alone
@@ -214,88 +176,10 @@ const statusLabel: Record<string, string> = {
     color: var(--ink-faint);
   }
 
-  .app-body {
-    display: grid;
-    gap: var(--sp-6);
-  }
-
-  @media (min-width: 900px) {
-    .app-body {
-      grid-template-columns: 1fr 240px;
-      gap: var(--sp-8);
-    }
-  }
-
-  .app-problem {
+  .app-purpose {
     color: var(--ink-muted);
-    font-size: var(--step-1);
-    line-height: 1.6;
-    max-width: 62ch;
-  }
-
-  .app-highlights {
-    list-style: none;
-    padding: 0;
-    margin: var(--sp-6) 0 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-4);
-  }
-
-  .app-highlights li {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--sp-3);
-    max-width: 68ch;
-  }
-
-  .hl-icon {
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
-    width: 24px;
-    height: 24px;
-    margin-top: 2px;
-    border-radius: 50%;
-    background: rgba(89, 149, 237, 0.16);
-    color: var(--accent);
-  }
-
-  .app-highlights strong {
-    display: block;
-    color: var(--ink);
-    font-weight: 700;
-    margin-bottom: 2px;
-  }
-
-  .app-highlights span span,
-  .app-highlights li > span:last-child {
-    color: var(--ink-muted);
-    font-size: var(--step--1);
     line-height: 1.65;
-  }
-
-  .app-actions {
-    margin-top: var(--sp-6);
-  }
-
-  .meta-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    margin-bottom: var(--sp-2);
-  }
-
-  .meta-label + .meta-value {
-    margin-bottom: var(--sp-5);
-  }
-
-  .meta-value {
-    color: var(--ink);
-    font-weight: 600;
-    font-size: var(--step--1);
+    max-width: 52ch;
   }
 
   .stack {
@@ -304,7 +188,12 @@ const statusLabel: Record<string, string> = {
     gap: var(--sp-2);
     list-style: none;
     padding: 0;
-    margin: 0;
+    margin: var(--sp-5) 0 0;
+  }
+
+  .app-actions {
+    margin-top: auto;
+    padding-top: var(--sp-5);
   }
 
   .idea h3 {
