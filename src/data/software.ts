@@ -24,6 +24,8 @@ export type SoftwareEntry = {
   url?: string;
   /** Public source, if the team open-sources it. */
   repo?: string;
+  /** Path to this app's guide under /docs/, if one is written. */
+  docs?: string;
   /** The problem it solves, in plain terms. Two or three sentences. */
   problem: string;
   /** Notable engineering decisions. These are what judges actually probe. */
@@ -67,6 +69,25 @@ export const software: SoftwareEntry[] = [
       },
     ],
     stack: ['React', 'TypeScript', 'Vite', 'IndexedDB / Dexie', 'Supabase', 'FTCScout API'],
+    docs: '/docs/scouting/',
+  },
+  {
+    name: 'Bubblotics Inventory',
+    tagline: 'What is in stock, what is on order, and what is on the robot.',
+    status: 'in-progress',
+    period: '2026',
+    // [PLACEHOLDER] Add once inventory.bubblotics.ca is serving.
+    // url: 'https://inventory.bubblotics.ca',
+    docs: '/docs/inventory/',
+    problem:
+      'Build season loses hours to a part nobody can find, and days to a part nobody ordered. Tracking stock, orders and what is currently bolted to the robot in one place is the cheapest fix available to a team our size.',
+    highlights: [
+      {
+        title: '[PLACEHOLDER] Written by whoever built it',
+        body: 'Replace these with the real decisions behind the app. What it stores, how it is kept up to date, and what it does about the part someone takes off the shelf without telling anyone.',
+      },
+    ],
+    stack: ['[PLACEHOLDER]'],
   },
 ];
 

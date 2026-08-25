@@ -109,4 +109,22 @@ const updates = defineCollection({
     }),
 });
 
-export const collections = { robots, updates };
+const docs = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/docs' }),
+  schema: z.object({
+    title: z.string(),
+    /** One line shown on the docs index card. */
+    summary: z.string(),
+    /** Which app this documents. */
+    app: z.string(),
+    /** Sort order on the index. Lower first. */
+    order: z.number().default(10),
+    /** Live URL of the app this documents, if it has one. */
+    appUrl: z.string().optional(),
+    /** Season or revision, e.g. "26-7". */
+    revision: z.string().optional(),
+    draft: z.boolean().default(false),
+  }),
+});
+
+export const collections = { robots, updates, docs };

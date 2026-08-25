@@ -6,7 +6,7 @@
  * from the same `nav` array the header uses, and the FIRST attribution.
  */
 
-import { team, nav, contact, activeSocials } from '../data/site';
+import { team, nav, secondaryNav, contact, activeSocials } from '../data/site';
 import { url } from '../lib/paths';
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
@@ -15,7 +15,7 @@ const year = new Date().getFullYear();
 
 /* Split the nav into two columns so it doesn't run as one long strip. */
 const half = Math.ceil(nav.length / 2);
-const navCols = [nav.slice(0, half), nav.slice(half)];
+const navCols = [nav.slice(0, half), [...nav.slice(half), ...secondaryNav]];
 ---
 
 <footer class="site-footer">

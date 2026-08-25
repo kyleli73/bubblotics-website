@@ -67,7 +67,7 @@ const statusLabel: Record<string, string> = {
                   ))}
                 </ul>
 
-                {(app.url || app.repo) && (
+                {(app.url || app.repo || app.docs) && (
                   <div class="cluster app-actions">
                     {app.url && (
                       /*
@@ -85,6 +85,12 @@ const statusLabel: Record<string, string> = {
                       >
                         Open the app
                         <Icon name="arrowUpRight" size={15} />
+                      </a>
+                    )}
+                    {app.docs && (
+                      <a href={url(app.docs)} class="btn btn-ghost btn-sm">
+                        <Icon name="calendar" size={15} />
+                        How to use it
                       </a>
                     )}
                     {app.repo && (
