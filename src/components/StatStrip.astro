@@ -20,10 +20,17 @@ import { stats } from '../data/site';
           <li class="stat">
             <span
               class="stat-value"
-              data-count={stat.value}
-              data-count-suffix={stat.suffix}
+              data-count={stat.count === false ? undefined : stat.value}
+              data-count-suffix={stat.count === false ? undefined : stat.suffix}
             >
-              {stat.value.toLocaleString()}
+              {/*
+                A year is written plainly. toLocaleString() would render
+                2026 as "2,026", which is the correct formatting for a
+                quantity and wrong for a date.
+              */}
+              {stat.count === false
+                ? String(stat.value)
+                : stat.value.toLocaleString()}
               {stat.suffix}
             </span>
             <span class="stat-label">{stat.label}</span>
@@ -37,42 +44,56 @@ import { stats } from '../data/site';
 <style>
   .stats-band {
     position: relative;
-    padding-block: var(--sp-7);
-    border-block: 1px solid var(--line);
-    background: linear-gradient(
-      180deg,
-      rgba(89, 149, 237, 0.06),
-      rgba(16, 37, 66, 0.28)
-    );
+    border-block: var(--edge);
+    background: rgba(89, 149, 237, 0.04);
   }
 
   .stats-grid {
     display: grid;
-    /* Two across on a phone, four on a laptop. auto-fit does that without
-       a single media query. */
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
-    gap: var(--sp-5);
+    grid-template-columns: repeat(2, 1fr);
     list-style: none;
     margin: 0;
     padding: 0;
   }
 
-  .stat {
-    position: relative;
-    text-align: center;
-    padding: var(--sp-3) var(--sp-2);
+  @media (min-width: 760px) {
+    .stats-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
   }
 
-  /* Hairline divider between figures, skipped on the first so the row
-     doesn't open with a stray line. */
-  .stat + .stat::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 18%;
-    height: 64%;
-    width: 1px;
-    background: var(--line-strong);
+  /*
+   * Dividers drawn as borders on the cells rather than as a gap, so the
+   * row reads as one ruled band. Every cell gets a right edge and the last
+   * in each row has it removed, which is what keeps the outer edge clean
+   * at both breakpoints.
+   */
+  .stat {
+    padding: var(--sp-6) var(--sp-5);
+    border-right: var(--edge);
+    border-bottom: var(--edge);
+  }
+
+  .stat:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .stat:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+
+  @media (min-width: 760px) {
+    .stat {
+      border-bottom: 0;
+    }
+
+    .stat:nth-child(2n) {
+      border-right: var(--edge);
+    }
+
+    .stat:last-child {
+      border-right: 0;
+    }
   }
 
   .stat-value {
@@ -81,21 +102,19 @@ import { stats } from '../data/site';
     font-size: var(--step-4);
     font-weight: 700;
     line-height: 1;
-    letter-spacing: -0.03em;
-    /* Digits share a width, so the number doesn't jitter while counting. */
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    /* Tabular figures stop the number jittering sideways as it counts. */
     font-variant-numeric: tabular-nums;
-    background: linear-gradient(160deg, var(--snow), var(--cornflower-light));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
   }
 
   .stat-label {
     display: block;
-    margin-top: var(--sp-2);
-    font-size: var(--step--1);
-    font-weight: 600;
-    letter-spacing: 0.08em;
+    margin-top: var(--sp-3);
+    font-family: var(--font-display);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--ink-faint);
   }

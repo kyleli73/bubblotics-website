@@ -1,0 +1,233 @@
+---
+/*
+ * The numbered progress rail down the left edge.
+ *
+ * A fixed column of section numbers that fills in as you scroll and
+ * highlights whichever section you are currently inside. It answers two
+ * questions a long single-page site otherwise leaves open: how far through
+ * am I, and how much is left.
+ *
+ * ── Decisions worth knowing ────────────────────────────────────────────
+ *
+ * Desktop only. On a phone it would eat a fifth of the screen width to say
+ * something the scrollbar already says, so it is hidden below 1200px.
+ *
+ * It is a real <nav> of real anchor links, not decoration. Clicking a number
+ * jumps to that section, and the whole rail is reachable by keyboard. The
+ * numerals are aria-hidden so a screen reader announces "Software" rather
+ * than "zero three Software".
+ *
+ * IntersectionObserver decides which entry is active, not a scroll handler.
+ * A scroll handler here would run on every one of the sixty frames a second
+ * Lenis produces and recompute element positions each time; the observer is
+ * told once and then only fires when something crosses the line.
+ */
+
+interface Props {
+  /** In document order. `id` must match the section's id attribute. */
+  sections: { id: string; label: string }[];
+}
+
+const { sections } = Astro.props;
+---
+
+<nav class="rail" aria-label="Page sections" data-rail>
+  <ol>
+    {
+      sections.map((s, i) => (
+        <li>
+          <a href={`#${s.id}`} class="rail-link" data-rail-link={s.id}>
+            <span class="rail-num" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <span class="rail-label">{s.label}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+
+<style>
+  .rail {
+    display: none;
+  }
+
+  /*
+   * 1200px, not the 940px the nav uses. The rail sits outside the content
+   * shell, so it needs room for the shell plus its own width on both sides;
+   * below this it would overlap the text.
+   */
+  @media (min-width: 1200px) {
+    .rail {
+      display: block;
+      position: fixed;
+      left: var(--sp-6);
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 40;
+    }
+  }
+
+  @media (min-width: 1500px) {
+    .rail {
+      left: var(--sp-7);
+    }
+  }
+
+  .rail ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+    /* Counters come from the markup, so the list must not add its own. */
+    counter-reset: none;
+  }
+
+  .rail-link {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    text-decoration: none;
+    /* The label is hidden until hover or activation, so the resting rail is
+       a quiet column of numbers rather than a second menu competing with
+       the header. */
+    padding: 2px 0;
+  }
+
+  .rail-num {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--ink-faint);
+    transition: color var(--dur-fast) var(--ease);
+  }
+
+  .rail-label {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--ink-faint);
+
+    /* Slides out from behind the number. Width animates rather than
+       display, so it can transition; visibility keeps it out of the way
+       for a pointer when it is closed. */
+    max-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition:
+      max-width var(--dur) var(--ease),
+      opacity var(--dur-fast) var(--ease),
+      color var(--dur-fast) var(--ease);
+  }
+
+  .rail-link:hover .rail-label,
+  .rail-link:focus-visible .rail-label,
+  .rail-link.is-active .rail-label {
+    max-width: 14ch;
+    opacity: 1;
+  }
+
+  .rail-link:hover .rail-num,
+  .rail-link:hover .rail-label,
+  .rail-link:focus-visible .rail-num {
+    color: var(--ink);
+  }
+
+  /* The active section. Yellow, and the only place on the rail it appears,
+     which is what makes it readable at a glance. */
+  .rail-link.is-active .rail-num,
+  .rail-link.is-active .rail-label {
+    color: var(--highlight);
+  }
+
+  /* A tick that grows to the left of the active number, so position is
+     legible without reading any of the digits. */
+  .rail-link::before {
+    content: '';
+    width: 0;
+    height: 2px;
+    background: var(--highlight);
+    transition: width var(--dur) var(--ease);
+  }
+
+  .rail-link.is-active::before {
+    width: 18px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rail-link,
+    .rail-link::before,
+    .rail-num,
+    .rail-label {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  /*
+   * Marks the rail entry for whichever section currently occupies the
+   * middle of the screen.
+   *
+   * rootMargin '-45% 0px -45% 0px' shrinks the observer's window to a thin
+   * band across the centre of the viewport. A section is "active" when it
+   * crosses that band. Without the margin, three tall sections are all
+   * intersecting at once and the highlight flickers between them.
+   */
+  const rail = document.querySelector<HTMLElement>('[data-rail]');
+
+  if (rail) {
+    const links = new Map<string, HTMLAnchorElement>();
+    rail
+      .querySelectorAll<HTMLAnchorElement>('[data-rail-link]')
+      .forEach((a) => links.set(a.dataset.railLink!, a));
+
+    const targets = [...links.keys()]
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+
+    if (targets.length > 0) {
+      const setActive = (id: string) => {
+        links.forEach((a, key) => a.classList.toggle('is-active', key === id));
+      };
+
+      /*
+       * Which sections are currently across the centre band. A fast scroll
+       * (or a jump from a rail click) can deliver several entries in one
+       * callback, and looping over them assigning as you go would leave
+       * whichever happened to be last in the array active, which is not
+       * necessarily the one on screen. Tracking the set and then picking
+       * the first in document order makes the result independent of the
+       * callback's ordering.
+       */
+      const visible = new Set<string>();
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) visible.add(entry.target.id);
+            else visible.delete(entry.target.id);
+          }
+
+          const first = targets.find((t) => visible.has(t.id));
+          if (first) setActive(first.id);
+        },
+        { rootMargin: '-45% 0px -45% 0px', threshold: 0 }
+      );
+
+      targets.forEach((t) => observer.observe(t));
+
+      // The band is in the middle of the screen, so at the very top of the
+      // page nothing is inside it and the rail would start blank. Show the
+      // first entry until the observer has something to say.
+      setActive(targets[0].id);
+    }
+  }
+</script>

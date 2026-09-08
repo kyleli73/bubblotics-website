@@ -7,11 +7,14 @@
  * once you move down the page. That transition is handled in the header's
  * own script at the bottom of this file.
  *
- * Ten nav items is a lot even for a laptop, so below 1180px the whole thing
- * collapses into a full-screen panel.
+ * The ten pages are grouped under four headings (Team, Build, Season,
+ * Sponsors), each opening a dropdown. Grouping is what got the bar back
+ * under 940px: four words and a button fit on a small laptop, ten did not.
+ *
+ * Below 940px the whole thing collapses into a full-screen numbered panel.
  */
 
-import { nav } from '../data/site';
+import { nav, navGroups } from '../data/site';
 import { url, isActive } from '../lib/paths';
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
@@ -25,20 +28,74 @@ const currentPath = Astro.url.pathname;
       <Logo variant="full" size={42} />
     </a>
 
+    <!--
+      Each group is a <li> holding a button and a panel. The button carries
+      aria-expanded and aria-controls so the state is announced, and the
+      panel is hidden with the `hidden` attribute rather than only with CSS,
+      which keeps its links out of the tab order while closed.
+
+      Opening is handled by CSS on :hover and :focus-within for pointer and
+      keyboard users, and by the script below for a click or a tap. Hover
+      alone would strand anyone on a touchscreen, since there is no hover to
+      have; click alone would feel sticky with a mouse.
+    -->
     <nav class="desktop-nav" aria-label="Main">
-      <ul>
+      <ul class="nav-groups">
         {
-          nav.map((item) => {
-            const active = isActive(url(item.href), currentPath);
+          navGroups.map((group) => {
+            const groupId = `nav-group-${group.label.toLowerCase()}`;
+            // A group counts as current if any page inside it is the page
+            // you are on, so "Build" stays lit while you read /robots/.
+            const active = group.items.some((item) =>
+              isActive(url(item.href), currentPath)
+            );
+
             return (
-              <li>
-                <a
-                  href={url(item.href)}
-                  class:list={['nav-link', { active }]}
-                  aria-current={active ? 'page' : undefined}
+              <li class="nav-group" data-nav-group>
+                <button
+                  type="button"
+                  class:list={['nav-trigger', { active }]}
+                  aria-expanded="false"
+                  aria-controls={groupId}
+                  data-nav-trigger
                 >
-                  {item.label}
-                </a>
+                  {group.label}
+                  <svg
+                    class="nav-chevron"
+                    viewBox="0 0 24 24"
+                    width="14"
+                    height="14"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M6 9l6 6 6-6"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="square"
+                    />
+                  </svg>
+                </button>
+
+                <div class="nav-panel" id={groupId} data-nav-panel hidden>
+                  <ul>
+                    {group.items.map((item) => {
+                      const itemActive = isActive(url(item.href), currentPath);
+                      return (
+                        <li>
+                          <a
+                            href={url(item.href)}
+                            class:list={['nav-item', { active: itemActive }]}
+                            aria-current={itemActive ? 'page' : undefined}
+                          >
+                            <span class="nav-item-label">{item.label}</span>
+                            <span class="nav-item-blurb">{item.blurb}</span>
+                          </a>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               </li>
             );
           })
@@ -146,51 +203,172 @@ const currentPath = Astro.url.pathname;
     display: none;
   }
 
-  .desktop-nav ul {
+  .nav-groups {
     display: flex;
     align-items: center;
-    gap: var(--sp-1);
+    gap: var(--sp-2);
     list-style: none;
     margin: 0;
     padding: 0;
   }
 
-  .nav-link {
+  .nav-group {
     position: relative;
-    display: block;
-    padding: var(--sp-2) var(--sp-3);
-    border-radius: var(--radius-pill);
-    color: var(--ink-muted);
-    font-size: 0.94rem;
-    font-weight: 600;
-    text-decoration: none;
+  }
+
+  .nav-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-3) var(--sp-3);
+    border: 0;
+    background: none;
+    cursor: pointer;
+
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     white-space: nowrap;
-    transition:
-      color var(--dur-fast) var(--ease),
-      background var(--dur-fast) var(--ease);
+    color: var(--ink-muted);
+    transition: color var(--dur-fast) var(--ease);
   }
 
-  .nav-link:hover {
-    color: var(--ink);
-    background: rgba(89, 149, 237, 0.12);
-  }
-
-  /* A small bubble under the current page rather than an underline. */
-  .nav-link.active {
+  .nav-trigger:hover,
+  .nav-group:focus-within .nav-trigger {
     color: var(--ink);
   }
 
-  .nav-link.active::after {
+  /* The group containing the current page. A 2px underline rather than the
+     old dot, to match the square edges the rest of the page uses. */
+  .nav-trigger.active {
+    color: var(--ink);
+  }
+
+  .nav-trigger.active::after {
     content: '';
     position: absolute;
-    bottom: 2px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
+    left: var(--sp-3);
+    right: var(--sp-3);
+    bottom: 6px;
+    height: 2px;
     background: var(--highlight);
-    box-shadow: 0 0 10px var(--highlight);
+  }
+
+  .nav-chevron {
+    transition: transform var(--dur-fast) var(--ease);
+    color: var(--ink-faint);
+  }
+
+  .nav-group:hover .nav-chevron,
+  .nav-group:focus-within .nav-chevron,
+  .nav-trigger[aria-expanded='true'] .nav-chevron {
+    transform: rotate(180deg);
+    color: var(--highlight);
+  }
+
+  /* ── The dropdown ─────────────────────────────────────────────────── */
+
+  .nav-panel {
+    position: absolute;
+    top: calc(100% - 4px);
+    left: 0;
+    min-width: 264px;
+    padding: var(--sp-2);
+    z-index: 10;
+
+    /* Square, 2px edged, solid enough to read over the hero bubbles. */
+    border: var(--edge);
+    background: rgba(7, 15, 28, 0.96);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    box-shadow: 0 18px 40px rgba(3, 8, 16, 0.55);
+
+    /*
+     * `hidden` is on the element in the markup, so the panel is genuinely
+     * out of the tab order when closed. This rule un-hides it for hover and
+     * keyboard focus without JavaScript having to run at all: display is
+     * forced back on, overriding [hidden]'s display:none.
+     */
+    opacity: 0;
+    transform: translateY(-6px);
+    transition:
+      opacity var(--dur-fast) var(--ease),
+      transform var(--dur-fast) var(--ease);
+  }
+
+  .nav-group:hover .nav-panel,
+  .nav-group:focus-within .nav-panel,
+  .nav-panel[data-open] {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /*
+   * A hover bridge. Without it the 4px gap between the trigger and the
+   * panel counts as "not hovering either", so the panel closes while the
+   * pointer is still travelling toward it. This pads the gap invisibly.
+   */
+  .nav-panel::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    right: 0;
+    height: 10px;
+  }
+
+  .nav-panel ul {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-item {
+    display: block;
+    padding: var(--sp-3);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition:
+      background var(--dur-fast) var(--ease),
+      border-color var(--dur-fast) var(--ease);
+  }
+
+  .nav-item:hover,
+  .nav-item:focus-visible {
+    background: rgba(89, 149, 237, 0.12);
+    border-left-color: var(--highlight);
+  }
+
+  .nav-item.active {
+    border-left-color: var(--highlight);
+  }
+
+  .nav-item-label {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .nav-item-blurb {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: var(--ink-faint);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav-panel,
+    .nav-chevron {
+      transition: none;
+    }
   }
 
   .header-cta {
@@ -238,12 +416,13 @@ const currentPath = Astro.url.pathname;
   }
 
   /*
-   * 1180px, not the usual 1024. Ten nav items plus the Sponsor Us button
-   * need about 1160px before the button gets pushed out of the header.
-   * If you add another nav item, re-measure: the failure is silent, the
-   * button just vanishes.
+   * 940px. Four group headings plus the Sponsor Us button fit comfortably
+   * here; the flat ten-item version this replaced needed 1180px.
+   *
+   * If you add a fifth group, re-measure. The failure is silent: the
+   * button does not wrap, it just gets pushed out of the header.
    */
-  @media (min-width: 1180px) {
+  @media (min-width: 940px) {
     .desktop-nav {
       display: block;
     }
@@ -452,9 +631,67 @@ const currentPath = Astro.url.pathname;
 
     // Crossing into desktop layout with the panel open would leave the
     // body unscrollable and no visible way to close it.
-    const desktop = window.matchMedia('(min-width: 1180px)');
+    const desktop = window.matchMedia('(min-width: 940px)');
     desktop.addEventListener('change', (e) => {
       if (e.matches && panel.classList.contains('open')) setOpen(false);
+    });
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Desktop dropdowns: click and touch
+     ─────────────────────────────────────────────────────────────────────
+     Hover and keyboard focus are handled entirely in CSS above. This adds
+     the two cases CSS cannot: a click (which should latch the panel open
+     rather than closing it the moment the pointer leaves) and a tap on a
+     touchscreen, where there is no hover at all.
+
+     A touch device fires a synthetic hover on tap, so without this a first
+     tap would open the panel and immediately follow the link behind it.
+     The trigger is a <button>, not a link, precisely so that tap has
+     somewhere harmless to land.
+  */
+  const groups = document.querySelectorAll<HTMLElement>('[data-nav-group]');
+
+  const closeAllGroups = () => {
+    groups.forEach((g) => {
+      g.querySelector('[data-nav-trigger]')?.setAttribute(
+        'aria-expanded',
+        'false'
+      );
+      g.querySelector('[data-nav-panel]')?.removeAttribute('data-open');
+    });
+  };
+
+  groups.forEach((group) => {
+    const trigger = group.querySelector<HTMLButtonElement>('[data-nav-trigger]');
+    const panel = group.querySelector<HTMLElement>('[data-nav-panel]');
+    if (!trigger || !panel) return;
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = panel.hasAttribute('data-open');
+      closeAllGroups();
+      if (!isOpen) {
+        panel.setAttribute('data-open', '');
+        trigger.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
+  if (groups.length > 0) {
+    // Clicking anywhere else, or pressing Escape, dismisses an open panel.
+    document.addEventListener('click', closeAllGroups);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const open = document.querySelector<HTMLElement>('[data-nav-panel][data-open]');
+      if (!open) return;
+      // Hand focus back to the trigger, or the key press strands the
+      // keyboard user on an element that just disappeared.
+      open.closest('[data-nav-group]')
+        ?.querySelector<HTMLButtonElement>('[data-nav-trigger]')
+        ?.focus();
+      closeAllGroups();
     });
   }
 </script>

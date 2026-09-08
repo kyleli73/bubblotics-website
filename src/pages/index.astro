@@ -1,621 +1,1180 @@
 ---
 /*
- * Home page.
+ * ═══════════════════════════════════════════════════════════════════════════
+ *  HOME
+ * ═══════════════════════════════════════════════════════════════════════════
  *
- * Order matters here. A visitor arriving from an Instagram link gives a page
- * a few seconds, so the sequence is: who we are, proof we are good at it,
- * what we build, what we are up to, how to help.
+ * One scrolling page, built as stacked full-bleed bands separated by 2px
+ * rules rather than as floating cards on a background. Content sits flush
+ * left inside the shell, so every heading, paragraph and grid starts on the
+ * same vertical line all the way down. That single alignment does more for
+ * how deliberate the page feels than any amount of decoration.
+ *
+ * Order is who we are, what we build, what we write, who backs us. A visitor
+ * arriving from an Instagram link gives a page a few seconds, and the first
+ * screen has to answer "what is this" before it asks for anything.
+ *
+ * ── Rules this page follows ────────────────────────────────────────────
+ *   Structural blocks are square. Radius is for controls and media only.
+ *   Section boundaries are 2px, using var(--edge).
+ *   Yellow is the accent and stays rare: the sponsors banner, the active
+ *     rail marker, one word per heading. If it starts showing up in body
+ *     copy it has stopped meaning anything.
+ *   Nothing invented. Where a photo or a result does not exist yet there
+ *     is a labelled Placeholder naming the file path, never filler.
  */
 
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Bubbles from '../components/Bubbles.astro';
 import StatStrip from '../components/StatStrip.astro';
-import RobotCard from '../components/RobotCard.astro';
-import UpdateCard from '../components/UpdateCard.astro';
-import CtaBand from '../components/CtaBand.astro';
+import ScrollRail from '../components/ScrollRail.astro';
+import Placeholder from '../components/Placeholder.astro';
 import Icon from '../components/Icon.astro';
-import Gallery from '../components/Gallery.astro';
-import Logo from '../components/Logo.astro';
-import { team, subteams } from '../data/site';
+import { team, subteams, outreach, sponsorTiers } from '../data/site';
+import { homeSoftware, picklistColumns } from '../data/software';
 import { url } from '../lib/paths';
 
-// Newest robots first. `draft: true` in a markdown file keeps it off the site
-// while it is being written.
 const robots = (await getCollection('robots', ({ data }) => !data.draft)).sort(
   (a, b) => b.data.order - a.data.order
 );
+const currentRobot = robots[0];
 
 const posts = (await getCollection('updates', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-  .slice(0, 3);
+  .slice(0, 2);
+
+const dateFmt = new Intl.DateTimeFormat('en-CA', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+
+/* Rail stops, in document order. Each id must exist as a section below. */
+const railSections = [
+  { id: 'team', label: 'Team' },
+  { id: 'build', label: 'Build' },
+  { id: 'software', label: 'Software' },
+  { id: 'gallery', label: 'Gallery' },
+  { id: 'updates', label: 'Updates' },
+  { id: 'outreach', label: 'Outreach' },
+];
+
+const statusLabel: Record<string, string> = {
+  live: 'Live',
+  'in-progress': 'In progress',
+  planned: 'Planned',
+};
+
+/* Every sponsor across every tier. Empty today, which the grid handles. */
+const sponsors = sponsorTiers.flatMap((t) => t.members);
 ---
 
 <BaseLayout title={`${team.name} · FTC Team ${team.number}`} bareTitle>
-  <!-- ═══ HERO ═══════════════════════════════════════════════════════ -->
-  <section class="hero" data-hero>
-    <Bubbles count={22} tone="full" />
+  <ScrollRail sections={railSections} />
 
-    <!-- Two large soft lights behind the headline. data-parallax makes them
-         drift as the page scrolls, which gives the flat background depth. -->
-    <div class="hero-glow hero-glow-blue" data-hero-glow data-parallax="0.18">
-    </div>
-    <div class="hero-glow hero-glow-gold" data-hero-glow data-parallax="0.28">
-    </div>
+  <!-- ═══ HERO ═══════════════════════════════════════════════════════════
+       Full-bleed Prussian navy. The bubble field is a canvas, not DOM
+       nodes: at this count, animating spans would repaint layout on every
+       frame, and mouse-repel plus click-to-pop needs per-pixel hit testing
+       that DOM elements cannot do cheaply.
+  -->
+  <section class="hero" id="top">
+    <Bubbles count={26} tone="full" />
 
     <div class="shell hero-inner">
-      <!--
-        The team mark, large, above the headline. It carries the number and
-        the bubble motif on its own, so it does most of the work of
-        establishing who this is before anyone reads a word.
-
-        aria-hidden because the <h1> underneath already says "Bubblotics".
-        Without it a screen reader announces the team name twice in a row.
-      -->
-      <div class="hero-mark" data-hero-item aria-hidden="true">
-        <Logo variant="mark" size={124} />
-      </div>
-
-      <p class="hero-badge" data-hero-item>
-        <Icon name="location" size={14} />
+      <p class="hero-eyebrow">
+        <Icon name="location" size={13} />
         {team.location}
-        <span class="dot" aria-hidden="true">&bull;</span>
+        <span class="hero-dot" aria-hidden="true">/</span>
         {team.program}
       </p>
 
-      <h1 class="hero-title" data-hero-item>
-        <span class="hero-line">Bubblotics</span>
-        <span class="hero-line hero-number">Team 35858</span>
+      <h1 class="hero-title">
+        <span class="hero-word">Bubblotics</span>
+        <span class="hero-num">Team 35858</span>
       </h1>
 
-      <p class="hero-tagline" data-hero-item>{team.tagline}</p>
+      <p class="hero-tagline">{team.tagline}</p>
 
-      <p class="hero-lead" data-hero-item>
-        {team.blurb.split('. ')[0]}.
-      </p>
+      <p class="hero-lead">{team.blurb.split('. ')[0]}.</p>
 
-      <div class="cluster hero-actions" data-hero-item>
-        <a href={url('/robots/')} class="btn btn-primary" data-magnetic="0.22">
+      <div class="cluster hero-actions">
+        <a href={url('/robots/')} class="btn btn-primary">
           See our robots
-          <Icon name="arrow" size={17} />
+          <Icon name="arrow" size={16} />
         </a>
         <a href={url('/about/')} class="btn btn-ghost">Our story</a>
       </div>
     </div>
 
-    <!-- Scroll cue. aria-hidden because it is decoration; the content
-         below is reachable without it. -->
-    <div class="scroll-cue" aria-hidden="true">
-      <span class="scroll-cue-track"><span class="scroll-cue-dot"></span></span>
-      <span class="scroll-cue-label">Scroll</span>
+    <div class="scroll-hint" aria-hidden="true">
+      <span class="scroll-hint-line"></span>
+      Scroll
     </div>
   </section>
 
   <StatStrip />
 
-  <!-- ═══ WHO WE ARE ═════════════════════════════════════════════════ -->
-  <section class="section" id="who-we-are">
+  <!-- ═══ 01 · WHO WE ARE ════════════════════════════════════════════ -->
+  <section class="band" id="team">
     <div class="shell">
-      <div class="split">
-        <div>
-          <p class="eyebrow" data-reveal="fade">Who we are</p>
-          <h2 data-reveal>
-            A student team that builds
-            <span class="gradient-word">real machines</span>
-          </h2>
-          <p class="lead" data-reveal data-reveal-delay="0.08">{team.blurb}</p>
+      <p class="eyebrow">01 / Who we are</p>
+      <h2 class="band-title">
+        A student team that builds <span class="accent-word">real machines</span>
+      </h2>
 
-          <ul class="subteam-list" data-reveal data-stagger>
-            {
-              subteams.map((s) => (
-                <li class="subteam">
-                  <h3>{s.name}</h3>
-                  <p>{s.description}</p>
-                </li>
-              ))
-            }
+      <p class="band-lead" data-reveal>{team.blurb}</p>
+
+      <ul class="subteams" data-reveal data-stagger>
+        {
+          subteams.map((s, i) => (
+            <li class="subteam">
+              <span class="subteam-num">{String(i + 1).padStart(2, '0')}</span>
+              <h3>{s.name}</h3>
+              <p>{s.description}</p>
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="wide-media" data-reveal>
+        <Placeholder path="src/assets/team/team-photo.jpg" ratio="21 / 9">
+          A wide shot of the whole team, ideally in the workspace with the
+          robot. This is the one photo most visitors will actually look at.
+        </Placeholder>
+      </div>
+
+      <a href={url('/about/')} class="link-arrow band-link" data-reveal="fade">
+        Read our story
+        <Icon name="arrow" size={16} />
+      </a>
+    </div>
+  </section>
+
+  <!-- ═══ 02 · WHAT WE ARE BUILDING ══════════════════════════════════ -->
+  <section class="band" id="build">
+    <div class="shell">
+      <p class="eyebrow">02 / The build</p>
+      <h2 class="band-title">
+        What we are <span class="accent-word">building</span>
+      </h2>
+
+      <p class="band-lead" data-reveal>
+        BIOBUZZ will be our first competition season. Until then we are
+        learning on an offseason robot, and everything we work out along the
+        way gets written down here.
+      </p>
+
+      {
+        currentRobot && (
+          <article class="feature" data-reveal>
+            <div class="feature-media">
+              <Placeholder
+                path="src/assets/robots/offseason.jpg"
+                ratio="4 / 3"
+                kind="Robot"
+              >
+                The offseason robot, three-quarter view, on a clean
+                background. Then uncomment `heroImage` in
+                src/content/robots/offseason-decode.md.
+              </Placeholder>
+            </div>
+
+            <div class="feature-body">
+              <p class="feature-meta">
+                Season 01
+                <span aria-hidden="true">/</span>
+                {currentRobot.data.season}
+              </p>
+              <h3 class="feature-title">{currentRobot.data.name}</h3>
+              <p class="feature-summary">{currentRobot.data.summary}</p>
+
+              <a
+                href={url(`/robots/${currentRobot.id}/`)}
+                class="link-arrow"
+              >
+                Robot details
+                <Icon name="arrow" size={16} />
+              </a>
+            </div>
+          </article>
+        )
+      }
+
+      <!--
+        The next season, stated as not existing. An empty slot that says
+        why it is empty is worth more than hiding the row until there is
+        something to put in it: it shows a visitor where this is going.
+      -->
+      <div class="upnext" data-reveal>
+        <span class="upnext-num">Season 02</span>
+        <div class="upnext-body">
+          <h3>Not yet built</h3>
+          <p>
+            The BIOBUZZ robot starts once the game is released. This row
+            fills in when it exists.
+          </p>
+        </div>
+        <span class="upnext-tag">Pending</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 03 · SOFTWARE ══════════════════════════════════════════════ -->
+  <section class="band" id="software">
+    <div class="shell">
+      <p class="eyebrow">03 / Software</p>
+      <h2 class="band-title">
+        Tools we <span class="accent-word">wrote ourselves</span>
+      </h2>
+
+      <p class="band-lead" data-reveal>
+        Three strands, one of them running today. These are internal team
+        tools, so there is nothing here to sign up for.
+      </p>
+
+      <ol class="soft-list" data-reveal data-stagger>
+        {
+          homeSoftware.map((item, i) => (
+            <li class="soft">
+              <span class="soft-num">{String(i + 1).padStart(2, '0')}</span>
+              <div class="soft-body">
+                <h3>{item.name}</h3>
+                <p>{item.purpose}</p>
+              </div>
+              <span class:list={['soft-status', `is-${item.status}`]}>
+                {statusLabel[item.status]}
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+
+      <!--
+        What the scouting app produces, as a table of columns rather than
+        rows of data. We have not been to an event, so there is no data.
+        See the note in src/data/software.ts before adding example rows.
+      -->
+      <div class="table-block" data-reveal>
+        <h3 class="table-title">What the picklist holds</h3>
+
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th scope="col">Field</th>
+                <th scope="col">Source</th>
+                <th scope="col">What it is for</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                picklistColumns.map((row) => (
+                  <tr>
+                    <th scope="row">{row.field}</th>
+                    <td>{row.source}</td>
+                    <td>{row.use}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <p class="table-note">
+          Structure only. There are no numbers here because we have not
+          competed yet, and inventing some would make every other figure on
+          this site worth doubting.
+        </p>
+      </div>
+
+      <a href={url('/software/')} class="link-arrow band-link" data-reveal="fade">
+        All our software
+        <Icon name="arrow" size={16} />
+      </a>
+    </div>
+  </section>
+
+  <!-- ═══ 04 · GALLERY ═══════════════════════════════════════════════ -->
+  <section class="band" id="gallery">
+    <div class="shell">
+      <p class="eyebrow">04 / In the pits</p>
+      <h2 class="band-title">Season <span class="accent-word">in photos</span></h2>
+
+      <p class="band-lead" data-reveal>
+        Six slots, waiting on photos. Drop files into src/assets/gallery/ and
+        they appear here automatically, no code change needed.
+      </p>
+
+      <div class="gal-grid" data-reveal data-stagger>
+        {
+          Array.from({ length: 6 }, (_, i) => (
+            <Placeholder
+              path={`src/assets/gallery/0${i + 1}-name.jpg`}
+              ratio="4 / 3"
+            >
+              {
+                [
+                  'Build session, hands on the robot.',
+                  'The team at a competition.',
+                  'A close crop of a mechanism.',
+                  'Drive practice.',
+                  'Mentoring an FLL team.',
+                  'Something that went wrong, honestly captioned.',
+                ][i]
+              }
+            </Placeholder>
+          ))
+        }
+      </div>
+
+      <a href={url('/gallery/')} class="link-arrow band-link" data-reveal="fade">
+        Full gallery
+        <Icon name="arrow" size={16} />
+      </a>
+    </div>
+  </section>
+
+  <!-- ═══ 05 · UPDATES ═══════════════════════════════════════════════ -->
+  <section class="band" id="updates">
+    <div class="shell">
+      <p class="eyebrow">05 / Latest</p>
+      <h2 class="band-title">From the <span class="accent-word">workshop</span></h2>
+
+      {
+        posts.length > 0 ? (
+          <ul class="post-list" data-reveal data-stagger>
+            {posts.map((post) => (
+              <li class="post">
+                <div class="post-media">
+                  <Placeholder
+                    path={`src/assets/updates/${post.id}.jpg`}
+                    ratio="3 / 2"
+                  >
+                    Cover image for this post.
+                  </Placeholder>
+                </div>
+
+                <div class="post-body">
+                  <p class="post-meta">
+                    <time datetime={post.data.date.toISOString()}>
+                      {dateFmt.format(post.data.date)}
+                    </time>
+                    {post.data.tags[0] && (
+                      <span class="post-tag">{post.data.tags[0]}</span>
+                    )}
+                  </p>
+
+                  <h3 class="post-title">
+                    <a href={url(`/updates/${post.id}/`)}>{post.data.title}</a>
+                  </h3>
+
+                  <p class="post-excerpt">{post.data.excerpt}</p>
+                </div>
+              </li>
+            ))}
           </ul>
+        ) : (
+          <p class="band-lead">
+            No posts yet. See the README for how to add one.
+          </p>
+        )
+      }
 
-          <a href={url('/about/')} class="link-arrow who-cta" data-reveal="fade">
-            Read our story
+      <a href={url('/updates/')} class="link-arrow band-link" data-reveal="fade">
+        All updates
+        <Icon name="arrow" size={16} />
+      </a>
+    </div>
+  </section>
+
+  <!-- ═══ 06 · OUTREACH ══════════════════════════════════════════════ -->
+  <section class="band" id="outreach">
+    <div class="shell">
+      <p class="eyebrow">06 / Outreach</p>
+      <h2 class="band-title">
+        The teams we <span class="accent-word">mentor</span>
+      </h2>
+
+      <div class="split-block">
+        <div class="split-text" data-reveal>
+          <p class="band-lead">{outreach[0].description}</p>
+          <a href={url('/outreach/')} class="link-arrow">
+            What they have won
             <Icon name="arrow" size={16} />
           </a>
         </div>
 
         <div class="split-media" data-reveal="right">
-          <div class="media-frame">
-            <div class="ph-image">
-              <span>[Placeholder]</span>
-              <small>
-                A wide team photo goes here. Save it to
-                src/assets/team/team-photo.jpg and swap this block for an
-                &lt;Image&gt;.
-              </small>
-            </div>
-          </div>
-
-          <!-- Floating stat card overlapping the photo. The overlap is what
-               makes the section read as designed rather than as two columns. -->
-          <div class="float-card glass" data-parallax="0.08">
-            <Icon name="users" size={22} />
-            <p class="float-value">{team.rookieYear}</p>
-            <p class="float-label">Rookie season</p>
-          </div>
+          <Placeholder path="src/assets/team/outreach.jpg" ratio="3 / 2">
+            Our students working with an FLL team. Faces of minors need a
+            signed photo release before this goes public.
+          </Placeholder>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ═══ ROBOTS ═════════════════════════════════════════════════════ -->
-  <section class="section" id="robots">
+  <!-- ═══ SPONSORS ═══════════════════════════════════════════════════
+       The one full-bleed yellow band on the site. It is the only ask on
+       the page, and being the single yellow surface is what makes it read
+       as the thing to act on.
+  -->
+  <section class="sponsor-band" id="sponsors">
     <div class="shell">
-      <div class="head-row">
-        <div class="section-head">
-          <p class="eyebrow" data-reveal="fade">The build</p>
-          <h2 data-reveal>What we are <span class="accent-word">building</span></h2>
-          <p data-reveal data-reveal-delay="0.06">
-            BIOBUZZ will be our first competition season. Until then we are
-            learning on an offseason robot, and everything we work out along
-            the way gets written down here.
-          </p>
-        </div>
-        <a href={url('/robots/')} class="link-arrow head-link" data-reveal="fade">
-          All robots
-          <Icon name="arrow" size={16} />
-        </a>
-      </div>
+      <p class="sponsor-eyebrow">Sponsors</p>
+      <h2 class="sponsor-title">Help us build the first one</h2>
 
-      {
-        robots.length > 0 ? (
-          <div class="grid grid-3" data-reveal data-stagger>
-            {robots.slice(0, 3).map((robot, i) => (
-              <RobotCard robot={robot} index={robots.length - 1 - i} />
-            ))}
-          </div>
-        ) : (
-          <p class="empty-note">
-            <span class="ph-tag">[Placeholder]</span> No robot pages yet. See
-            the README for how to add one.
-          </p>
-        )
-      }
+      <p class="sponsor-body">
+        Sponsorship pays for the aluminium, the motors, the registration fees,
+        and the bus. It also puts your name in front of every student, parent,
+        and mentor at the events we attend.
+      </p>
+
+      <a href={url('/sponsors/')} class="btn btn-invert">
+        Sponsor us
+        <Icon name="arrow" size={16} />
+      </a>
+
+      <ul class="logo-grid">
+        {
+          sponsors.map((s) => (
+            <li class="logo-slot is-filled">
+              {s.url ? (
+                <a href={s.url} target="_blank" rel="noopener noreferrer">
+                  {s.name}
+                </a>
+              ) : (
+                <span>{s.name}</span>
+              )}
+            </li>
+          ))
+        }
+
+        {/*
+          Open slots, drawn rather than hidden. A grid with one logo and
+          five gaps says "there is room here"; a grid with one logo alone
+          says "nobody else signed up".
+        */}
+        {
+          Array.from({ length: Math.max(0, 6 - sponsors.length) }, () => (
+            <li class="logo-slot">
+              <span>Open</span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <p class="sponsor-note">
+        Logos go in public/images/sponsors/ and are listed in
+        src/data/site.ts.
+      </p>
     </div>
   </section>
-
-  <!-- ═══ GALLERY TEASER ═════════════════════════════════════════════ -->
-  <section class="section section-tight">
-    <div class="shell">
-      <div class="head-row">
-        <div class="section-head">
-          <p class="eyebrow" data-reveal="fade">In the pits</p>
-          <h2 data-reveal>Season <span class="accent-word">in photos</span></h2>
-        </div>
-        <a href={url('/gallery/')} class="link-arrow head-link" data-reveal="fade">
-          Full gallery
-          <Icon name="arrow" size={16} />
-        </a>
-      </div>
-
-      <Gallery limit={6} columns={3} />
-    </div>
-  </section>
-
-  <!-- ═══ UPDATES ════════════════════════════════════════════════════ -->
-  <section class="section" id="updates">
-    <div class="shell">
-      <div class="head-row">
-        <div class="section-head">
-          <p class="eyebrow" data-reveal="fade">Latest</p>
-          <h2 data-reveal>From the <span class="accent-word">workshop</span></h2>
-        </div>
-        <a href={url('/updates/')} class="link-arrow head-link" data-reveal="fade">
-          All updates
-          <Icon name="arrow" size={16} />
-        </a>
-      </div>
-
-      {
-        posts.length > 0 ? (
-          <div class="grid grid-3" data-reveal data-stagger>
-            {posts.map((post) => (
-              <UpdateCard post={post} />
-            ))}
-          </div>
-        ) : (
-          <p class="empty-note">
-            <span class="ph-tag">[Placeholder]</span> No posts yet. See the
-            README for how to add one.
-          </p>
-        )
-      }
-    </div>
-  </section>
-
-  <CtaBand
-    title="Help us build the next one"
-    body="Sponsorship pays for the aluminium, the motors, the registration fees, and the bus. It also puts your name in front of every student, parent, and mentor at the events we attend."
-  />
 </BaseLayout>
 
 <style>
-  /* ── Hero ────────────────────────────────────────────────────────── */
+  /* ═══ HERO ═══════════════════════════════════════════════════════════ */
 
   .hero {
     position: relative;
     display: flex;
     align-items: center;
     /* 100svh is the "small viewport height": the space left once a mobile
-       browser's address bar is showing. Plain 100vh causes the bottom of
-       the hero to sit under the browser chrome on iOS. */
+       browser's address bar is showing. Plain 100vh puts the bottom of the
+       hero under the browser chrome on iOS. */
     min-height: 100svh;
-    padding-top: calc(var(--header-h) + var(--sp-7));
+    padding-top: calc(var(--header-h) + var(--sp-8));
     padding-bottom: var(--sp-9);
     overflow: hidden;
+    background: var(--prussian);
+    border-bottom: var(--edge);
   }
 
   .hero-inner {
     position: relative;
     z-index: 2;
-    text-align: center;
+    /* Flush left, like everything else. */
+    text-align: left;
   }
 
-  .hero-glow {
-    position: absolute;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 0;
-    filter: blur(20px);
-  }
-
-  .hero-glow-blue {
-    top: -18%;
-    left: -12%;
-    width: min(900px, 95vw);
-    aspect-ratio: 1;
-    background: radial-gradient(
-      circle,
-      rgba(89, 149, 237, 0.3),
-      transparent 62%
-    );
-  }
-
-  .hero-glow-gold {
-    bottom: -25%;
-    right: -14%;
-    width: min(720px, 85vw);
-    aspect-ratio: 1;
-    background: radial-gradient(
-      circle,
-      rgba(255, 160, 0, 0.16),
-      transparent 62%
-    );
-  }
-
-  /* ── Hero mark ───────────────────────────────────────────────────── */
-
-  .hero-mark {
-    display: flex;
-    justify-content: center;
-    margin-bottom: var(--sp-5);
-    /* Bobs gently, the way a bubble sits in still air. Slow and small on
-       purpose: at this size anything faster reads as a glitch. */
-    animation: float 6.5s var(--ease-io) infinite;
-  }
-
-  /* A soft light behind the mark so it sits in the scene rather than on
-     top of it. drop-shadow follows the artwork's actual silhouette, which
-     box-shadow cannot do. */
-  .hero-mark :global(.logo-mark) {
-    filter: drop-shadow(0 0 32px rgba(89, 149, 237, 0.45))
-      drop-shadow(0 12px 28px rgba(7, 15, 28, 0.6));
-  }
-
-  @keyframes float {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-11px);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .hero-mark {
-      animation: none;
-    }
-  }
-
-  /* The mark competes with the headline for vertical space on a short
-     screen, and the headline is what matters. */
-  @media (max-height: 700px) {
-    .hero-mark :global(.logo-mark) {
-      width: 88px;
-      height: 88px;
-    }
-  }
-
-  .hero-badge {
+  .hero-eyebrow {
     display: inline-flex;
     align-items: center;
     gap: var(--sp-2);
-    padding: var(--sp-2) var(--sp-4);
-    border-radius: var(--radius-pill);
-    border: 1px solid var(--line-strong);
-    background: rgba(89, 149, 237, 0.1);
-    backdrop-filter: blur(10px);
-    font-size: var(--step--1);
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    color: var(--ink-muted);
+    font-family: var(--font-display);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
     margin-bottom: var(--sp-5);
   }
 
-  .hero-badge :global(svg) {
+  .hero-dot {
     color: var(--highlight);
-  }
-
-  .dot {
-    color: var(--ink-faint);
   }
 
   .hero-title {
-    display: flex;
-    flex-direction: column;
-    gap: 0.05em;
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    margin: 0;
   }
 
-  .hero-line {
+  .hero-word {
     display: block;
-    line-height: 0.95;
-    background: linear-gradient(
-      170deg,
-      var(--snow) 0%,
-      var(--platinum) 40%,
-      var(--cornflower-light) 100%
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    font-size: var(--step-5);
+    color: var(--ink);
   }
 
-  /* The number gets the yellow. The branding guide's "blue headers with
-     yellow accents" rule, applied to the biggest text on the site. */
-  .hero-number {
-    font-size: 0.42em;
-    letter-spacing: 0.14em;
-    background: none;
-    color: var(--highlight);
-    -webkit-text-fill-color: var(--highlight);
-    margin-top: 0.35em;
+  /*
+   * The team number, set as a wide-tracked rule line under the name. The
+   * branding guide asks for Ethnocentric on the wordmark; that face is not
+   * licensed, so this is the fallback the guide names: heavy display type
+   * at wide letter-spacing.
+   */
+  .hero-num {
+    display: block;
+    margin-top: var(--sp-3);
+    font-size: var(--step-1);
+    font-weight: 700;
+    letter-spacing: 0.42em;
+    color: var(--accent);
   }
 
   .hero-tagline {
-    margin-top: var(--sp-5);
+    margin-top: var(--sp-6);
+    padding-left: var(--sp-4);
+    border-left: 3px solid var(--highlight);
     font-family: var(--font-display);
     font-size: var(--step-2);
     font-weight: 700;
-    letter-spacing: -0.01em;
     color: var(--ink);
   }
 
   .hero-lead {
-    margin: var(--sp-4) auto 0;
+    margin-top: var(--sp-5);
     max-width: 56ch;
     font-size: var(--step-1);
-    line-height: 1.55;
+    line-height: 1.6;
     color: var(--ink-muted);
   }
 
   .hero-actions {
-    justify-content: center;
     margin-top: var(--sp-7);
   }
 
-  /* ── Scroll cue ──────────────────────────────────────────────────── */
-
-  .scroll-cue {
+  .scroll-hint {
     position: absolute;
-    bottom: var(--sp-5);
+    bottom: var(--sp-6);
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: var(--sp-2);
+    gap: var(--sp-3);
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
     z-index: 2;
   }
 
-  .scroll-cue-track {
-    display: block;
-    width: 24px;
-    height: 38px;
-    border-radius: var(--radius-pill);
-    border: 1.5px solid var(--line-strong);
-    position: relative;
+  .scroll-hint-line {
+    width: 46px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--highlight));
   }
 
-  /* A bubble falling down the inside of the track, on a loop. */
-  .scroll-cue-dot {
-    position: absolute;
-    top: 7px;
-    left: 50%;
-    width: 5px;
-    height: 5px;
-    margin-left: -2.5px;
-    border-radius: 50%;
-    background: var(--highlight);
-    animation: cue 1.9s var(--ease-io) infinite;
-  }
-
-  @keyframes cue {
-    0%,
-    18% {
-      transform: translateY(0);
-      opacity: 0;
-    }
-    35% {
-      opacity: 1;
-    }
-    72% {
-      transform: translateY(16px);
-      opacity: 0;
-    }
-    100% {
-      transform: translateY(16px);
-      opacity: 0;
-    }
-  }
-
-  .scroll-cue-label {
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .scroll-cue-dot {
-      animation: none;
-      opacity: 1;
-    }
-  }
-
-  /* Below 600px tall (a phone in landscape) the cue overlaps the buttons. */
-  @media (max-height: 640px) {
-    .scroll-cue {
+  @media (max-width: 640px) {
+    .scroll-hint {
       display: none;
     }
   }
 
-  /* ── Who we are ──────────────────────────────────────────────────── */
+  /* ═══ BANDS ══════════════════════════════════════════════════════════
+     Every major section is a band with a 2px rule under it. The rule is a
+     bottom border rather than a top one so the last band before the yellow
+     sponsors block does not double up on its edge. */
 
-  .split {
-    display: grid;
-    gap: var(--sp-7);
-    align-items: center;
+  .band {
+    padding-block: var(--sp-9);
+    border-bottom: var(--edge);
   }
 
-  @media (min-width: 940px) {
-    .split {
-      grid-template-columns: 1.05fr 0.95fr;
-      gap: var(--sp-8);
+  @media (min-width: 900px) {
+    .band {
+      padding-block: var(--sp-10);
     }
   }
 
-  .subteam-list {
+  .band-title {
+    font-family: var(--font-display);
+    font-size: var(--step-4);
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    margin: 0 0 var(--sp-5);
+    max-width: 20ch;
+  }
+
+  .band-lead {
+    max-width: 68ch;
+    font-size: var(--step-1);
+    line-height: 1.65;
+    color: var(--ink-muted);
+  }
+
+  .band-link {
+    margin-top: var(--sp-7);
+  }
+
+  /* ═══ SUBTEAMS ═══════════════════════════════════════════════════════ */
+
+  .subteams {
     display: grid;
-    gap: var(--sp-4);
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+    gap: 0;
     list-style: none;
+    margin: var(--sp-8) 0 0;
     padding: 0;
-    margin: var(--sp-6) 0 0;
+    border-top: var(--edge);
+    border-left: var(--edge);
+  }
+
+  @media (min-width: 700px) {
+    .subteams {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1100px) {
+    .subteams {
+      grid-template-columns: repeat(4, 1fr);
+    }
   }
 
   .subteam {
-    padding-left: var(--sp-4);
-    border-left: 2px solid var(--line-strong);
+    padding: var(--sp-6);
+    border-right: var(--edge);
+    border-bottom: var(--edge);
+  }
+
+  .subteam-num {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--highlight);
+    margin-bottom: var(--sp-4);
   }
 
   .subteam h3 {
     font-family: var(--font-display);
     font-size: var(--step-0);
     font-weight: 700;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--accent);
-    margin-bottom: var(--sp-1);
+    margin-bottom: var(--sp-3);
   }
 
   .subteam p {
     font-size: var(--step--1);
+    line-height: 1.65;
     color: var(--ink-muted);
-    line-height: 1.55;
   }
 
-  .who-cta {
-    display: inline-flex;
-    margin-top: var(--sp-6);
+  .wide-media {
+    margin-top: var(--sp-8);
   }
 
-  .split-media {
-    position: relative;
+  /* ═══ FEATURE ROBOT ══════════════════════════════════════════════════ */
+
+  .feature {
+    display: grid;
+    gap: var(--sp-6);
+    margin-top: var(--sp-8);
+    padding-top: var(--sp-7);
+    border-top: var(--edge);
   }
 
-  .media-frame {
-    position: relative;
-    aspect-ratio: 4 / 5;
-    border-radius: var(--radius-xl);
-    overflow: hidden;
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .float-card {
-    position: absolute;
-    left: calc(var(--sp-5) * -1);
-    bottom: var(--sp-6);
-    padding: var(--sp-4) var(--sp-5);
-    text-align: left;
-    box-shadow: var(--shadow-lg);
-  }
-
-  .float-card :global(svg) {
-    color: var(--highlight);
-    margin-bottom: var(--sp-2);
-  }
-
-  .float-value {
-    font-family: var(--font-display);
-    font-size: var(--step-2);
-    font-weight: 700;
-    line-height: 1;
-    color: var(--ink);
-  }
-
-  .float-label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    margin-top: var(--sp-1);
-  }
-
-  @media (max-width: 520px) {
-    /* The card hangs off the edge on a narrow screen. Tuck it back in. */
-    .float-card {
-      left: var(--sp-3);
-      bottom: var(--sp-3);
+  @media (min-width: 860px) {
+    .feature {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-8);
+      align-items: start;
     }
   }
 
-  /* ── Section heads with a trailing link ──────────────────────────── */
-
-  .head-row {
+  .feature-meta {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
     display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: var(--sp-4);
-    margin-bottom: var(--sp-6);
+    gap: var(--sp-3);
   }
 
-  .head-row .section-head {
-    margin-bottom: 0;
-    flex: 1 1 340px;
+  .feature-title {
+    margin-top: var(--sp-4);
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    font-weight: 700;
+    line-height: 1.05;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
   }
 
-  .head-link {
-    padding-bottom: var(--sp-2);
-  }
-
-  .empty-note {
-    padding: var(--sp-6);
-    border: 1px dashed var(--line-strong);
-    border-radius: var(--radius);
+  .feature-summary {
+    margin: var(--sp-4) 0 var(--sp-6);
+    font-size: var(--step-0);
+    line-height: 1.7;
     color: var(--ink-muted);
+  }
+
+  /* ═══ SEASON 02, EMPTY ═══════════════════════════════════════════════ */
+
+  .upnext {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-5);
+    flex-wrap: wrap;
+    margin-top: var(--sp-7);
+    padding: var(--sp-6);
+    border: 2px dashed var(--line-strong);
+  }
+
+  .upnext-num {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .upnext-body {
+    flex: 1 1 22ch;
+  }
+
+  .upnext-body h3 {
+    font-family: var(--font-display);
+    font-size: var(--step-0);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .upnext-body p {
+    margin-top: var(--sp-2);
+    font-size: var(--step--1);
+    font-style: italic;
+    color: var(--ink-muted);
+  }
+
+  .upnext-tag {
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: var(--sp-2) var(--sp-3);
+    border: 2px solid var(--line-strong);
+    color: var(--ink-faint);
+  }
+
+  /* ═══ SOFTWARE ═══════════════════════════════════════════════════════ */
+
+  .soft-list {
+    list-style: none;
+    margin: var(--sp-8) 0 0;
+    padding: 0;
+    border-top: var(--edge);
+  }
+
+  .soft {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--sp-4) var(--sp-5);
+    align-items: start;
+    padding: var(--sp-6) 0;
+    border-bottom: var(--edge);
+  }
+
+  @media (min-width: 800px) {
+    .soft {
+      grid-template-columns: auto 1fr auto;
+      gap: var(--sp-6);
+      align-items: center;
+    }
+  }
+
+  .soft-num {
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--highlight);
+  }
+
+  .soft-body h3 {
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .soft-body p {
+    margin-top: var(--sp-3);
+    max-width: 62ch;
+    font-size: var(--step--1);
+    line-height: 1.65;
+    color: var(--ink-muted);
+  }
+
+  /* Status is colour-coded, but the word is always there too: colour alone
+     is not a label for anyone who cannot distinguish these hues. */
+  .soft-status {
+    grid-column: 2;
+    justify-self: start;
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: var(--sp-2) var(--sp-3);
+    border: 2px solid var(--line-strong);
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+
+  @media (min-width: 800px) {
+    .soft-status {
+      grid-column: 3;
+    }
+  }
+
+  .soft-status.is-in-progress {
+    border-color: var(--highlight);
+    color: var(--highlight);
+  }
+
+  .soft-status.is-live {
+    border-color: #8fe6b0;
+    color: #8fe6b0;
+  }
+
+  /* ═══ DATA TABLE ═════════════════════════════════════════════════════ */
+
+  .table-block {
+    margin-top: var(--sp-8);
+  }
+
+  .table-title {
+    font-family: var(--font-display);
+    font-size: var(--step-0);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: var(--sp-5);
+  }
+
+  /* A wide table must scroll inside its own box. Letting it widen the page
+     is what produces the sideways-scrolling body on a phone. */
+  .table-scroll {
+    overflow-x: auto;
+    border: var(--edge);
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--step--1);
+    min-width: 560px;
+  }
+
+  .data-table th,
+  .data-table td {
+    text-align: left;
+    padding: var(--sp-4) var(--sp-5);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .data-table thead th {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    background: rgba(89, 149, 237, 0.06);
+    border-bottom: var(--edge);
+  }
+
+  .data-table tbody th {
+    font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .data-table tbody td {
+    color: var(--ink-muted);
+  }
+
+  .data-table tbody tr:last-child th,
+  .data-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* Footnotes and captions are Source Sans 3 Italic, per the guide. */
+  .table-note {
+    margin-top: var(--sp-4);
+    max-width: 64ch;
+    font-style: italic;
+    font-size: var(--step--1);
+    line-height: 1.6;
+    color: var(--ink-faint);
+  }
+
+  /* ═══ GALLERY ════════════════════════════════════════════════════════ */
+
+  .gal-grid {
+    display: grid;
+    gap: var(--sp-5);
+    margin-top: var(--sp-8);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  }
+
+  /*
+   * Grayscale, lifting to full colour on hover. Applies to real photos once
+   * they exist; the placeholders are already monochrome, so this is here
+   * ready rather than doing anything visible today.
+   */
+  .gal-grid :global(img) {
+    filter: grayscale(1) contrast(1.05);
+    transition: filter var(--dur) var(--ease);
+  }
+
+  .gal-grid :global(img:hover) {
+    filter: grayscale(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gal-grid :global(img) {
+      transition: none;
+    }
+  }
+
+  /* ═══ UPDATES ════════════════════════════════════════════════════════ */
+
+  .post-list {
+    list-style: none;
+    margin: var(--sp-8) 0 0;
+    padding: 0;
+    border-top: var(--edge);
+  }
+
+  .post {
+    display: grid;
+    gap: var(--sp-5);
+    padding: var(--sp-7) 0;
+    border-bottom: var(--edge);
+  }
+
+  @media (min-width: 800px) {
+    .post {
+      grid-template-columns: 300px 1fr;
+      gap: var(--sp-7);
+      align-items: start;
+    }
+  }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .post-tag {
+    padding: 3px var(--sp-3);
+    border: 2px solid var(--line-strong);
+    color: var(--accent);
+  }
+
+  .post-title {
+    margin-top: var(--sp-4);
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 700;
+    line-height: 1.1;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+  }
+
+  .post-title a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .post-title a:hover {
+    color: var(--highlight);
+  }
+
+  .post-excerpt {
+    margin-top: var(--sp-4);
+    max-width: 62ch;
+    line-height: 1.65;
+    color: var(--ink-muted);
+  }
+
+  /* ═══ OUTREACH ═══════════════════════════════════════════════════════ */
+
+  .split-block {
+    display: grid;
+    gap: var(--sp-7);
+    margin-top: var(--sp-7);
+  }
+
+  @media (min-width: 860px) {
+    .split-block {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-8);
+      align-items: start;
+    }
+  }
+
+  .split-text .link-arrow {
+    margin-top: var(--sp-6);
+  }
+
+  /* ═══ SPONSORS BANNER ════════════════════════════════════════════════ */
+
+  .sponsor-band {
+    background: var(--bus-yellow);
+    color: var(--prussian);
+    padding-block: var(--sp-9);
+    border-bottom: var(--edge);
+  }
+
+  @media (min-width: 900px) {
+    .sponsor-band {
+      padding-block: var(--sp-10);
+    }
+  }
+
+  .sponsor-eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    /* Not full black: a softened navy on yellow is easier to hold at small
+       sizes than maximum contrast, and stays well past the AA threshold. */
+    color: rgba(16, 37, 66, 0.72);
+    margin-bottom: var(--sp-4);
+  }
+
+  .sponsor-title {
+    font-family: var(--font-display);
+    font-size: var(--step-4);
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    max-width: 18ch;
+    color: var(--prussian);
+  }
+
+  .sponsor-body {
+    margin: var(--sp-5) 0 var(--sp-6);
+    max-width: 60ch;
+    font-size: var(--step-1);
+    line-height: 1.6;
+    color: rgba(16, 37, 66, 0.85);
+  }
+
+  /* The one button on the site that sits on yellow, so it inverts: navy
+     fill, yellow text. A yellow-on-yellow primary button would vanish. */
+  .btn-invert {
+    background: var(--prussian);
+    color: var(--bus-yellow);
+    border-color: var(--prussian);
+  }
+
+  .btn-invert:hover {
+    background: var(--prussian-950);
+    border-color: var(--prussian-950);
+    color: var(--bus-yellow);
+  }
+
+  .logo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+    gap: 0;
+    list-style: none;
+    margin: var(--sp-8) 0 0;
+    padding: 0;
+    border-top: 2px solid rgba(16, 37, 66, 0.28);
+    border-left: 2px solid rgba(16, 37, 66, 0.28);
+  }
+
+  .logo-slot {
+    display: grid;
+    place-items: center;
+    min-height: 92px;
+    padding: var(--sp-4);
     text-align: center;
+    border-right: 2px solid rgba(16, 37, 66, 0.28);
+    border-bottom: 2px solid rgba(16, 37, 66, 0.28);
+
+    font-family: var(--font-display);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+
+    /*
+     * 0.68, not the 0.45 this started at. Navy at 0.45 over yellow measures
+     * 2.55:1, which fails AA and is genuinely hard to read; the word "Open"
+     * looked like a print artefact rather than a label. 0.68 clears 4.5:1
+     * and still reads as clearly quieter than a filled slot.
+     */
+    color: rgba(16, 37, 66, 0.68);
+  }
+
+  .logo-slot.is-filled {
+    color: var(--prussian);
+  }
+
+  .logo-slot a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+  }
+
+  .logo-slot a:hover {
+    border-bottom-color: var(--prussian);
+  }
+
+  .sponsor-note {
+    margin-top: var(--sp-5);
+    font-style: italic;
+    font-size: var(--step--1);
+    color: rgba(16, 37, 66, 0.7);
   }
 </style>

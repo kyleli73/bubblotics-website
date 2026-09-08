@@ -70,16 +70,38 @@
   --accent: var(--cornflower);
   --accent-soft: var(--cornflower-light);
 
-  /* The warm accent, used for primary buttons, focus rings, the eyebrow
-     tick, and the one word per heading that carries emphasis. Orange, to
-     match the mark. */
-  --highlight: var(--logo-orange);
+  /* The accent, used for primary buttons, focus rings, the eyebrow tick,
+     the sponsors banner, and the one word per heading that carries
+     emphasis. School Bus Yellow, straight from the guide.
 
-  /* School Bus Yellow, kept to a single job: marking a standout award.
-     Yellow reads as gold there, which is exactly the meaning wanted, and
-     restricting it to one use is what keeps it meaningful. If it starts
-     appearing anywhere else, it stops signalling anything. */
+     ── A known tension, decided deliberately ──────────────────────────
+     The logo artwork's warm colour is not this yellow. Measured off the
+     file, the numerals and band are #FFA000, a true orange. An earlier
+     version of this stylesheet followed the artwork and used the orange
+     everywhere, on the reasoning that orange next to yellow reads as a
+     near-miss rather than a pair.
+
+     The guide names School Bus Yellow as the accent, and the guide wins:
+     it is the document the team hands a sponsor or a judge, and an
+     interface that does not match it is the thing that looks wrong. The
+     orange stays defined below and is used only where the logo's own
+     artwork is being matched, so the two never sit edge to edge. Keep the
+     yellow sparing. It marks what matters and stops working the moment it
+     is everywhere. */
+  --highlight: var(--bus-yellow);
+
+  /* Same yellow, named for the one job where the meaning is "gold" rather
+     than "accent": a standout award. Kept as its own token so that meaning
+     survives if the accent above is ever retuned. */
   --gold: var(--bus-yellow);
+
+  /* ── Structural edges ────────────────────────────────────────────────
+     The home page is built as stacked full-bleed bands rather than
+     floating cards, so the boundary between two sections is a real 2px
+     line rather than a shadow. Structural blocks stay square: the radius
+     tokens below are for controls and media, not for the page's skeleton. */
+  --edge-w: 2px;
+  --edge: var(--edge-w) solid var(--line-strong);
 
   --line: rgba(137, 172, 220, 0.16); /* hairline borders */
   --line-strong: rgba(137, 172, 220, 0.32);
@@ -900,6 +922,31 @@ p {
 .has-js [data-reveal] {
   opacity: 0;
   will-change: transform, opacity;
+}
+
+/*
+ * ── Why main is clipped horizontally ──────────────────────────────────
+ *
+ * A [data-reveal="right"] element waits 52px to the RIGHT of where it will
+ * end up, and only slides home once you scroll to it. Those 52px are real
+ * layout: on a narrow screen they widen the document, and the whole page
+ * scrolls sideways until the animation has run. Measured on a 375px
+ * viewport, the outreach photo pushed the document to 403px, so every
+ * section could be dragged 28px left. The header, being fixed, stretched to
+ * match, which is what made it obvious.
+ *
+ * `clip` rather than `hidden` on purpose. `overflow-x: hidden` forces the
+ * other axis to `auto`, which turns main into a scroll container and breaks
+ * any position:sticky inside it. `overflow-x: clip` leaves the vertical axis
+ * genuinely visible and simply refuses to scroll what pokes out sideways,
+ * which is exactly the behaviour wanted.
+ *
+ * Safari before 16 does not support `clip` and will ignore this rule. Those
+ * visitors get the sideways scroll that everyone got before this rule
+ * existed, which is a cosmetic annoyance rather than a broken page.
+ */
+main {
+  overflow-x: clip;
 }
 
 /* Anyone who has asked their system to reduce motion gets the finished

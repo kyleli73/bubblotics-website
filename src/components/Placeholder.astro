@@ -1,0 +1,123 @@
+---
+/*
+ * A labelled gap where a real asset goes.
+ *
+ * ── Why this exists as a component ─────────────────────────────────────
+ * The alternative is filler: a stock photo, a grey rectangle, a paragraph
+ * of lorem ipsum. Filler is worse than an obvious hole, because it hides
+ * the hole. Six months from now nobody remembers which photos were real.
+ *
+ * So a placeholder here is loud on purpose (dashed edge, diagonal hatch)
+ * and it names the exact path to drop the file into. Whoever finally has
+ * the photo does not have to read any code to find out where it goes: the
+ * page they are looking at already told them.
+ *
+ * Usage:
+ *   <Placeholder path="src/assets/team/team-photo.jpg" ratio="16 / 9">
+ *     A wide shot of the whole team.
+ *   </Placeholder>
+ *
+ * The slot is the art direction: what the photo should actually show. Keep
+ * it specific, since it is the brief for whoever takes the picture.
+ */
+
+interface Props {
+  /** Exact path the asset should be saved to. Shown verbatim. */
+  path: string;
+  /** CSS aspect-ratio for the box, e.g. "16 / 9" or "1 / 1". */
+  ratio?: string;
+  /** Short label in the corner, e.g. "Photo", "Screenshot". */
+  kind?: string;
+  class?: string;
+}
+
+const {
+  path,
+  ratio = '16 / 9',
+  kind = 'Photo',
+  class: className = '',
+} = Astro.props;
+---
+
+<figure class={`ph ${className}`} style={`--ph-ratio: ${ratio};`}>
+  <div class="ph-box">
+    <span class="ph-kind">{kind}</span>
+    <span class="ph-word">Placeholder</span>
+  </div>
+
+  <figcaption class="ph-caption">
+    <span class="ph-brief"><slot /></span>
+    <code class="ph-path">{path}</code>
+  </figcaption>
+</figure>
+
+<style>
+  .ph {
+    margin: 0;
+  }
+
+  .ph-box {
+    display: grid;
+    place-content: center;
+    gap: var(--sp-2);
+    aspect-ratio: var(--ph-ratio);
+    padding: var(--sp-5);
+    text-align: center;
+
+    /* Square, like every other structural block on this page. */
+    border: 2px dashed var(--line-strong);
+
+    /*
+     * Diagonal hatch. Reads unmistakably as "nothing here yet" at any size,
+     * including in a screenshot sent to someone who has not seen the site,
+     * which a plain grey box does not.
+     */
+    background-image: repeating-linear-gradient(
+      45deg,
+      rgba(137, 172, 220, 0.055) 0 10px,
+      transparent 10px 20px
+    );
+  }
+
+  .ph-kind {
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--highlight);
+  }
+
+  .ph-word {
+    font-family: var(--font-display);
+    font-size: var(--step-0);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* Captions are Source Sans 3 Italic, per the branding guide. */
+  .ph-caption {
+    margin-top: var(--sp-3);
+    font-style: italic;
+    font-size: var(--step--1);
+    line-height: 1.55;
+    color: var(--ink-muted);
+  }
+
+  .ph-brief {
+    display: block;
+  }
+
+  .ph-path {
+    display: block;
+    margin-top: var(--sp-2);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-style: normal;
+    font-size: 0.78rem;
+    /* Long paths must not force the page to scroll sideways on a phone. */
+    overflow-wrap: anywhere;
+    color: var(--accent-soft);
+  }
+</style>

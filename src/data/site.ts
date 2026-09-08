@@ -59,16 +59,29 @@ export const team = {
  * `value` must be a plain number for the counter to work. Put any symbol in
  * `suffix` ("+", "%") and any wording in `label`.
  */
-export const stats = [
+export type Stat = {
+  value: number;
+  suffix: string;
+  label: string;
+  /*
+   * Set false for a figure that is an identifier rather than a quantity.
+   * "2026" is a year: watching it tick up from zero reads as a counter
+   * that has not finished loading, not as a fact. It renders immediately.
+   */
+  count?: boolean;
+};
+
+export const stats: Stat[] = [
   /*
    * Only things that are true today. A rookie team's honest figures are
-   * seasons: 0, awards: 0, championships: 0, and three counters animating
-   * up to zero is a worse look than not having them. These are the numbers
-   * that are actually non-zero and actually mean something.
+   * seasons: 0, awards: 0, championships: 0, and counters animating up to
+   * zero is a worse look than not having them. These are the numbers that
+   * are actually non-zero and actually mean something.
    */
   { value: 15, suffix: '', label: 'Students on the team' },
-  { value: 5, suffix: '', label: 'FLL teams we mentor' },
   { value: 4, suffix: '', label: 'Subteams' },
+  { value: 5, suffix: '', label: 'FLL teams mentored' },
+  { value: 2026, suffix: '', label: 'First season', count: false },
 ];
 
 /*
@@ -332,18 +345,121 @@ export const contact = {
 export const activeSocials = contact.socials.filter((s) => s.handle !== null);
 
 /*
- * The header and footer navigation. Add a page here and it appears in both,
- * plus the mobile menu and the footer sitemap.
+ * ── Navigation ────────────────────────────────────────────────────────────
+ *
+ * Ten flat links is too many for a menu bar. Past about seven, nobody reads
+ * the row, they scan it, and scanning ten similar words takes longer than
+ * reading four. So the header groups them under four headings and opens each
+ * as a dropdown.
+ *
+ * The grouping is by what a visitor came for, not by our internal structure:
+ *
+ *   Team      who we are and how to reach us
+ *   Build     the things we make, hardware and software
+ *   Season    what has happened and what we are posting about
+ *   Sponsors  the ask, and who has already said yes
+ *
+ * `nav` below is kept as a flat list, derived from the groups, because the
+ * footer sitemap and the mobile panel both want every link at one level. Add
+ * a page to a group and it appears in all three places.
  */
-export const nav = [
+export type NavGroup = {
+  label: string;
+  /** Where the group heading itself points, if it has a page of its own. */
+  href?: string;
+  items: { label: string; href: string; blurb: string }[];
+};
+
+export const navGroups: NavGroup[] = [
+  {
+    label: 'Team',
+    items: [
+      {
+        label: 'Our Story',
+        href: '/about/',
+        blurb: 'Who we are and how the team started',
+      },
+      {
+        label: 'Outreach',
+        href: '/outreach/',
+        blurb: 'The five FLL teams we mentor',
+      },
+      {
+        label: 'Contact',
+        href: '/contact/',
+        blurb: 'Email, Instagram, and where to find us',
+      },
+    ],
+  },
+  {
+    label: 'Build',
+    items: [
+      {
+        label: 'Robots',
+        href: '/robots/',
+        blurb: 'What we have built, season by season',
+      },
+      {
+        label: 'Software',
+        href: '/software/',
+        blurb: 'The tools we wrote ourselves',
+      },
+    ],
+  },
+  {
+    label: 'Season',
+    items: [
+      {
+        label: 'Updates',
+        href: '/updates/',
+        blurb: 'Notes from the workshop',
+      },
+      {
+        label: 'Awards',
+        href: '/awards/',
+        blurb: 'Results, once we have them',
+      },
+      {
+        label: 'Gallery',
+        href: '/gallery/',
+        blurb: 'Photos from builds and events',
+      },
+    ],
+  },
+  {
+    label: 'Sponsors',
+    href: '/sponsors/',
+    items: [
+      {
+        label: 'Our Sponsors',
+        href: '/sponsors/',
+        blurb: 'The people backing this team',
+      },
+      {
+        label: 'Sponsor Us',
+        href: '/sponsors/#tiers',
+        blurb: 'What your support pays for',
+      },
+    ],
+  },
+];
+
+/*
+ * Flat list, derived. The footer sitemap and the mobile menu use this.
+ *
+ * Home is prepended by hand because it has no group: it is the logo.
+ * Duplicate hrefs are dropped so "Sponsor Us" (an anchor on the sponsors
+ * page) does not show up twice in the footer.
+ */
+export const nav: { label: string; href: string }[] = [
   { label: 'Home', href: '/' },
-  { label: 'Our Story', href: '/about/' },
-  { label: 'Robots', href: '/robots/' },
-  { label: 'Software', href: '/software/' },
-  { label: 'Awards', href: '/awards/' },
-  { label: 'Gallery', href: '/gallery/' },
-  { label: 'Updates', href: '/updates/' },
-  { label: 'Outreach', href: '/outreach/' },
-  { label: 'Sponsors', href: '/sponsors/' },
-  { label: 'Contact', href: '/contact/' },
+  ...navGroups
+    .flatMap((g) => g.items)
+    .map(({ label, href }) => ({ label, href }))
+    // Drop anything whose href we already have. Two entries pointing at the
+    // same page in one footer column looks like a mistake, because it is.
+    .filter(
+      (item, i, all) => all.findIndex((x) => x.href === item.href) === i
+    )
+    .filter((item) => !item.href.includes('#')),
 ];
