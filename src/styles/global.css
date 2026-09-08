@@ -419,6 +419,12 @@ p {
 .section {
   padding-block: var(--sp-9);
   position: relative;
+  /*
+   * The same 2px rule the home page draws between its bands. Putting it on
+   * .section means all nine interior pages pick up the rhythm without any
+   * of them being edited.
+   */
+  border-bottom: var(--edge);
 }
 
 .section-tight {
@@ -528,71 +534,36 @@ p {
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(var(--glass-blur)) saturate(1.3);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.3);
-  border-radius: var(--radius-lg);
 }
 
 .card {
   position: relative;
-  background: linear-gradient(
-    165deg,
-    rgba(89, 149, 237, 0.1),
-    rgba(16, 37, 66, 0.5) 55%
-  );
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
+  /*
+   * A flat panel with a real 2px edge, matching the bands on the home page.
+   *
+   * This used to be a rounded glass tile with a masked gradient ring and a
+   * lift on hover. On its own it looked fine; sitting one click away from a
+   * page built out of square ruled bands, it read as a different website.
+   * Consistency across the nine pages is worth more than the tile.
+   */
+  background: rgba(89, 149, 237, 0.05);
+  border: var(--edge);
   padding: var(--sp-5);
-  overflow: hidden;
   isolation: isolate;
   transition:
-    transform var(--dur) var(--ease),
-    border-color var(--dur) var(--ease),
-    box-shadow var(--dur) var(--ease);
+    background var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
 }
 
-/* The soap-bubble highlight: a bright hairline along the top edge that
-   brightens on hover. One CSS rule, and it is what makes these read as
-   bubbles rather than as generic dark cards. */
-.card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    150deg,
-    rgba(252, 250, 249, 0.32),
-    transparent 38%,
-    transparent 70%,
-    rgba(89, 149, 237, 0.24)
-  );
-  /* Masks the gradient down to the 1px border ring only. */
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  opacity: 0.75;
-  transition: opacity var(--dur) var(--ease);
-  pointer-events: none;
-  z-index: 1;
-}
-
+/*
+ * Hover is a brightening, not a lift. A card that rises off the page fights
+ * the flat, ruled look everything else now has.
+ */
 .card:hover {
-  transform: translateY(-4px);
-  border-color: var(--line-strong);
-  box-shadow: var(--shadow), var(--glow);
+  background: rgba(89, 149, 237, 0.1);
+  border-color: var(--accent);
 }
 
-.card:hover::before {
-  opacity: 1;
-}
-
-/* Cards that are entirely a link. The whole card becomes the click target
-   via the ::after overlay, so the link text stays meaningful for screen
-   readers while the mouse gets a big, forgiving hit area. */
 .card-link {
   display: block;
   color: inherit;
@@ -611,14 +582,19 @@ p {
   color: var(--highlight);
 }
 
+/*
+ * The photo at the top of a card, bled to the card's edges.
+ *
+ * The negative margin cancels the card's padding so the image meets the
+ * border. There were two border-radius declarations here, the second
+ * silently overriding the first; both are gone now that cards are square.
+ */
 .card-media {
   position: relative;
   aspect-ratio: 16 / 10;
   overflow: hidden;
-  border-radius: var(--radius);
   margin: calc(var(--sp-5) * -1) calc(var(--sp-5) * -1) var(--sp-5);
-  border-bottom: 1px solid var(--line);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: var(--edge);
   background: var(--prussian-900);
 }
 
@@ -649,11 +625,13 @@ p {
   text-align: center;
   padding: var(--sp-5);
   color: var(--ink-faint);
-  background-color: var(--prussian-900);
+  /* Same treatment as the Placeholder component: dashed 2px edge and a
+     diagonal hatch, so a gap looks the same wherever it appears. */
+  border: 2px dashed var(--line-strong);
   background-image: repeating-linear-gradient(
-    -45deg,
-    rgba(89, 149, 237, 0.07) 0 12px,
-    transparent 12px 24px
+    45deg,
+    rgba(137, 172, 220, 0.055) 0 10px,
+    transparent 10px 20px
   );
 }
 
@@ -887,8 +865,7 @@ p {
 }
 
 .prose img {
-  border-radius: var(--radius);
-  border: 1px solid var(--line);
+  border: var(--edge);
 }
 
 .prose code {
@@ -979,22 +956,30 @@ main {
 .page-head {
   position: relative;
   padding-top: calc(var(--header-h) + var(--sp-8));
-  padding-bottom: var(--sp-7);
+  padding-bottom: var(--sp-8);
   overflow: hidden;
+  border-bottom: var(--edge);
+  background: var(--prussian);
 }
 
+/*
+ * A wash of light anchored to the left, where the title is.
+ *
+ * It used to be a large circle centred in the section, which pulled the eye
+ * to the middle of a band whose content is hard left. Moving it under the
+ * heading is the difference between lighting the page and lighting the
+ * empty half of it.
+ */
 .page-head::after {
-  /* A wide, soft bubble of light behind the title. */
   content: '';
   position: absolute;
-  top: -40%;
-  left: 50%;
-  width: min(1100px, 130vw);
+  top: -60%;
+  left: -10%;
+  width: min(900px, 110vw);
   aspect-ratio: 1;
-  transform: translateX(-50%);
   background: radial-gradient(
     circle,
-    rgba(89, 149, 237, 0.15),
+    rgba(89, 149, 237, 0.16),
     transparent 62%
   );
   pointer-events: none;

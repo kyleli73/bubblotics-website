@@ -120,9 +120,13 @@ const navCols = [nav.slice(0, half), nav.slice(half)];
 <style>
   .site-footer {
     position: relative;
-    margin-top: var(--sp-9);
+    /*
+     * No top margin and no top border. Whatever sits above the footer is a
+     * .section or a full-bleed band, and both draw their own 2px rule on
+     * the bottom edge. Keeping a border here as well produced a 2px line
+     * and a 1px line separated by six rems of blank page.
+     */
     padding-block: var(--sp-8) var(--sp-6);
-    border-top: 1px solid var(--line);
     background: linear-gradient(
       to bottom,
       rgba(16, 37, 66, 0.35),
