@@ -399,6 +399,10 @@ const bubbles = Array.from({ length: count }, (_, i) => {
       const target = count();
       if (bubbles.length === 0) {
         bubbles = Array.from({ length: target }, () => spawn(false));
+        // Random scatter can leave some bubbles inside others. Ease them
+        // apart before the first frame, without bouncing, so the field
+        // does not open with every overlapping pair flying apart at once.
+        for (let k = 0; k < 40; k++) collide(false);
       } else if (bubbles.length > target) {
         bubbles.length = target;
       } else {
@@ -574,47 +578,111 @@ const bubbles = Array.from({ length: count }, (_, i) => {
       rings.push({ x: b.x, y: b.y, r: b.r, alpha: b.alpha, life: 1, light: lightAt(b.x, b.y).amount });
     }
 
-    function step() {
-      const c = ctx!;
-      t += 0.016;
-      drawLight();
-      c.clearRect(0, 0, w, h);
+    /* ── Movement: drift, sway, the pointer's push, and water drag ──── */
+    function move(b: Bubble) {
+      // Sway: a slow sine on top of the base velocity, so the path curves
+      // instead of running dead straight.
+      b.x += b.vx + Math.sin(t * 0.5 + b.phase) * (b.drift * 0.004);
+      b.y += b.vy;
 
-      for (const b of bubbles) {
-        // Sway: a slow sine on top of the base velocity, so the path curves
-        // instead of running dead straight.
-        b.x += b.vx + Math.sin(t * 0.5 + b.phase) * (b.drift * 0.004);
-        b.y += b.vy;
+      if (pointer.active) {
+        const dx = b.x - pointer.x;
+        const dy = b.y - pointer.y;
+        const d2 = dx * dx + dy * dy;
+        const reach = 150 + b.r;
+        if (d2 < reach * reach && d2 > 0.01) {
+          const d = Math.sqrt(d2);
+          // Falls off with distance so the effect has a soft edge rather
+          // than a visible circular boundary.
+          const force = (1 - d / reach) * 0.9;
+          b.vx += (dx / d) * force * 0.35;
+          b.vy += (dy / d) * force * 0.35;
+        }
+      }
 
-        // ── Pointer repulsion ────────────────────────────────────────
-        if (pointer.active) {
-          const dx = b.x - pointer.x;
-          const dy = b.y - pointer.y;
+      // Damping pulls the bubble back to its natural drift after a shove
+      // or a bump, otherwise one pass of the cursor sends it off forever.
+      b.vx *= 0.965;
+      const targetVy = -0.10 * (0.6 + b.r / 60) - 0.06;
+      b.vy += (targetVy - b.vy) * 0.02;
+
+      // Recycle off the top, or off the sides after a hard shove.
+      if (b.y < -b.r * 2 || b.x < -b.r * 3 || b.x > w + b.r * 3) {
+        Object.assign(b, spawn(true));
+      }
+    }
+
+    /*
+     * ── Bubble against bubble ──────────────────────────────────────────
+     * For every pair that overlaps: first push them apart so they no
+     * longer overlap, then, if they are still closing on each other,
+     * bounce them off along the line between their centres.
+     *
+     * Mass goes with area, so a big bubble barely moves when a small one
+     * runs into it and sends the small one off. BOUNCE under 1 loses a
+     * little energy on every bump, which is what makes them read as soft
+     * bubbles in water rather than billiard balls; the water drag in
+     * move() then settles them back into their rise.
+     *
+     * Big bubbles rise faster than small ones, so collisions happen on
+     * their own as the big ones catch up, and more when you push a bubble
+     * into its neighbours with the cursor.
+     *
+     * Every pair is checked. With at most 18 bubbles that is 153 checks a
+     * frame, which costs nothing; a cleverer spatial index would only pay
+     * off with hundreds.
+     */
+    const BOUNCE = 0.8;
+
+    function collide(bounce: boolean) {
+      for (let i = 0; i < bubbles.length; i++) {
+        const a = bubbles[i];
+        for (let j = i + 1; j < bubbles.length; j++) {
+          const b = bubbles[j];
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const reach = a.r + b.r;
           const d2 = dx * dx + dy * dy;
-          const reach = 150 + b.r;
-          if (d2 < reach * reach && d2 > 0.01) {
-            const d = Math.sqrt(d2);
-            // Falls off with distance so the effect has a soft edge rather
-            // than a visible circular boundary.
-            const force = (1 - d / reach) * 0.9;
-            b.vx += (dx / d) * force * 0.35;
-            b.vy += (dy / d) * force * 0.35;
+          if (d2 >= reach * reach || d2 === 0) continue;
+
+          const d = Math.sqrt(d2);
+          const nx = dx / d, ny = dy / d;
+          const ma = a.r * a.r, mb = b.r * b.r;
+          const total = ma + mb;
+
+          // Separate them. Each moves in proportion to the OTHER's mass,
+          // so the lighter bubble does most of the moving.
+          const overlap = reach - d;
+          a.x -= nx * overlap * (mb / total);
+          a.y -= ny * overlap * (mb / total);
+          b.x += nx * overlap * (ma / total);
+          b.y += ny * overlap * (ma / total);
+
+          if (!bounce) continue;
+
+          // Bounce, but only if they are moving towards each other. A pair
+          // already separating must not be pulled back together.
+          const closing = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+          if (closing < 0) {
+            const impulse = (-(1 + BOUNCE) * closing) / (1 / ma + 1 / mb);
+            a.vx -= (impulse / ma) * nx;
+            a.vy -= (impulse / ma) * ny;
+            b.vx += (impulse / mb) * nx;
+            b.vy += (impulse / mb) * ny;
           }
         }
-
-        // Damping pulls the bubble back to its natural drift after a shove,
-        // otherwise one pass of the cursor sends it off forever.
-        b.vx *= 0.965;
-        const targetVy = -0.10 * (0.6 + b.r / 60) - 0.06;
-        b.vy += (targetVy - b.vy) * 0.02;
-
-        // Recycle off the top, or off the sides after a hard shove.
-        if (b.y < -b.r * 2 || b.x < -b.r * 3 || b.x > w + b.r * 3) {
-          Object.assign(b, spawn(true));
-        }
-
-        drawBubble(b);
       }
+    }
+
+    function update() {
+      for (const b of bubbles) move(b);
+      collide(true);
+    }
+
+    function render() {
+      const c = ctx!;
+      drawLight();
+      c.clearRect(0, 0, w, h);
+      for (const b of bubbles) drawBubble(b);
 
       // ── Rings left by popped bubbles ───────────────────────────────
       // About a third of a second each: widening to 1.6x while fading on
@@ -631,7 +699,15 @@ const bubbles = Array.from({ length: count }, (_, i) => {
         c.strokeStyle = `rgba(170, 200, 245, ${ring.alpha * (0.25 + 0.55 * ring.light) * ring.life * ring.life})`;
         c.stroke();
       }
+    }
 
+    /* Every frame: move everything, settle collisions, then draw. Moving
+       all the bubbles before checking any pair matters: checking as each
+       one moved would test against neighbours still in last frame's spot. */
+    function step() {
+      t += 0.016;
+      update();
+      render();
       raf = requestAnimationFrame(step);
     }
 

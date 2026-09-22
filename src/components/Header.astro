@@ -239,28 +239,35 @@ const currentPath = Astro.url.pathname;
   .nav-group:focus-within .nav-trigger,
   .nav-trigger[aria-expanded='true'] {
     color: var(--ink);
-    background: var(--surface-1);
   }
 
-  /*
-   * The group containing the current page: a short yellow bar centred under
-   * the word.
-   *
-   * It hangs off the label, not the button. The button also holds the
-   * chevron, so a mark centred on the button sat noticeably right of the
-   * word's centre, and at 4px across it read as a stray speck rather than
-   * an indicator. A 16 by 3px bar under the word itself is unmistakable
-   * without being loud.
-   */
   .nav-trigger.active {
     color: var(--ink);
   }
 
+  /*
+   * ── The bar ────────────────────────────────────────────────────────────
+   * A short yellow line centred under the word. It hangs off the label, not
+   * the button: the button also holds the chevron, so a mark centred on the
+   * button sat right of the word's centre.
+   *
+   * Every item has one, collapsed to nothing. It grows out from the centre
+   * when you point at the item, reach it from the keyboard, or open its
+   * menu, and it stays while you move down into that menu (it follows the
+   * whole group, not just the button). It also rests under the group that
+   * holds the page you are on.
+   *
+   * There is only ever one. Point at another item and the resting bar
+   * shrinks away as the new one grows, then returns when you leave. That
+   * hand-off is what the :has() rule at the end does. It replaced a faint
+   * pill that appeared behind a hovered item; with the bar doing that job,
+   * the pill was a second indicator saying the same thing.
+   */
   .nav-trigger-label {
     position: relative;
   }
 
-  .nav-trigger.active .nav-trigger-label::after {
+  .nav-trigger-label::after {
     content: '';
     position: absolute;
     left: 50%;
@@ -270,6 +277,37 @@ const currentPath = Astro.url.pathname;
     margin-left: -8px;
     border-radius: var(--radius-pill);
     background: var(--highlight);
+    transform: scaleX(0);
+    opacity: 0;
+    transition:
+      transform 320ms var(--ease-smooth),
+      opacity 200ms var(--ease);
+  }
+
+  .nav-trigger.active .nav-trigger-label::after,
+  .nav-group:hover .nav-trigger-label::after,
+  .nav-group:focus-within .nav-trigger-label::after,
+  .nav-trigger[aria-expanded='true'] .nav-trigger-label::after {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+
+  .nav-groups:has(.nav-group:hover)
+    .nav-group:not(:hover)
+    .nav-trigger.active
+    .nav-trigger-label::after,
+  .nav-groups:has(.nav-group:focus-within)
+    .nav-group:not(:focus-within)
+    .nav-trigger.active
+    .nav-trigger-label::after {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav-trigger-label::after {
+      transition: none;
+    }
   }
 
   .nav-chevron {
