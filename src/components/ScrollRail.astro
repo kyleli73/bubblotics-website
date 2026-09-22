@@ -104,6 +104,10 @@ const { sections } = Astro.props;
     --num-w: 16px;
     --link-pad: 12px;
     --label-gap: 10px;
+    /* Frosted glass for the open panel: dark enough that the page behind
+       blurs away rather than showing through, light enough not to read as
+       a solid slab laid over the content. */
+    --rail-glass: rgba(10, 21, 38, 0.78);
   }
 
   .rail-panel {
@@ -126,7 +130,7 @@ const { sections } = Astro.props;
     right: var(--rail-pad);
     height: var(--row-h);
     border-radius: var(--radius-pill);
-    background: rgba(252, 250, 249, 0.09);
+    background: rgba(252, 250, 249, 0.07);
     transform: translateY(
       calc(var(--active) * (var(--row-h) + var(--row-gap)))
     );
@@ -256,7 +260,9 @@ const { sections } = Astro.props;
     }
 
     .rail:focus-within .rail-panel {
-      background: var(--surface-menu);
+      background: var(--rail-glass);
+      backdrop-filter: blur(20px) saturate(1.5);
+      -webkit-backdrop-filter: blur(20px) saturate(1.5);
       box-shadow: var(--shadow-2);
       transition:
         background 480ms var(--ease-smooth),
@@ -291,7 +297,9 @@ const { sections } = Astro.props;
    */
   @media (min-width: 1380px) and (hover: hover) {
     .rail:hover .rail-panel {
-      background: var(--surface-menu);
+      background: var(--rail-glass);
+      backdrop-filter: blur(20px) saturate(1.5);
+      -webkit-backdrop-filter: blur(20px) saturate(1.5);
       box-shadow: var(--shadow-2);
       transition:
         background 480ms var(--ease-smooth),
@@ -411,6 +419,8 @@ const { sections } = Astro.props;
       position: absolute;
       top: 50%;
       left: 6px;
+      backdrop-filter: blur(20px) saturate(1.5);
+      -webkit-backdrop-filter: blur(20px) saturate(1.5);
       /*
        * max-content, explicitly. The panel is positioned against the rail,
        * which is only as wide as the 24px strip of dots, and an absolutely
@@ -419,7 +429,7 @@ const { sections } = Astro.props;
        * the names were clipped away.
        */
       width: max-content;
-      background: var(--surface-menu);
+      background: var(--rail-glass);
       box-shadow: var(--shadow-2);
       opacity: 0;
       visibility: hidden;
@@ -450,6 +460,33 @@ const { sections } = Astro.props;
     }
   }
 
+  /*
+   * A narrower screen with a real mouse (a laptop window under 1380px):
+   * the dots open on hover, like the wide version, with its tighter rows.
+   * Touch screens keep tap-to-open and 44px rows for thumbs.
+   */
+  @media (max-width: 1379.98px) and (hover: hover) and (pointer: fine) {
+    .rail {
+      --row-h: 34px;
+    }
+
+    .rail:hover .rail-panel,
+    .rail:focus-within .rail-panel {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(-50%);
+      transition:
+        opacity 280ms var(--ease),
+        transform 420ms var(--ease-smooth),
+        visibility 0s;
+    }
+
+    .rail:hover .rail-toggle,
+    .rail:focus-within .rail-toggle {
+      opacity: 0;
+    }
+  }
+
   @media (min-width: 768px) and (max-width: 1379.98px) {
     /* Tablets have 32px of side padding: a little more air for the dots. */
     .rail {
@@ -475,6 +512,7 @@ const { sections } = Astro.props;
       ...rail.querySelectorAll<HTMLAnchorElement>('[data-rail-link]'),
     ];
     const compact = window.matchMedia('(max-width: 1379.98px)');
+    const mouse = window.matchMedia('(hover: hover) and (pointer: fine)');
 
     /* ── Opening and closing the list on phones and tablets ──────────── */
 
@@ -497,13 +535,18 @@ const { sections } = Astro.props;
 
     toggle.addEventListener('click', (e) => {
       e.stopPropagation();
+      if (mouse.matches) return; // hover already opens it
       setOpen(!rail.classList.contains('is-open'));
     });
 
     // Choosing a section: let the link do its job (the smooth-scroll code
     // in motion.ts takes it from here), then fold the list away.
     linkEls.forEach((a) =>
-      a.addEventListener('click', () => {
+      a.addEventListener('click', (e) => {
+        // After a mouse click, let go of focus so the panel can close when
+        // the pointer leaves (focus would otherwise hold it open). A
+        // keyboard press (detail 0) keeps focus where the user is.
+        if (e.detail > 0) a.blur();
         if (compact.matches) window.setTimeout(() => setOpen(false), 0);
       })
     );
