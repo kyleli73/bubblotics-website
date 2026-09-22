@@ -597,4 +597,11 @@ const liveSpecs = robot.data.specs.filter((s) => publishable(s.label, s.value));
   .robot-nav-link:hover .robot-nav-name {
     color: var(--highlight);
   }
+
+  /* A full thumb-sized target on touch screens; it was 22px tall. */
+  @media (pointer: coarse) {
+    .back-link {
+      min-height: 44px;
+    }
+  }
 </style>

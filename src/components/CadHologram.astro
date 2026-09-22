@@ -452,7 +452,14 @@ const { model, name, caption } = Astro.props;
     margin: 0;
   }
 
-  .holo-parts button {
+  /*
+   * The part buttons are created by the script below, not written in the
+   * template, so they never receive Astro's scoping attribute and a plain
+   * scoped selector cannot reach them. :global(button) matches them while
+   * .holo-parts stays scoped to this component. Before this, none of these
+   * rules applied and the list rendered as the browser's default buttons.
+   */
+  .holo-parts :global(button) {
     display: flex;
     align-items: baseline;
     gap: var(--sp-3);
@@ -481,19 +488,19 @@ const { model, name, caption } = Astro.props;
     flex-shrink: 0;
   }
 
-  .holo-parts button:hover {
+  .holo-parts :global(button:hover) {
     color: var(--ink);
     background: var(--surface-1);
   }
 
   /* aria-pressed doubles as the styling hook, so the visual state and the
      state announced to a screen reader can never disagree. */
-  .holo-parts button[aria-pressed='true'] {
+  .holo-parts :global(button[aria-pressed='true']) {
     color: var(--highlight);
     background: var(--surface-2);
   }
 
-  .holo-parts button[aria-pressed='true'] :global(.holo-num) {
+  .holo-parts :global(button[aria-pressed='true'] .holo-num) {
     color: var(--highlight);
   }
 
@@ -506,6 +513,16 @@ const { model, name, caption } = Astro.props;
   .holo-note {
     margin-top: var(--sp-3);
     font-size: var(--step--1);
+  }
+
+  /* Thumb-sized controls on touch screens: the part buttons were 27px tall,
+     the view buttons 38px and the slider 42px. */
+  @media (pointer: coarse) {
+    .holo-btn,
+    .holo-range,
+    .holo-parts :global(button) {
+      min-height: 44px;
+    }
   }
 </style>
 

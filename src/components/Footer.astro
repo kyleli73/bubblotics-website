@@ -293,4 +293,23 @@ const navCols = [nav.slice(0, half), nav.slice(half)];
       text-align: right;
     }
   }
+
+  /*
+   * On a touchscreen every footer link gets a full 44px row. They were 22
+   * to 34px tall: fine for a mouse, easy to miss with a thumb, and the
+   * wrong link is the one that gets tapped.
+   */
+  @media (pointer: coarse) {
+    .footer-links ul {
+      gap: 0;
+    }
+
+    .footer-links a,
+    a.contact-line {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      margin-bottom: 0;
+    }
+  }
 </style>

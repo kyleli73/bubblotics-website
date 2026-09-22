@@ -6,20 +6,29 @@
  * currently inside. It answers two questions a long single-page site
  * otherwise leaves open: how far through am I, and how much is left.
  *
+ * ── Two forms, one rail ────────────────────────────────────────────────
+ *
+ * Wide screens (1380px and up): a slim capsule of numbers in the margin
+ * beside the content. Hover it, or tab into it, and it widens to show the
+ * section names.
+ *
+ * Phones and tablets: there is no margin to sit in, so a capsule of numbers
+ * would cover the start of every line of text. Instead the rail shrinks to
+ * a column of dots that fits inside the page's side padding, with the
+ * current section shown as a yellow pill. Tapping it opens the same
+ * numbered list as the desktop version, with rows tall enough to hit with
+ * a thumb. Tap a section to go there; the list closes behind you. It keeps
+ * out of the way over the opening screen and the footer, where there is no
+ * section to report.
+ *
  * ── Decisions worth knowing ────────────────────────────────────────────
  *
- * Desktop only. On a phone it would eat a fifth of the screen width to say
- * something the scrollbar already says, so it only appears from 1380px, the
- * first width with a margin wide enough to hold it beside the content with
- * room to breathe.
- *
- * It is a real <nav> of real anchor links, not decoration. Clicking a number
- * jumps to that section, and the whole rail is reachable by keyboard. The
- * numerals are aria-hidden so a screen reader announces "Software" rather
- * than "zero three Software".
+ * It is a real <nav> of real anchor links, not decoration, and the whole
+ * rail is reachable by keyboard in both forms. The numerals are aria-hidden
+ * so a screen reader announces "Software" rather than "zero three Software".
  *
  * IntersectionObserver decides which entry is active, not a scroll handler.
- * A scroll handler here would run on every one of the sixty frames a second
+ * A scroll handler would run on every one of the sixty frames a second
  * Lenis produces and recompute element positions each time; the observer is
  * told once and then only fires when something crosses the line.
  */
@@ -32,8 +41,26 @@ interface Props {
 const { sections } = Astro.props;
 ---
 
-<nav class="rail" aria-label="Page sections" data-rail>
-  <div class="rail-panel" data-rail-panel style="--active: 0">
+<nav class="rail" aria-label="Page sections" data-rail style="--active: 0">
+  <!--
+    Phones and tablets only: the column of dots. A real button, so it can be
+    reached and opened from the keyboard as well as by touch.
+  -->
+  <button
+    type="button"
+    class="rail-toggle"
+    aria-expanded="false"
+    aria-controls="rail-panel"
+    data-rail-toggle
+  >
+    <span class="sr-only">Show page sections</span>
+    <span class="rail-dots" aria-hidden="true">
+      {sections.map(() => <span class="rail-dot" />)}
+      <span class="rail-dot-active" />
+    </span>
+  </button>
+
+  <div class="rail-panel" id="rail-panel" data-rail-panel>
     <!--
       One highlight for the whole rail, sitting behind the active row. It
       glides to the new row when the section changes instead of the old row
@@ -62,42 +89,13 @@ const { sections } = Astro.props;
 </nav>
 
 <style>
-  /*
-   * ── How the rail moves ──────────────────────────────────────────────
-   * At rest it is a slim capsule of numbers. On hover or keyboard focus it
-   * widens into a near-opaque panel and the section names fade in beside
-   * the numbers, one after another.
-   *
-   * Everything here is tuned for smoothness, which an earlier version
-   * lacked, for three reasons worth remembering:
-   *
-   *   1. The width adapts to the labels on its own. Each row is a small
-   *      grid: the number, then a label column that animates from 0fr to
-   *      1fr. An fr column in a shrink-to-fit box grows to exactly its
-   *      content's natural width, so the panel opens to precisely what the
-   *      longest name needs, whatever the names are, with no measuring.
-   *      The version before this measured the links in script, but that
-   *      measurement left out their right padding and caught the labels
-   *      mid-shift, so the panel opened 18px too narrow and "Software" ran
-   *      into the edge. The one before that animated max-width to 14ch,
-   *      far wider than any label, so it shot out and then stalled.
-   *
-   *   2. The corner radius never changes. It used to animate from 999px to
-   *      24px, but a radius is capped at half the element's size, so the
-   *      visible corners did nothing until the last tenth of the animation
-   *      and then popped.
-   *
-   *   3. Only cheap properties move with the reveal. The labels are always
-   *      laid out at full width and merely clipped by the panel, so they
-   *      fade and slide (opacity and transform, which the browser does on
-   *      the graphics card) instead of changing size.
-   *
-   * Opening is slower than closing. The labels leave first and quickly,
-   * then the panel folds in behind them, so no text is ever wiped by the
-   * closing edge.
-   */
+  /* ═══ SHARED ═════════════════════════════════════════════════════════ */
+
   .rail {
-    display: none;
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: var(--z-rail);
 
     --rail-pad: 6px;
     /* Rows breathe a little more on tall screens: 32px up to 36px. */
@@ -108,59 +106,18 @@ const { sections } = Astro.props;
     --label-gap: 10px;
   }
 
-  /*
-   * 1380px. The rail must fit in the margin beside the content at rest.
-   * The content column is 1200px wide with 32px of padding; below this
-   * width the capsule would crowd the start of every line of text. When
-   * open it deliberately floats over the page, which the opaque panel
-   * makes safe.
-   */
-  @media (min-width: 1380px) {
-    .rail {
-      display: block;
-      position: fixed;
-      left: var(--sp-5);
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: var(--z-rail);
-    }
-  }
-
-  @media (min-width: 1500px) {
-    .rail {
-      left: var(--sp-6);
-    }
-  }
-
   .rail-panel {
     position: relative;
     padding: var(--rail-pad);
     overflow: hidden;
     border-radius: 26px;
-
-    background: rgba(10, 21, 38, 0.55);
-    backdrop-filter: blur(16px) saturate(1.4);
-    -webkit-backdrop-filter: blur(16px) saturate(1.4);
-    box-shadow: var(--shadow-1);
-
-    transition:
-      background 380ms var(--ease-smooth) 70ms,
-      box-shadow 380ms var(--ease-smooth) 70ms;
-  }
-
-  .rail:hover .rail-panel,
-  .rail:focus-within .rail-panel {
-    background: var(--surface-menu);
-    box-shadow: var(--shadow-2);
-    transition:
-      background 480ms var(--ease-smooth),
-      box-shadow 480ms var(--ease-smooth);
   }
 
   /*
    * The highlight behind the active row. Neutral, not yellow: translucent
    * yellow over navy mixes to a muddy olive. The active row's number and
-   * name turn yellow instead, which is clean.
+   * name turn yellow instead, which is clean. --active is set on the whole
+   * rail by the script, so the dots and the list always agree.
    */
   .rail-indicator {
     position: absolute;
@@ -186,30 +143,16 @@ const { sections } = Astro.props;
     gap: var(--row-gap);
   }
 
-  /*
-   * Closing waits 70ms so the labels have faded before the column folds;
-   * opening starts at once and runs a little longer, so it feels weighted.
-   */
   .rail-link {
     display: grid;
-    grid-template-columns: var(--num-w) 0fr;
+    grid-template-columns: var(--num-w) 1fr;
     align-items: center;
     height: var(--row-h);
     padding: 0 var(--link-pad);
     border-radius: var(--radius-pill);
     text-decoration: none;
     white-space: nowrap;
-    transition:
-      grid-template-columns 380ms var(--ease-smooth) 70ms,
-      background var(--dur-fast) var(--ease);
-  }
-
-  .rail:hover .rail-link,
-  .rail:focus-within .rail-link {
-    grid-template-columns: var(--num-w) 1fr;
-    transition:
-      grid-template-columns 480ms var(--ease-smooth),
-      background var(--dur-fast) var(--ease);
+    transition: background var(--dur-fast) var(--ease);
   }
 
   /* The cell that clips the name while its column is narrower than it.
@@ -219,15 +162,7 @@ const { sections } = Astro.props;
     overflow: hidden;
   }
 
-  /* Hover on the other rows: a much fainter wash than the active one, so
-     "where you are" and "where you are pointing" never look alike. */
-  .rail-link:not(.is-active):hover,
-  .rail-link:not(.is-active):focus-visible {
-    background: rgba(252, 250, 249, 0.045);
-  }
-
   .rail-num {
-    flex: 0 0 var(--num-w);
     text-align: center;
     font-family: var(--font-display);
     font-size: var(--text-label);
@@ -246,32 +181,7 @@ const { sections } = Astro.props;
     font-weight: 700;
     letter-spacing: var(--track-caps);
     color: var(--ink);
-
-    /* Closing: gone fast, with no stagger. */
-    opacity: 0;
-    transform: translateX(-6px);
-    transition:
-      opacity 140ms var(--ease),
-      transform 200ms var(--ease-exit),
-      color 300ms var(--ease);
-  }
-
-  .rail:hover .rail-label,
-  .rail:focus-within .rail-label {
-    opacity: 1;
-    transform: none;
-
-    /* Opening: each name follows the one above it by 22ms, starting once
-       the panel is already on its way out. */
-    transition:
-      opacity 320ms var(--ease) calc(90ms + var(--i) * 22ms),
-      transform 420ms var(--ease-smooth) calc(90ms + var(--i) * 22ms),
-      color 300ms var(--ease);
-  }
-
-  .rail:hover .rail-num,
-  .rail:focus-within .rail-num {
-    color: var(--ink-muted);
+    transition: color 300ms var(--ease);
   }
 
   /* The section you are in: its number and name in yellow. */
@@ -280,37 +190,348 @@ const { sections } = Astro.props;
     color: var(--highlight);
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .rail-panel,
-    .rail:hover .rail-panel,
-    .rail:focus-within .rail-panel,
-    .rail-indicator,
-    .rail-link,
-    .rail:hover .rail-link,
-    .rail:focus-within .rail-link,
-    .rail-num,
-    .rail-label,
-    .rail:hover .rail-label,
+  /* Hover on the other rows: a much fainter wash than the active one, so
+     "where you are" and "where you are pointing" never look alike. */
+  .rail-link:not(.is-active):hover,
+  .rail-link:not(.is-active):focus-visible {
+    background: rgba(252, 250, 249, 0.045);
+  }
+
+  /* ═══ WIDE SCREENS: the capsule that opens on hover ═══════════════════
+   *
+   * At rest a slim capsule of numbers. On hover or keyboard focus it widens
+   * into a near-opaque panel and the section names fade in, one after
+   * another. Tuned for smoothness, for three reasons worth remembering:
+   *
+   *   1. The width adapts to the labels on its own. Each row is a small
+   *      grid whose label column animates from 0fr to 1fr, which grows to
+   *      exactly the widest label's natural width. An earlier version
+   *      measured the links in script, left out their right padding, and
+   *      opened 18px too narrow; the one before animated max-width to 14ch,
+   *      far past any label, so it shot out and then stalled.
+   *
+   *   2. The corner radius never changes. It used to animate from 999px,
+   *      but a radius is capped at half the element's size, so the corners
+   *      did nothing until the last tenth of the animation and then popped.
+   *
+   *   3. The labels only fade and slide (opacity and transform, which the
+   *      browser hands to the graphics card) instead of changing size.
+   *
+   * Opening is slower than closing, and on close the labels leave before
+   * the column folds, so no text is ever wiped by the moving edge.
+   */
+  .rail-toggle {
+    display: none;
+  }
+
+  @media (min-width: 1380px) {
+    .rail {
+      left: var(--sp-5);
+    }
+
+    .rail-panel {
+      background: rgba(10, 21, 38, 0.55);
+      backdrop-filter: blur(16px) saturate(1.4);
+      -webkit-backdrop-filter: blur(16px) saturate(1.4);
+      box-shadow: var(--shadow-1);
+      transition:
+        background 380ms var(--ease-smooth) 70ms,
+        box-shadow 380ms var(--ease-smooth) 70ms;
+    }
+
+    .rail-link {
+      grid-template-columns: var(--num-w) 0fr;
+      transition:
+        grid-template-columns 380ms var(--ease-smooth) 70ms,
+        background var(--dur-fast) var(--ease);
+    }
+
+    .rail-label {
+      opacity: 0;
+      transform: translateX(-6px);
+      transition:
+        opacity 140ms var(--ease),
+        transform 200ms var(--ease-exit),
+        color 300ms var(--ease);
+    }
+
+    .rail:focus-within .rail-panel {
+      background: var(--surface-menu);
+      box-shadow: var(--shadow-2);
+      transition:
+        background 480ms var(--ease-smooth),
+        box-shadow 480ms var(--ease-smooth);
+    }
+
+    .rail:focus-within .rail-link {
+      grid-template-columns: var(--num-w) 1fr;
+      transition:
+        grid-template-columns 480ms var(--ease-smooth),
+        background var(--dur-fast) var(--ease);
+    }
+
     .rail:focus-within .rail-label {
-      transition: none;
+      opacity: 1;
+      transform: none;
+      transition:
+        opacity 320ms var(--ease) calc(90ms + var(--i) * 22ms),
+        transform 420ms var(--ease-smooth) calc(90ms + var(--i) * 22ms),
+        color 300ms var(--ease);
+    }
+
+    .rail:focus-within .rail-num {
+      color: var(--ink-muted);
+    }
+  }
+
+  /*
+   * Hover opens it only where hover is real. On a touchscreen a tap leaves
+   * a "sticky" hover behind, which would hold the panel open after you had
+   * already moved on.
+   */
+  @media (min-width: 1380px) and (hover: hover) {
+    .rail:hover .rail-panel {
+      background: var(--surface-menu);
+      box-shadow: var(--shadow-2);
+      transition:
+        background 480ms var(--ease-smooth),
+        box-shadow 480ms var(--ease-smooth);
+    }
+
+    .rail:hover .rail-link {
+      grid-template-columns: var(--num-w) 1fr;
+      transition:
+        grid-template-columns 480ms var(--ease-smooth),
+        background var(--dur-fast) var(--ease);
+    }
+
+    .rail:hover .rail-label {
+      opacity: 1;
+      transform: none;
+      transition:
+        opacity 320ms var(--ease) calc(90ms + var(--i) * 22ms),
+        transform 420ms var(--ease-smooth) calc(90ms + var(--i) * 22ms),
+        color 300ms var(--ease);
+    }
+
+    .rail:hover .rail-num {
+      color: var(--ink-muted);
+    }
+  }
+
+  @media (min-width: 1500px) {
+    .rail {
+      left: var(--sp-6);
+    }
+  }
+
+  /* ═══ PHONES AND TABLETS: dots that open into the list ════════════════
+   *
+   * The dots sit inside the page's side padding (24px on a phone), so they
+   * never overlap a word. The tappable area is the whole strip of padding,
+   * from the screen edge to where the text begins: narrower than the ideal
+   * 44px, but wider would steal taps meant for links at the start of a line.
+   * The list that opens has 44px rows, which is where the real choosing
+   * happens.
+   */
+  @media (max-width: 1379.98px) {
+    .rail {
+      left: 0;
+      --row-h: 44px;
+    }
+
+    .rail-toggle {
+      display: grid;
+      place-items: center;
+      width: 24px;
+      padding: 0;
+      border: 0;
+      background: none;
+      cursor: pointer;
+      transition:
+        opacity 300ms var(--ease),
+        transform 400ms var(--ease-smooth);
+    }
+
+    /* Nothing to report over the opening screen or the footer, and the
+       headline and footer text start right beside the dots, so the dots
+       step aside there. */
+    .rail:not(.in-sections) .rail-toggle {
+      opacity: 0;
+      transform: translateX(-100%);
+      pointer-events: none;
+    }
+
+    .rail-dots {
+      --dot: 5px;
+      --dot-gap: 9px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--dot-gap);
+      width: 18px;
+      padding: 10px 0;
+      border-radius: var(--radius-pill);
+      background: rgba(10, 21, 38, 0.6);
+      backdrop-filter: blur(12px) saturate(1.4);
+      -webkit-backdrop-filter: blur(12px) saturate(1.4);
+      box-shadow: var(--shadow-1);
+    }
+
+    .rail-dot {
+      width: var(--dot);
+      height: var(--dot);
+      border-radius: 50%;
+      background: rgba(252, 250, 249, 0.3);
+    }
+
+    /* The current section: a yellow pill that glides from dot to dot. It is
+       solid yellow, a small shape, which reads clean where a yellow wash
+       over navy would not. */
+    .rail-dot-active {
+      position: absolute;
+      top: calc(10px - 4px);
+      left: 50%;
+      width: var(--dot);
+      height: calc(var(--dot) + 8px);
+      margin-left: calc(var(--dot) / -2);
+      border-radius: var(--radius-pill);
+      background: var(--highlight);
+      transform: translateY(
+        calc(var(--active) * (var(--dot) + var(--dot-gap)))
+      );
+      transition: transform 420ms var(--ease-smooth);
+    }
+
+    /* The list: hidden until the dots are tapped, then it grows out from
+       them. visibility, not display, so it can animate, and so its links
+       are out of the tab order while closed. */
+    .rail-panel {
+      position: absolute;
+      top: 50%;
+      left: 6px;
+      /*
+       * max-content, explicitly. The panel is positioned against the rail,
+       * which is only as wide as the 24px strip of dots, and an absolutely
+       * positioned box shrinks to fit the space it is given: without this
+       * the list squeezed down to its narrowest possible width, 40px, and
+       * the names were clipped away.
+       */
+      width: max-content;
+      background: var(--surface-menu);
+      box-shadow: var(--shadow-2);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-50%) translateX(-10px) scale(0.97);
+      transform-origin: left center;
+      transition:
+        opacity 220ms var(--ease),
+        transform 280ms var(--ease-exit),
+        visibility 0s linear 280ms;
+    }
+
+    .rail.is-open .rail-panel {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(-50%);
+      transition:
+        opacity 280ms var(--ease),
+        transform 420ms var(--ease-smooth),
+        visibility 0s;
+    }
+
+    .rail.is-open .rail-toggle {
+      opacity: 0;
+    }
+
+    .rail-num {
+      color: var(--ink-muted);
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1379.98px) {
+    /* Tablets have 32px of side padding: a little more air for the dots. */
+    .rail {
+      left: 4px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rail *,
+    .rail *::before,
+    .rail *::after {
+      transition: none !important;
     }
   }
 </style>
 
 <script>
   const rail = document.querySelector<HTMLElement>('[data-rail]');
-  const panel = rail?.querySelector<HTMLElement>('[data-rail-panel]');
+  const toggle = rail?.querySelector<HTMLButtonElement>('[data-rail-toggle]');
 
-  if (rail && panel) {
+  if (rail && toggle) {
     const linkEls = [
       ...rail.querySelectorAll<HTMLAnchorElement>('[data-rail-link]'),
     ];
+    const compact = window.matchMedia('(max-width: 1379.98px)');
 
+    /* ── Opening and closing the list on phones and tablets ──────────── */
+
+    const label = toggle.querySelector('.sr-only');
+
+    const setOpen = (open: boolean, returnFocus = false) => {
+      rail.classList.toggle('is-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      if (label) {
+        label.textContent = open ? 'Hide page sections' : 'Show page sections';
+      }
+      if (open) {
+        // Land on the current section, so a keyboard user starts from
+        // where they are rather than from the top of the list.
+        (rail.querySelector<HTMLAnchorElement>('.rail-link.is-active') ?? linkEls[0])?.focus({ preventScroll: true });
+      } else if (returnFocus) {
+        toggle.focus({ preventScroll: true });
+      }
+    };
+
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setOpen(!rail.classList.contains('is-open'));
+    });
+
+    // Choosing a section: let the link do its job (the smooth-scroll code
+    // in motion.ts takes it from here), then fold the list away.
+    linkEls.forEach((a) =>
+      a.addEventListener('click', () => {
+        if (compact.matches) window.setTimeout(() => setOpen(false), 0);
+      })
+    );
+
+    // A tap anywhere else closes it, as does Escape, and so does starting
+    // to scroll: once you are moving through the page you have moved on.
+    document.addEventListener('click', (e) => {
+      if (rail.classList.contains('is-open') && !rail.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && rail.classList.contains('is-open')) setOpen(false, true);
+    });
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (rail.classList.contains('is-open')) setOpen(false);
+      },
+      { passive: true }
+    );
+
+    // Widening past the breakpoint with the list open would strand it.
+    compact.addEventListener('change', () => setOpen(false));
+
+    /* ── Which section is active ─────────────────────────────────────── */
 
     /*
-     * Marks the rail entry for whichever section currently occupies the
-     * middle of the screen.
-     *
      * rootMargin '-45% 0px -45% 0px' shrinks the observer's window to a
      * thin band across the centre of the viewport. A section is "active"
      * when it crosses that band. Without the margin, three tall sections
@@ -325,8 +546,8 @@ const { sections } = Astro.props;
       const setActive = (id: string) => {
         const index = ids.indexOf(id);
         if (index < 0) return;
-        // Moving --active is what slides the highlight to its new row.
-        panel.style.setProperty('--active', String(index));
+        // Moving --active slides both the dot and the list's highlight.
+        rail.style.setProperty('--active', String(index));
         linkEls.forEach((a, i) => a.classList.toggle('is-active', i === index));
       };
 
@@ -346,6 +567,10 @@ const { sections } = Astro.props;
             else visible.delete(entry.target.id);
           }
 
+          // Over the hero or the footer nothing is in the band; the phone
+          // version of the rail uses this to step aside there.
+          rail.classList.toggle('in-sections', visible.size > 0);
+
           const first = targets.find((t) => visible.has(t.id));
           if (first) setActive(first.id);
         },
@@ -355,8 +580,8 @@ const { sections } = Astro.props;
       targets.forEach((t) => observer.observe(t));
 
       // The band is in the middle of the screen, so at the very top of the
-      // page nothing is inside it and the rail would start blank. Show the
-      // first entry until the observer has something to say.
+      // page nothing is inside it and the desktop rail would start blank.
+      // Show the first entry until the observer has something to say.
       setActive(targets[0].id);
     }
   }

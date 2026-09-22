@@ -218,4 +218,11 @@ const { Content } = await render(post);
 
   .related {
   }
+
+  /* A full thumb-sized target on touch screens; it was 22px tall. */
+  @media (pointer: coarse) {
+    .back-link {
+      min-height: 44px;
+    }
+  }
 </style>

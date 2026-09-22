@@ -777,7 +777,8 @@ p {
 }
 
 .btn-sm {
-  min-height: 40px;
+  /* 44px: the smallest target a thumb hits reliably. This was 40px. */
+  min-height: 44px;
   padding: var(--sp-2) var(--sp-4);
   font-size: var(--step--1);
 }
@@ -787,6 +788,9 @@ p {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-2);
+  /* Tall enough to tap. The words stay centred in the extra height, so it
+     looks the same and just catches a thumb that lands a little off. */
+  min-height: 44px;
   font-family: var(--font-display);
   font-weight: 700;
   text-transform: uppercase;

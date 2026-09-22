@@ -999,6 +999,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
 
   .post {
     --post-pad: var(--sp-3);
+    position: relative;
     display: grid;
     gap: var(--sp-5);
     padding: var(--post-pad);
@@ -1065,6 +1066,18 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
   .post-title a {
     color: inherit;
     text-decoration: none;
+  }
+
+  /*
+   * The whole card is the link. The title's link reaches out to cover the
+   * card with an invisible layer, so a tap anywhere on it opens the post,
+   * not only a tap on the title text (which was a 34px strip on a phone).
+   * Screen readers still hear one link, named by the title.
+   */
+  .post-title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
   }
 
   .post-title a:hover {
