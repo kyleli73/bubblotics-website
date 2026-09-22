@@ -100,19 +100,14 @@ const dev = SHOW_UNFINISHED;
     border-radius: var(--radius-lg);
 
     /*
-     * A light source at the top right fading into deep navy, with a trace
-     * of warmth at the bottom left. Close enough to how a lit photo reads
-     * that the frame sits comfortably among real images once some arrive.
+     * A light source at the top right fading into deep navy. Close enough
+     * to how a lit photo reads that the frame sits comfortably among real
+     * images once some arrive.
      */
     background:
       radial-gradient(
         70% 90% at 85% 10%,
         rgba(89, 149, 237, 0.3),
-        transparent 60%
-      ),
-      radial-gradient(
-        50% 60% at 10% 100%,
-        rgba(254, 198, 1, 0.07),
         transparent 60%
       ),
       linear-gradient(160deg, #13294a 0%, #0c1b31 55%, #09152a 100%);
@@ -143,7 +138,7 @@ const dev = SHOW_UNFINISHED;
     left: var(--sp-4);
     padding: 4px var(--sp-3);
     border-radius: var(--radius-pill);
-    background: rgba(254, 198, 1, 0.16);
+    background: rgba(252, 250, 249, 0.07);
     font-family: var(--font-display);
     font-size: var(--text-label);
     font-weight: 700;

@@ -59,7 +59,7 @@ const currentPath = Astro.url.pathname;
                   aria-controls={groupId}
                   data-nav-trigger
                 >
-                  {group.label}
+                  <span class="nav-trigger-label">{group.label}</span>
                   <svg
                     class="nav-chevron"
                     viewBox="0 0 24 24"
@@ -242,22 +242,33 @@ const currentPath = Astro.url.pathname;
     background: var(--surface-1);
   }
 
-  /* The group containing the current page: a small yellow dot under the
-     label. It was a 2px underline, which read as one more line on a page
-     that no longer draws any. */
+  /*
+   * The group containing the current page: a short yellow bar centred under
+   * the word.
+   *
+   * It hangs off the label, not the button. The button also holds the
+   * chevron, so a mark centred on the button sat noticeably right of the
+   * word's centre, and at 4px across it read as a stray speck rather than
+   * an indicator. A 16 by 3px bar under the word itself is unmistakable
+   * without being loud.
+   */
   .nav-trigger.active {
     color: var(--ink);
   }
 
-  .nav-trigger.active::after {
+  .nav-trigger-label {
+    position: relative;
+  }
+
+  .nav-trigger.active .nav-trigger-label::after {
     content: '';
     position: absolute;
     left: 50%;
-    bottom: 3px;
-    width: 4px;
-    height: 4px;
-    margin-left: -2px;
-    border-radius: 50%;
+    bottom: -8px;
+    width: 16px;
+    height: 3px;
+    margin-left: -8px;
+    border-radius: var(--radius-pill);
     background: var(--highlight);
   }
 

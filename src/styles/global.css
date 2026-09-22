@@ -202,8 +202,11 @@
   --shadow: 0 12px 32px rgba(7, 15, 28, 0.45);
   --shadow-lg: 0 28px 70px rgba(7, 15, 28, 0.6);
   --glow: 0 0 44px rgba(89, 149, 237, 0.28);
-  --glow-warm: 0 0 36px rgba(254, 198, 1, 0.28);
-  --glow-gold: 0 0 36px rgba(254, 198, 1, 0.26);
+  /* Named 'glow' for history; both are plain depth now. A yellow glow
+     over navy mixes to a muddy olive, so warm light is never used as a
+     haze. Yellow appears as a solid colour or not at all. */
+  --glow-warm: 0 10px 28px -10px rgba(0, 0, 0, 0.55);
+  --glow-gold: 0 10px 28px -10px rgba(0, 0, 0, 0.55);
 
   /* ── Motion ──────────────────────────────────────────────────────────
      One easing curve, used everywhere. Mixed easings are the difference
@@ -214,6 +217,10 @@
      departures speed up out of it; using the arrival curve for both makes
      a closing menu feel like it is reluctant to go. */
   --ease-exit: cubic-bezier(0.55, 0, 1, 0.45);
+  /* A long, soft deceleration: fast off the mark, then an unhurried
+     settle. The curve iOS uses for sheets and panels, and the reason they
+     feel weighted rather than mechanical. For things that change size. */
+  --ease-smooth: cubic-bezier(0.32, 0.72, 0, 1);
 
   /* ── Layers ──────────────────────────────────────────────────────────
      Named, so nobody has to guess whether 99 beats 100. The site had nine
@@ -286,9 +293,8 @@ body {
  * on mid-range phones, and iOS Safari ignores it entirely anyway. A fixed
  * layer is composited once and then just sits there.
  *
- * The warm wash was the logo's orange (#FFA000) until the accent moved to
- * School Bus Yellow; it is yellow now so the page's one warm tint matches
- * its one warm colour.
+ * There is no warm wash. A faint yellow one sat top right for a while; over
+ * navy, translucent yellow mixes to a muddy olive, so it went.
  */
 body::before {
   content: '';
@@ -301,11 +307,6 @@ body::before {
       ellipse 80% 55% at 12% -8%,
       rgba(89, 149, 237, 0.17),
       transparent 62%
-    ),
-    radial-gradient(
-      ellipse 65% 50% at 92% 8%,
-      rgba(254, 198, 1, 0.05),
-      transparent 60%
     );
 }
 
@@ -682,7 +683,7 @@ p {
   display: inline-block;
   padding: 0.1em 0.5em;
   border-radius: var(--radius-pill);
-  background: rgba(254, 198, 1, 0.16);
+  background: rgba(252, 250, 249, 0.07);
   color: var(--highlight);
   font-size: 0.9em;
   font-weight: 600;
@@ -759,7 +760,7 @@ p {
 }
 
 .btn-primary:hover {
-  box-shadow: 0 10px 28px rgba(254, 198, 1, 0.34);
+  box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.5);
 }
 
 .btn-ghost {
@@ -823,7 +824,7 @@ p {
 }
 
 .tag-warm {
-  background: rgba(254, 198, 1, 0.14);
+  background: rgba(252, 250, 249, 0.07);
   color: var(--highlight);
 }
 

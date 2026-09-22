@@ -77,7 +77,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
        that DOM elements cannot do cheaply.
   -->
   <section class="hero" id="top" data-hero>
-    <Bubbles count={26} tone="full" />
+    <Bubbles count={18} tone="full" />
 
     <div class="shell hero-inner" data-hero-content>
       <p class="hero-eyebrow" data-hero-item>
@@ -874,8 +874,9 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     white-space: nowrap;
   }
 
+  /* Yellow text on a neutral pill. A yellow-tinted pill over navy mixes to
+     olive; the word alone carries the colour cleanly. */
   .soft-status.is-in-progress {
-    background: rgba(254, 198, 1, 0.14);
     color: var(--highlight);
   }
 
@@ -1109,9 +1110,9 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     border-radius: var(--radius-xl);
     background: var(--bus-yellow);
     color: var(--prussian);
-    /* A warm glow underneath rather than a grey drop shadow, so it looks
-       lit rather than stuck on. */
-    box-shadow: 0 32px 80px -32px rgba(254, 198, 1, 0.4);
+    /* Plain depth underneath. A yellow glow here spilled onto the navy
+       around the panel as an olive haze. */
+    box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.6);
   }
 
   @media (min-width: 900px) {

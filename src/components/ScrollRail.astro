@@ -2,10 +2,9 @@
 /*
  * The numbered progress rail down the left edge.
  *
- * A fixed column of section numbers that fills in as you scroll and
- * highlights whichever section you are currently inside. It answers two
- * questions a long single-page site otherwise leaves open: how far through
- * am I, and how much is left.
+ * A floating column of section numbers that marks whichever section you are
+ * currently inside. It answers two questions a long single-page site
+ * otherwise leaves open: how far through am I, and how much is left.
  *
  * ── Decisions worth knowing ────────────────────────────────────────────
  *
@@ -34,45 +33,83 @@ const { sections } = Astro.props;
 ---
 
 <nav class="rail" aria-label="Page sections" data-rail>
-  <ol>
-    {
-      sections.map((s, i) => (
-        <li>
-          <a href={`#${s.id}`} class="rail-link" data-rail-link={s.id}>
-            <span class="rail-num" aria-hidden="true">
-              {String(i + 1).padStart(2, '0')}
-            </span>
-            <span class="rail-label">{s.label}</span>
-          </a>
-        </li>
-      ))
-    }
-  </ol>
+  <div class="rail-panel" data-rail-panel style="--active: 0">
+    <!--
+      One highlight for the whole rail, sitting behind the active row. It
+      glides to the new row when the section changes instead of the old row
+      switching off and the new one switching on. It lives outside the <ol>
+      because a list may only contain list items.
+    -->
+    <span class="rail-indicator" aria-hidden="true"></span>
+
+    <ol>
+      {
+        sections.map((s, i) => (
+          <li style={`--i: ${i}`}>
+            <a href={`#${s.id}`} class="rail-link" data-rail-link={s.id}>
+              <span class="rail-num" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <span class="rail-label">{s.label}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
 </nav>
 
 <style>
   /*
-   * ── The capsule ─────────────────────────────────────────────────────
-   * At rest the rail is a slim floating capsule of numbers. On hover or
-   * keyboard focus it widens to show the section names and turns almost
-   * opaque, lifted off the page by a shadow.
+   * ── How the rail moves ──────────────────────────────────────────────
+   * At rest it is a slim capsule of numbers. On hover or keyboard focus it
+   * widens into a near-opaque panel and the section names fade in beside
+   * the numbers, one after another.
    *
-   * That opacity is the point. The first version was bare numbers on the
-   * page, and when its labels slid out they landed on top of whatever
-   * body text sat beside them, so the two ran together into one unreadable
-   * layer. A solid surface under the labels means the rail always reads
-   * as a separate object above the page, never as part of it.
+   * Everything here is tuned for smoothness, which an earlier version
+   * lacked, for three reasons worth remembering:
+   *
+   *   1. The width animates between two EXACT values: the capsule's real
+   *      width and the width the longest label needs (measured by the
+   *      script below once the font has loaded). The old version animated
+   *      each label's max-width from 0 to 14ch, far wider than any label,
+   *      so the panel shot out in the first third of the animation and
+   *      then sat still for the rest, which reads as a jerk.
+   *
+   *   2. The corner radius never changes. It used to animate from 999px to
+   *      24px, but a radius is capped at half the element's size, so the
+   *      visible corners did nothing until the last tenth of the animation
+   *      and then popped.
+   *
+   *   3. Only cheap properties move with the reveal. The labels are always
+   *      laid out at full width and merely clipped by the panel, so they
+   *      fade and slide (opacity and transform, which the browser does on
+   *      the graphics card) instead of changing size.
+   *
+   * Opening is slower than closing. The labels leave first and quickly,
+   * then the panel folds in behind them, so no text is ever wiped by the
+   * closing edge.
    */
   .rail {
     display: none;
+
+    --rail-pad: 6px;
+    --row-h: 32px;
+    --row-gap: 2px;
+    --num-w: 16px;
+    --link-pad: 12px;
+    /* Numbers exactly centred in the capsule. */
+    --rail-closed: calc(
+      2 * var(--rail-pad) + 2 * var(--link-pad) + var(--num-w)
+    );
   }
 
   /*
    * 1380px. The rail must fit in the margin beside the content at rest.
-   * The content column is 1200px wide with 32px of padding and the capsule
-   * ends 90px from the left edge, so at 1320px it cleared the text by just
-   * 2px, which reads as touching. 1380px leaves at least 32px of air. When expanded it deliberately floats over
-   * the page, which the opaque surface makes safe.
+   * The content column is 1200px wide with 32px of padding; below this
+   * width the capsule would crowd the start of every line of text. When
+   * open it deliberately floats over the page, which the opaque panel
+   * makes safe.
    */
   @media (min-width: 1380px) {
     .rail {
@@ -91,59 +128,97 @@ const { sections } = Astro.props;
     }
   }
 
-  .rail ol {
-    list-style: none;
-    margin: 0;
-    padding: var(--sp-3) var(--sp-2);
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+  .rail-panel {
+    position: relative;
+    width: var(--rail-closed);
+    padding: var(--rail-pad);
+    overflow: hidden;
+    border-radius: 26px;
 
-    border-radius: var(--radius-pill);
     background: rgba(10, 21, 38, 0.55);
     backdrop-filter: blur(16px) saturate(1.4);
     -webkit-backdrop-filter: blur(16px) saturate(1.4);
     box-shadow: var(--shadow-1);
 
+    /* Closing: waits a beat so the labels are gone before the edge moves. */
     transition:
-      background var(--dur) var(--ease),
-      box-shadow var(--dur) var(--ease),
-      border-radius var(--dur) var(--ease);
+      width 380ms var(--ease-smooth) 70ms,
+      background 380ms var(--ease-smooth) 70ms,
+      box-shadow 380ms var(--ease-smooth) 70ms;
   }
 
-  /* Expanded: near-opaque, deeper shadow, and a radius that suits a panel
-     rather than a pill once it is wider than it is tall. */
-  .rail:hover ol,
-  .rail:focus-within ol {
+  .rail:hover .rail-panel,
+  .rail:focus-within .rail-panel {
+    /* Fallback width until the script has measured the real one. */
+    width: var(--rail-open, 8.5rem);
     background: var(--surface-menu);
     box-shadow: var(--shadow-2);
-    border-radius: var(--radius-lg);
+
+    /* Opening: straight away, and a little slower, so it feels weighted. */
+    transition:
+      width 480ms var(--ease-smooth),
+      background 480ms var(--ease-smooth),
+      box-shadow 480ms var(--ease-smooth);
+  }
+
+  /*
+   * The highlight behind the active row. Neutral, not yellow: translucent
+   * yellow over navy mixes to a muddy olive. The active row's number and
+   * name turn yellow instead, which is clean.
+   */
+  .rail-indicator {
+    position: absolute;
+    top: var(--rail-pad);
+    left: var(--rail-pad);
+    right: var(--rail-pad);
+    height: var(--row-h);
+    border-radius: var(--radius-pill);
+    background: rgba(252, 250, 249, 0.09);
+    transform: translateY(
+      calc(var(--active) * (var(--row-h) + var(--row-gap)))
+    );
+    transition: transform 520ms var(--ease-smooth);
+  }
+
+  .rail ol {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--row-gap);
   }
 
   .rail-link {
     display: flex;
     align-items: center;
-    gap: var(--sp-3);
-    min-height: 32px;
-    padding: 0 var(--sp-3);
+    gap: 10px;
+    height: var(--row-h);
+    padding: 0 var(--link-pad);
     border-radius: var(--radius-pill);
     text-decoration: none;
+    white-space: nowrap;
     transition: background var(--dur-fast) var(--ease);
   }
 
-  .rail-link:hover,
-  .rail-link:focus-visible {
-    background: var(--surface-2);
+  /* Hover on the other rows: a much fainter wash than the active one, so
+     "where you are" and "where you are pointing" never look alike. */
+  .rail-link:not(.is-active):hover,
+  .rail-link:not(.is-active):focus-visible {
+    background: rgba(252, 250, 249, 0.045);
   }
 
   .rail-num {
+    flex: 0 0 var(--num-w);
+    text-align: center;
     font-family: var(--font-display);
     font-size: var(--text-label);
     font-weight: 700;
     letter-spacing: var(--track-caps);
     font-variant-numeric: tabular-nums;
     color: var(--ink-faint);
-    transition: color var(--dur-fast) var(--ease);
+    transition: color 300ms var(--ease);
   }
 
   .rail-label {
@@ -151,25 +226,28 @@ const { sections } = Astro.props;
     font-size: var(--text-meta);
     font-weight: 700;
     letter-spacing: var(--track-caps);
-    white-space: nowrap;
-    /* Full ink, not muted: once the panel is open, the names are the
-       thing being read and should be the brightest text in it. */
     color: var(--ink);
 
-    /* Collapsed until the rail opens. Width animates rather than display,
-       so it can transition. */
-    max-width: 0;
+    /* Closing: gone fast, with no stagger. */
     opacity: 0;
-    overflow: hidden;
+    transform: translateX(-6px);
     transition:
-      max-width var(--dur) var(--ease),
-      opacity var(--dur-fast) var(--ease);
+      opacity 140ms var(--ease),
+      transform 200ms var(--ease-exit),
+      color 300ms var(--ease);
   }
 
   .rail:hover .rail-label,
   .rail:focus-within .rail-label {
-    max-width: 14ch;
     opacity: 1;
+    transform: none;
+
+    /* Opening: each name follows the one above it by 22ms, starting once
+       the panel is already on its way out. */
+    transition:
+      opacity 320ms var(--ease) calc(90ms + var(--i) * 22ms),
+      transform 420ms var(--ease-smooth) calc(90ms + var(--i) * 22ms),
+      color 300ms var(--ease);
   }
 
   .rail:hover .rail-num,
@@ -177,67 +255,80 @@ const { sections } = Astro.props;
     color: var(--ink-muted);
   }
 
-  /*
-   * The section you are in. Yellow number with a soft yellow pill behind
-   * it, the only yellow on the rail, which is what makes position legible
-   * at a glance even while the rail is collapsed.
-   */
-  .rail-link.is-active {
-    background: rgba(254, 198, 1, 0.14);
-  }
-
-  .rail-link.is-active .rail-num,
-  .rail:hover .rail-link.is-active .rail-num,
-  .rail:focus-within .rail-link.is-active .rail-num,
-  .rail-link.is-active .rail-label {
+  /* The section you are in: its number and name in yellow. */
+  .rail .rail-link.is-active .rail-num,
+  .rail .rail-link.is-active .rail-label {
     color: var(--highlight);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .rail ol,
+    .rail-panel,
+    .rail:hover .rail-panel,
+    .rail:focus-within .rail-panel,
+    .rail-indicator,
     .rail-link,
     .rail-num,
-    .rail-label {
+    .rail-label,
+    .rail:hover .rail-label,
+    .rail:focus-within .rail-label {
       transition: none;
     }
   }
 </style>
 
 <script>
-  /*
-   * Marks the rail entry for whichever section currently occupies the
-   * middle of the screen.
-   *
-   * rootMargin '-45% 0px -45% 0px' shrinks the observer's window to a thin
-   * band across the centre of the viewport. A section is "active" when it
-   * crosses that band. Without the margin, three tall sections are all
-   * intersecting at once and the highlight flickers between them.
-   */
   const rail = document.querySelector<HTMLElement>('[data-rail]');
+  const panel = rail?.querySelector<HTMLElement>('[data-rail-panel]');
 
-  if (rail) {
-    const links = new Map<string, HTMLAnchorElement>();
-    rail
-      .querySelectorAll<HTMLAnchorElement>('[data-rail-link]')
-      .forEach((a) => links.set(a.dataset.railLink!, a));
+  if (rail && panel) {
+    const linkEls = [
+      ...rail.querySelectorAll<HTMLAnchorElement>('[data-rail-link]'),
+    ];
 
-    const targets = [...links.keys()]
+    /*
+     * The open width, measured rather than guessed. Every label is laid out
+     * at full width even while hidden, so the widest link's scrollWidth is
+     * exactly the space the longest name needs. Measured after the web font
+     * has loaded, since the fallback font's letters are a different width.
+     */
+    const measure = () => {
+      const pad = parseFloat(getComputedStyle(panel).paddingLeft) || 0;
+      const widest = Math.max(...linkEls.map((a) => a.scrollWidth));
+      if (widest > 0) {
+        panel.style.setProperty('--rail-open', `${Math.ceil(widest + pad * 2)}px`);
+      }
+    };
+    document.fonts.ready.then(measure);
+
+    /*
+     * Marks the rail entry for whichever section currently occupies the
+     * middle of the screen.
+     *
+     * rootMargin '-45% 0px -45% 0px' shrinks the observer's window to a
+     * thin band across the centre of the viewport. A section is "active"
+     * when it crosses that band. Without the margin, three tall sections
+     * are all intersecting at once and the highlight flickers between them.
+     */
+    const ids = linkEls.map((a) => a.dataset.railLink!);
+    const targets = ids
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null);
 
     if (targets.length > 0) {
       const setActive = (id: string) => {
-        links.forEach((a, key) => a.classList.toggle('is-active', key === id));
+        const index = ids.indexOf(id);
+        if (index < 0) return;
+        // Moving --active is what slides the highlight to its new row.
+        panel.style.setProperty('--active', String(index));
+        linkEls.forEach((a, i) => a.classList.toggle('is-active', i === index));
       };
 
       /*
        * Which sections are currently across the centre band. A fast scroll
        * (or a jump from a rail click) can deliver several entries in one
-       * callback, and looping over them assigning as you go would leave
-       * whichever happened to be last in the array active, which is not
-       * necessarily the one on screen. Tracking the set and then picking
-       * the first in document order makes the result independent of the
-       * callback's ordering.
+       * callback, and assigning as you go would leave whichever happened to
+       * be last in the array active. Tracking the set and picking the first
+       * in document order makes the result independent of that ordering.
        */
       const visible = new Set<string>();
 
