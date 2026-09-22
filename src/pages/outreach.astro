@@ -64,9 +64,9 @@ const impact = [
   <section class="section">
     <div class="shell">
       <div class="section-head">
-        <p class="eyebrow" data-reveal="fade">What we run</p>
+        <p class="eyebrow">What we run</p>
         <h2 data-reveal>Events and programs</h2>
-        <p data-reveal data-reveal-delay="0.06">
+        <p>
           Demonstrations, workshops, and ongoing mentorship. Newest first.
         </p>
       </div>
@@ -113,9 +113,9 @@ const impact = [
   <section class="section section-tight">
     <div class="shell">
       <div class="section-head">
-        <p class="eyebrow" data-reveal="fade">Who we work with</p>
+        <p class="eyebrow">Who we work with</p>
         <h2 data-reveal>The teams we <span class="accent-word">mentor</span></h2>
-        <p data-reveal data-reveal-delay="0.06">
+        <p>
           Five FIRST LEGO League teams at {team.parentOrg}, and what they
           achieved in the 2025-26 UNEARTHED season. These are their results,
           not ours.
@@ -172,7 +172,7 @@ const impact = [
   <section class="section section-tight">
     <div class="shell">
       <div class="section-head">
-        <p class="eyebrow" data-reveal="fade">Out in the community</p>
+        <p class="eyebrow">Out in the community</p>
         <h2 data-reveal>Photos from outreach</h2>
       </div>
       <Gallery limit={6} columns={3} />
@@ -223,7 +223,7 @@ const impact = [
     margin-top: var(--sp-2);
     font-size: var(--step--1);
     font-weight: 600;
-    letter-spacing: 0.1em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     color: var(--ink-faint);
   }
@@ -362,7 +362,7 @@ const impact = [
   .book h2 {
     font-size: var(--step-2);
     text-transform: none;
-    letter-spacing: -0.01em;
+    letter-spacing: var(--track-snug);
   }
 
   .book-body {

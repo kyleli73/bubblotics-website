@@ -51,7 +51,7 @@ const { Content } = await render(post);
           All updates
         </a>
 
-        <p class="post-meta" data-reveal="fade">
+        <p class="post-meta">
           <time datetime={d.date.toISOString().split('T')[0]}>
             {formatDate(d.date)}
           </time>
@@ -61,11 +61,11 @@ const { Content } = await render(post);
 
         <h1 data-reveal>{d.title}</h1>
 
-        <p class="lead" data-reveal data-reveal-delay="0.08">{d.excerpt}</p>
+        <p class="lead">{d.excerpt}</p>
 
         {
           d.tags.length > 0 && (
-            <ul class="post-tags" data-reveal="fade">
+            <ul class="post-tags">
               {d.tags.map((t) => (
                 <li class="tag">{t}</li>
               ))}
@@ -112,7 +112,7 @@ const { Content } = await render(post);
       <section class="section section-tight related">
         <div class="shell">
           <div class="section-head">
-            <p class="eyebrow" data-reveal="fade">Keep reading</p>
+            <p class="eyebrow">Keep reading</p>
             <h2 data-reveal>More updates</h2>
           </div>
 
@@ -137,13 +137,13 @@ const { Content } = await render(post);
 
   .post-head-inner {
     position: relative;
-    z-index: 1;
+    z-index: var(--z-raised);
   }
 
   .post-head h1 {
     font-size: var(--step-4);
     text-transform: none;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--track-tight);
   }
 
   .back-link {
@@ -153,7 +153,7 @@ const { Content } = await render(post);
     margin-bottom: var(--sp-5);
     font-size: var(--step--1);
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: var(--track-caps);
     text-transform: uppercase;
     color: var(--ink-faint);
     text-decoration: none;
@@ -179,7 +179,7 @@ const { Content } = await render(post);
     margin-bottom: var(--sp-4);
     font-size: var(--step--1);
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: var(--track-caps);
     text-transform: uppercase;
     color: var(--accent);
   }

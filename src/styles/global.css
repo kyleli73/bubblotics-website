@@ -115,20 +115,48 @@
   --glass-blur: 16px;
 
   /* ── Typography ──────────────────────────────────────────────────────
-     Source Sans 3 for body copy, per the branding guide. It ships as a
-     variable font, so every weight from 200 to 900 is available from one
-     downloaded file.
+     Source Sans 3 for everything, per the branding guide: Bold for
+     headings, Regular for body, Italic for captions. It ships as one
+     variable font, so every weight from 200 to 900 comes from a single
+     download and headings cost nothing extra.
 
-     [PLACEHOLDER] The guide names "Nelvetica Neue" for headlines. That
-     face isn't available as a web font. The stack below is the closest
-     neo-grotesque, and it renders natively on Apple devices with no
-     download at all. If the team licenses the real face, drop the files
-     in public/fonts/, add an @font-face block, and put its name at the
-     front of --font-display. Nothing else needs to change. */
+     This used to point headings at Helvetica Neue. That meant a heading
+     rendered as Helvetica on a Mac, Arial on Windows, and Roboto on
+     Android: the same page looked like three different brands depending
+     on who opened it, and none of them was the one in the guide.
+
+     [PLACEHOLDER] The guide names "Nelvetica Neue" for titles and
+     Ethnocentric for the wordmark. Neither is licensed for the web. If the
+     team buys them, add an @font-face block and put the name at the front
+     of --font-display (or --font-wordmark). Nothing else needs to change. */
   --font-body: 'Source Sans 3 Variable', 'Source Sans 3', system-ui,
     -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Helvetica Neue', Helvetica, 'Inter', system-ui, Arial,
-    sans-serif;
+  --font-display: var(--font-body);
+  --font-wordmark: var(--font-display);
+
+  /* ── Tracking ────────────────────────────────────────────────────────
+     Four values, not twenty-one. An audit found 21 distinct letter-spacing
+     values across the site, nine of them for small uppercase labels that
+     ranged from 0.10em to 0.24em and were indistinguishable side by side.
+     Near-identical values are worse than one value: they read as a mistake
+     rather than a decision.
+
+     The rule of thumb all four follow: the bigger the type, the tighter it
+     sits. Large display type looks loose at default spacing, and small
+     capitals are illegible without extra air between them. */
+  --track-tight: -0.022em; /* display headings, h1 and h2 */
+  --track-snug: -0.01em; /* titles, h3, card headings */
+  --track-caps: 0.04em; /* uppercase subheads at body size */
+  --track-label: 0.14em; /* small uppercase labels and eyebrows */
+  --track-wordmark: 0.38em; /* the team number under the wordmark, only */
+
+  /* ── Small text ──────────────────────────────────────────────────────
+     A floor, because the audit also found 33 tiny declarations in seven
+     near-identical sizes from 10.6px to 12.5px, 27 of them below 12px. Anything under 12px is hard to read
+     on a phone held at arm's length in a gym, which is where most of our
+     visitors are when they first see this. */
+  --text-label: 0.75rem; /* 12px: eyebrows, tags, table headers */
+  --text-meta: 0.8125rem; /* 13px: dates, captions, secondary lines */
 
   /* Fluid type. clamp(min, preferred, max) scales with the viewport between
      a phone and a desktop without a single media query. */
@@ -173,6 +201,26 @@
      between a site that feels designed and one that feels assembled. */
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-io: cubic-bezier(0.65, 0, 0.35, 1);
+  /* Accelerating, for things leaving. Arrivals decelerate into place and
+     departures speed up out of it; using the arrival curve for both makes
+     a closing menu feel like it is reluctant to go. */
+  --ease-exit: cubic-bezier(0.55, 0, 1, 0.45);
+
+  /* ── Layers ──────────────────────────────────────────────────────────
+     Named, so nobody has to guess whether 99 beats 100. The site had nine
+     ad hoc z-index values including 99, 100 and 999, which is how a menu
+     ends up underneath the thing it is supposed to cover. */
+  --z-raised: 1;
+  --z-float: 2;
+  --z-rail: 40;
+  /* One below the header, on purpose. The mobile menu panel covers the
+     page but must sit UNDER the header, because the button that closes it
+     lives in the header. At equal values the panel wins (it comes later in
+     the document) and the close button disappears behind it. */
+  --z-menu: 99;
+  --z-header: 100;
+  --z-overlay: 200;
+  --z-skip: 1000;
   --dur-fast: 160ms;
   --dur: 320ms;
   --dur-slow: 620ms;
@@ -217,11 +265,28 @@ body {
   text-rendering: optimizeLegibility;
   overflow-x: clip; /* stops decorative bubbles causing sideways scroll */
   min-height: 100vh;
+}
 
-  /* The page's ambient light. Two soft radial washes, cornflower at top
-     left and a faint yellow at bottom right, fixed so they sit behind the
-     content as it scrolls. This is what stops a dark site reading as flat
-     black. */
+/*
+ * The page's ambient light: a cornflower wash at top left and a faint
+ * yellow one at top right, pinned behind the content as it scrolls.
+ *
+ * Drawn on a fixed pseudo-element rather than with background-attachment:
+ * fixed on body. The fixed-attachment version forces the browser to repaint
+ * the whole background on every scroll frame, which is visible as stutter
+ * on mid-range phones, and iOS Safari ignores it entirely anyway. A fixed
+ * layer is composited once and then just sits there.
+ *
+ * The warm wash was the logo's orange (#FFA000) until the accent moved to
+ * School Bus Yellow; it is yellow now so the page's one warm tint matches
+ * its one warm colour.
+ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-image:
     radial-gradient(
       ellipse 80% 55% at 12% -8%,
@@ -230,11 +295,9 @@ body {
     ),
     radial-gradient(
       ellipse 65% 50% at 92% 8%,
-      rgba(255, 160, 0, 0.06),
+      rgba(254, 198, 1, 0.05),
       transparent 60%
     );
-  background-attachment: fixed;
-  background-repeat: no-repeat;
 }
 
 img,
@@ -280,10 +343,17 @@ a:hover {
 
 /* Keyboard focus must always be obvious. Yellow reads clearly against every
    surface on the site, which is exactly why it is reserved for this. */
+/*
+ * Keyboard focus. The outline follows whatever shape the element already
+ * has: a pill button gets a pill ring, a square card a square one.
+ *
+ * This rule used to set border-radius: 4px as well, which changed the
+ * element itself rather than its ring. Tab onto a square card and its
+ * corners visibly rounded, then snapped back when focus moved on.
+ */
 :focus-visible {
   outline: 2px solid var(--highlight);
   outline-offset: 3px;
-  border-radius: 4px;
 }
 
 :focus:not(:focus-visible) {
@@ -306,7 +376,7 @@ h4 {
   font-family: var(--font-display);
   font-weight: 700;
   line-height: 1.06;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--track-tight);
   text-wrap: balance; /* stops a lone word dropping to its own line */
 }
 
@@ -317,7 +387,7 @@ h1,
 .h-display {
   font-size: var(--step-5);
   text-transform: uppercase;
-  letter-spacing: -0.015em;
+  letter-spacing: var(--track-tight);
 }
 
 h2 {
@@ -328,7 +398,7 @@ h2 {
 
 h3 {
   font-size: var(--step-2);
-  letter-spacing: -0.01em;
+  letter-spacing: var(--track-snug);
 }
 
 h4 {
@@ -364,7 +434,7 @@ p {
   font-size: var(--step--1);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.16em;
+  letter-spacing: var(--track-label);
   color: var(--accent);
   margin-bottom: var(--sp-3);
 }
@@ -510,7 +580,7 @@ p {
   position: absolute;
   top: var(--sp-3);
   left: var(--sp-3);
-  z-index: 999;
+  z-index: var(--z-skip);
   padding: var(--sp-3) var(--sp-5);
   background: var(--highlight);
   color: var(--ink-inverse);
@@ -640,7 +710,7 @@ p {
   font-size: var(--step--1);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--track-label);
   color: var(--accent);
 }
 
@@ -684,7 +754,7 @@ p {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--step-0);
-  letter-spacing: 0.02em;
+  letter-spacing: var(--track-caps);
   text-decoration: none;
   overflow: hidden;
   isolation: isolate;
@@ -764,7 +834,7 @@ p {
   font-family: var(--font-display);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--track-label);
   font-size: var(--step--1);
   text-decoration: none;
   color: var(--accent-soft);
@@ -793,7 +863,7 @@ p {
   color: var(--ink-muted);
   font-size: var(--step--1);
   font-weight: 600;
-  letter-spacing: 0.03em;
+  letter-spacing: var(--track-caps);
   white-space: nowrap;
 }
 
@@ -829,7 +899,7 @@ p {
   color: var(--ink);
   margin-top: var(--sp-8);
   text-transform: none;
-  letter-spacing: -0.01em;
+  letter-spacing: var(--track-snug);
 }
 
 .prose h3 {
@@ -896,9 +966,38 @@ p {
    blank page. This is the classic way to break a site and never notice.
    ───────────────────────────────────────────────────────────────────────── */
 
-.has-js [data-reveal] {
+.has-js [data-reveal],
+.has-js [data-hero-title],
+.has-js [data-hero-item] {
   opacity: 0;
-  will-change: transform, opacity;
+}
+
+/*
+ * ── The failsafe ──────────────────────────────────────────────────────
+ *
+ * Everything above is hidden the moment `.has-js` goes on, which happens
+ * in an inline script in <head>, before the animation bundle has even
+ * started downloading. If that bundle then never arrives (a dropped
+ * connection on school wifi, a content blocker, a CDN hiccup), the reveal
+ * code never runs and the page stays blank. The try/catch in motion.ts
+ * cannot help, because the file it lives in is the thing that failed to
+ * load.
+ *
+ * So CSS reveals everything by itself after 2.5 seconds, unless motion.ts
+ * has announced itself by adding `.motion-ready`. When the script works,
+ * that class goes on within milliseconds and this rule never matches.
+ */
+@keyframes reveal-failsafe {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.has-js:not(.motion-ready) [data-reveal],
+.has-js:not(.motion-ready) [data-hero-title],
+.has-js:not(.motion-ready) [data-hero-item] {
+  animation: reveal-failsafe 0.5s ease 2.5s forwards;
 }
 
 /*
@@ -934,7 +1033,9 @@ main {
     scroll-behavior: auto;
   }
 
-  .has-js [data-reveal] {
+  .has-js [data-reveal],
+  .has-js [data-hero-title],
+  .has-js [data-hero-item] {
     opacity: 1 !important;
     transform: none !important;
   }

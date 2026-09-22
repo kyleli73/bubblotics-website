@@ -104,7 +104,7 @@ const rest = all.filter((r) => r.id !== featured?.id);
       {
         rest.length > 0 && (
           <div class="section-head">
-            <p class="eyebrow" data-reveal="fade">Earlier builds</p>
+            <p class="eyebrow">Earlier builds</p>
             <h2 data-reveal>The ones that came before</h2>
           </div>
         )
@@ -230,7 +230,7 @@ const rest = all.filter((r) => r.id !== featured?.id);
     margin-top: var(--sp-3);
     font-size: var(--step--1);
     font-weight: 600;
-    letter-spacing: 0.1em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     color: var(--ink-faint);
   }

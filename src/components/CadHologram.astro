@@ -48,14 +48,14 @@ const { model, name, caption } = Astro.props;
 
   <div class="shell">
     <div class="section-head">
-      <p class="eyebrow" data-reveal="fade">
+      <p class="eyebrow">
         <Icon name="cube" size={14} />
         Hologram
       </p>
       <h2 data-reveal>
         Take <span class="accent-word">{name}</span> apart
       </h2>
-      <p data-reveal data-reveal-delay="0.06">
+      <p>
         The real assembly geometry, rendered as a hologram. Drag to orbit,
         scroll to zoom, and pull the subsystems apart to see how it goes
         together.
@@ -175,7 +175,7 @@ const { model, name, caption } = Astro.props;
 
   .hologram-section :global(.shell) {
     position: relative;
-    z-index: 1;
+    z-index: var(--z-raised);
   }
 
   .holo {
@@ -260,7 +260,7 @@ const { model, name, caption } = Astro.props;
     inset: 0;
     pointer-events: none;
     /* Above the canvas, below the loading state. */
-    z-index: 2;
+    z-index: var(--z-float);
   }
 
   .holo-leaders {
@@ -313,17 +313,17 @@ const { model, name, caption } = Astro.props;
 
   .holo-callouts :global(.holo-callout-num) {
     font-family: var(--font-display);
-    font-size: 0.66rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: var(--track-label);
     color: var(--accent);
   }
 
   .holo-callouts :global(.holo-callout-name) {
-    font-size: 0.76rem;
+    font-size: var(--text-meta);
     font-weight: 600;
     line-height: 1.25;
-    letter-spacing: 0.04em;
+    letter-spacing: var(--track-caps);
     color: var(--ink-muted);
     text-transform: uppercase;
   }
@@ -347,11 +347,11 @@ const { model, name, caption } = Astro.props;
     left: 50%;
     bottom: var(--sp-4);
     transform: translateX(-50%);
-    z-index: 2;
+    z-index: var(--z-float);
     pointer-events: none;
-    font-size: 0.66rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.24em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     color: var(--ink-faint);
   }
@@ -385,9 +385,9 @@ const { model, name, caption } = Astro.props;
   }
 
   .holo-label {
-    font-size: 0.72rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     color: var(--ink-faint);
     white-space: nowrap;
@@ -438,9 +438,9 @@ const { model, name, caption } = Astro.props;
   }
 
   .holo-parts-title {
-    font-size: 0.72rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     color: var(--ink-faint);
     margin-bottom: var(--sp-3);
@@ -471,7 +471,7 @@ const { model, name, caption } = Astro.props;
     color: var(--ink-muted);
     font-size: var(--step--1);
     font-weight: 600;
-    letter-spacing: 0.03em;
+    letter-spacing: var(--track-caps);
     transition:
       color var(--dur-fast) var(--ease),
       border-color var(--dur-fast) var(--ease);
@@ -479,9 +479,9 @@ const { model, name, caption } = Astro.props;
 
   .holo-parts :global(.holo-num) {
     font-family: var(--font-display);
-    font-size: 0.68rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: var(--track-label);
     color: var(--accent);
     flex-shrink: 0;
   }

@@ -65,7 +65,7 @@ const { sections } = Astro.props;
       left: var(--sp-6);
       top: 50%;
       transform: translateY(-50%);
-      z-index: 40;
+      z-index: var(--z-rail);
     }
   }
 
@@ -99,18 +99,18 @@ const { sections } = Astro.props;
 
   .rail-num {
     font-family: var(--font-display);
-    font-size: 0.72rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: var(--track-label);
     color: var(--ink-faint);
     transition: color var(--dur-fast) var(--ease);
   }
 
   .rail-label {
     font-family: var(--font-display);
-    font-size: 0.72rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     white-space: nowrap;
     color: var(--ink-faint);

@@ -17,11 +17,25 @@
  * You add animation to a page purely with HTML attributes. No page ever
  * imports GSAP directly:
  *
- *   data-reveal              fade and rise in when scrolled into view
+ *   data-reveal              fade and rise in when scrolled into view.
+ *                            On an h1, h2 or h3 it becomes the masked
+ *                            line reveal instead: each line slides up
+ *                            from behind an invisible edge.
  *   data-reveal="left"       slide in from the left instead
  *   data-reveal="right"      from the right
- *   data-reveal="scale"      scale up from 92%
+ *   data-reveal="scale"      scale up from 96%
  *   data-reveal-delay="0.2"  hold for 0.2s first
+ *   data-hero / data-hero-title / data-hero-item / data-hero-content
+ *                            the home page's opening screen: title
+ *                            assembles on load, the rest follows, and the
+ *                            whole block recedes as you scroll away
+ *
+ * ── Restraint is the rule ──────────────────────────────────────────────
+ * Put data-reveal on a section's HEADLINE and on its main content group,
+ * and nowhere else. Not on eyebrows, lead paragraphs or "read more" links.
+ * An earlier version animated everything (thirty separate reveals on the
+ * About page) and the result read as a template: when every element
+ * moves, nothing is emphasised. Supporting text should simply be there.
  *   data-stagger             children animate one after another
  *   data-parallax="0.3"      drifts against the scroll; higher = more
  *   data-count="120"         counts from 0 to 120 when it comes into view
@@ -36,9 +50,15 @@
 
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { SplitText } from 'gsap/SplitText';
 import Lenis from 'lenis';
 
-gsap.registerPlugin(ScrollTrigger);
+/*
+ * SplitText used to be a paid Club GSAP plugin. Since GSAP 3.13 every
+ * plugin ships free in the main package, which is why it can be imported
+ * here with no account or licence key.
+ */
+gsap.registerPlugin(ScrollTrigger, SplitText);
 
 const prefersReducedMotion = window.matchMedia(
   '(prefers-reduced-motion: reduce)'
@@ -50,7 +70,11 @@ const prefersReducedMotion = window.matchMedia(
  * fails to animate is fine, a site stuck at opacity 0 is broken.
  */
 function showEverything() {
-  document.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => {
+  document
+    .querySelectorAll<HTMLElement>(
+      '[data-reveal], [data-hero-title], [data-hero-item]'
+    )
+    .forEach((el) => {
     el.style.opacity = '1';
     el.style.transform = 'none';
   });
@@ -156,18 +180,31 @@ function initSmoothScroll(): Lenis | null {
    ───────────────────────────────────────────────────────────────────────── */
 
 function initReveals() {
+  /*
+   * Distances are deliberately small. The first version moved things 42px
+   * and slid side-entering blocks 52px, which reads as "animated website".
+   * Apple-grade motion is felt more than seen: the content settles into
+   * place rather than travelling to it.
+   */
   const directions: Record<string, gsap.TweenVars> = {
-    up: { y: 42, opacity: 0 },
-    left: { x: -52, opacity: 0 },
-    right: { x: 52, opacity: 0 },
-    scale: { scale: 0.92, opacity: 0 },
+    up: { y: 28, opacity: 0 },
+    left: { x: -36, opacity: 0 },
+    right: { x: 36, opacity: 0 },
+    scale: { scale: 0.96, opacity: 0 },
     fade: { opacity: 0 },
   };
 
   document.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => {
     const key = el.dataset.reveal || 'up';
-    const from = directions[key] ?? directions.up;
     const delay = parseFloat(el.dataset.revealDelay ?? '0');
+
+    // Headings get the masked line reveal instead of a block fade.
+    if (/^H[1-3]$/.test(el.tagName) && key === 'up') {
+      revealLines(el, delay, { start: 'top 88%' });
+      return;
+    }
+
+    const from = directions[key] ?? directions.up;
 
     // A container marked data-stagger animates its own direct children in
     // sequence rather than moving as one block. Used for card grids.
@@ -187,10 +224,15 @@ function initReveals() {
         x: 0,
         scale: 1,
         opacity: 1,
-        duration: 0.95,
+        duration: 0.9,
         delay,
         ease: 'power3.out',
-        stagger: stagger ? 0.09 : 0,
+        /*
+         * 45ms between siblings. It was 90ms, which on a grid of eight
+         * cards meant the last one arrived most of a second after the
+         * first: long enough to read as a queue rather than a group.
+         */
+        stagger: stagger ? 0.045 : 0,
         scrollTrigger: {
           trigger: el,
           // Fires when the element's top reaches 88% down the viewport,
@@ -203,6 +245,67 @@ function initReveals() {
         },
       }
     );
+  });
+}
+
+/*
+ * The masked line reveal: each line of a heading rises into view from
+ * behind an invisible edge, one after another. It is the single most
+ * recognisable move on apple.com, and it works because the text appears to
+ * be uncovered rather than faded in.
+ *
+ * How it works: SplitText wraps every rendered line in its own element,
+ * and `mask: 'lines'` wraps each of those in a second element with
+ * overflow clipped. Pushing a line down 110% hides it below its own mask;
+ * animating it back to 0 slides it up into view.
+ *
+ * Lines depend on the font and the width of the screen, so this has to run
+ * after the web font has loaded (otherwise it splits using the fallback
+ * font's line breaks and the result is wrong), and it has to re-split when
+ * the window is resized. `autoSplit` handles the resize; the caller waits
+ * for fonts.
+ *
+ * SplitText also sets aria-label on the heading and hides the fragments
+ * from screen readers, so assistive tech still reads one sentence rather
+ * than "Built. By. Students."
+ */
+function revealLines(
+  el: HTMLElement,
+  delay: number,
+  opts: { start?: string; immediate?: boolean } = {}
+) {
+  // The heading itself is hidden by the pre-JS CSS; show it, and let the
+  // masks do the hiding from here.
+  gsap.set(el, { opacity: 1 });
+
+  let done = false;
+
+  SplitText.create(el, {
+    type: 'lines',
+    mask: 'lines',
+    autoSplit: true,
+    onSplit(self) {
+      /*
+       * A re-split after a resize. If the heading has already been
+       * revealed, leave the fresh lines where they are rather than hiding
+       * them again: re-animating on every window resize looks like a bug.
+       */
+      if (done) return;
+
+      return gsap.from(self.lines, {
+        yPercent: 110,
+        duration: 1.05,
+        ease: 'power4.out',
+        stagger: 0.085,
+        delay,
+        onComplete: () => {
+          done = true;
+        },
+        scrollTrigger: opts.immediate
+          ? undefined
+          : { trigger: el, start: opts.start ?? 'top 88%', once: true },
+      });
+    },
   });
 }
 
@@ -288,30 +391,57 @@ function initParallax() {
    ───────────────────────────────────────────────────────────────────────── */
 
 function initHeroIntro() {
-  const hero = document.querySelector('[data-hero]');
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
   if (!hero) return;
 
-  const items = hero.querySelectorAll('[data-hero-item]');
-  if (!items.length) return;
+  const title = hero.querySelector<HTMLElement>('[data-hero-title]');
+  const items = hero.querySelectorAll<HTMLElement>('[data-hero-item]');
 
-  gsap.set(items, { opacity: 0, y: 30 });
+  // The headline assembles first, line by line; everything under it
+  // follows as one soft wave once the title is mostly in.
+  if (title) revealLines(title, 0.1, { immediate: true });
 
-  gsap
-    .timeline({ defaults: { ease: 'power3.out' } })
-    .to(items, {
-      opacity: 1,
-      y: 0,
-      duration: 1.1,
-      stagger: 0.11,
-      // A short hold so the font has loaded and the text does not visibly
-      // reflow halfway through the animation.
-      delay: 0.15,
-    })
-    .from(
-      hero.querySelectorAll('[data-hero-glow]'),
-      { opacity: 0, scale: 0.7, duration: 1.6 },
-      0
+  if (items.length) {
+    gsap.fromTo(
+      items,
+      { opacity: 0, y: 18 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 1,
+        ease: 'power3.out',
+        stagger: 0.07,
+        delay: 0.45,
+      }
     );
+  }
+}
+
+/*
+ * As the hero scrolls away, its content drifts up slightly and dims, tied
+ * directly to scroll position. This is the effect on Apple product pages
+ * where the opening screen seems to recede as the next section arrives,
+ * rather than simply scrolling off like a page of text.
+ *
+ * `scrub` means there is no animation playing on its own: the scroll bar
+ * IS the timeline. Scroll back up and it runs backwards.
+ */
+function initHeroScrub() {
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+  const content = hero?.querySelector<HTMLElement>('[data-hero-content]');
+  if (!hero || !content) return;
+
+  gsap.to(content, {
+    yPercent: -10,
+    opacity: 0.15,
+    ease: 'none',
+    scrollTrigger: {
+      trigger: hero,
+      start: 'top top',
+      end: 'bottom top',
+      scrub: 0.5,
+    },
+  });
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -357,13 +487,34 @@ function init() {
     return;
   }
 
+  // Tells the CSS failsafe that JavaScript arrived and is in charge of
+  // revealing things. See "reveal-failsafe" in global.css.
+  document.documentElement.classList.add('motion-ready');
+
   try {
     initSmoothScroll();
-    initHeroIntro();
-    initReveals();
     initCounters();
     initParallax();
     initMagnetic();
+    initHeroScrub();
+
+    /*
+     * Anything that splits text into lines waits for the web font. Split
+     * before it loads and the lines are measured in the fallback font,
+     * then the real font swaps in with different widths and every line
+     * break is wrong. document.fonts.ready resolves once loading settles,
+     * including when a font fails, so this can never hang.
+     */
+    document.fonts.ready.then(() => {
+      try {
+        initHeroIntro();
+        initReveals();
+        ScrollTrigger.refresh();
+      } catch (err) {
+        console.error('[motion] reveal setup failed, showing content:', err);
+        showEverything();
+      }
+    });
 
     // Images that load after this point change the page height, which
     // leaves every ScrollTrigger firing at the wrong place. Recomputing on

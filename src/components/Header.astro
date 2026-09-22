@@ -162,7 +162,7 @@ const currentPath = Astro.url.pathname;
     top: 0;
     left: 0;
     right: 0;
-    z-index: 100;
+    z-index: var(--z-header);
     transition:
       background var(--dur) var(--ease),
       border-color var(--dur) var(--ease),
@@ -226,9 +226,9 @@ const currentPath = Astro.url.pathname;
     cursor: pointer;
 
     font-family: var(--font-display);
-    font-size: 0.78rem;
+    font-size: var(--text-meta);
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     white-space: nowrap;
     color: var(--ink-muted);
@@ -359,7 +359,7 @@ const currentPath = Astro.url.pathname;
   .nav-item-blurb {
     display: block;
     margin-top: 2px;
-    font-size: 0.78rem;
+    font-size: var(--text-meta);
     line-height: 1.4;
     color: var(--ink-faint);
   }
@@ -439,7 +439,7 @@ const currentPath = Astro.url.pathname;
   .mobile-nav {
     position: fixed;
     inset: 0;
-    z-index: 99;
+    z-index: var(--z-menu);
     display: flex;
     align-items: center;
     background: rgba(7, 15, 28, 0.96);
@@ -474,7 +474,7 @@ const currentPath = Astro.url.pathname;
     font-size: var(--step-2);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: -0.01em;
+    letter-spacing: var(--track-snug);
     color: var(--ink);
     text-decoration: none;
     transition:
@@ -502,9 +502,9 @@ const currentPath = Astro.url.pathname;
   }
 
   .mobile-link-num {
-    font-size: 0.7rem;
+    font-size: var(--text-label);
     font-weight: 600;
-    letter-spacing: 0.14em;
+    letter-spacing: var(--track-label);
     color: var(--accent);
     min-width: 2ch;
   }

@@ -20,11 +20,11 @@ const { eyebrow, title, lead } = Astro.props;
 <section class="page-head">
   <Bubbles count={10} tone="subtle" />
   <div class="shell">
-    {eyebrow && <p class="eyebrow" data-reveal="fade">{eyebrow}</p>}
+    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
     <h1 data-reveal data-reveal-delay="0.05" set:html={title} />
     {
       lead && (
-        <p class="lead" data-reveal data-reveal-delay="0.12">
+        <p class="lead">
           {lead}
         </p>
       )
@@ -42,6 +42,6 @@ const { eyebrow, title, lead } = Astro.props;
 
   .page-head :global(.shell) {
     position: relative;
-    z-index: 1;
+    z-index: var(--z-raised);
   }
 </style>

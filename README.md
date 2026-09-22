@@ -645,12 +645,14 @@ attributes so no page imports the animation library directly:
 
 | Attribute | Effect |
 |---|---|
-| `data-reveal` | Fades and rises in when scrolled into view |
+| `data-reveal` | Fades and rises in when scrolled into view. On a heading (`h1` to `h3`) each line slides up from behind a mask instead |
 | `data-reveal="left"` / `"right"` / `"scale"` | Different entrances |
 | `data-stagger` | Children animate one after another |
 | `data-parallax="0.3"` | Drifts against the scroll |
 | `data-count="12"` | Counts up from zero when scrolled into view |
 | `data-magnetic` | Leans toward the cursor |
+
+Use `data-reveal` on a section's headline and its main content group only. Leave eyebrows, lead paragraphs and small links unanimated. When every element on the page moves, nothing stands out, which is the difference between a site that feels designed and one that feels like a template.
 
 Anyone whose system asks for reduced motion gets the finished page instantly
 with no movement at all. That is a correctness requirement, not a preference:

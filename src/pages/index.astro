@@ -79,27 +79,27 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
        frame, and mouse-repel plus click-to-pop needs per-pixel hit testing
        that DOM elements cannot do cheaply.
   -->
-  <section class="hero" id="top">
+  <section class="hero" id="top" data-hero>
     <Bubbles count={26} tone="full" />
 
-    <div class="shell hero-inner">
-      <p class="hero-eyebrow">
+    <div class="shell hero-inner" data-hero-content>
+      <p class="hero-eyebrow" data-hero-item>
         <Icon name="location" size={13} />
         {team.location}
         <span class="hero-dot" aria-hidden="true">/</span>
         {team.program}
       </p>
 
-      <h1 class="hero-title">
+      <h1 class="hero-title" data-hero-title>
         <span class="hero-word">Bubblotics</span>
         <span class="hero-num">Team 35858</span>
       </h1>
 
-      <p class="hero-tagline">{team.tagline}</p>
+      <p class="hero-tagline" data-hero-item>{team.tagline}</p>
 
-      <p class="hero-lead">{team.blurb.split('. ')[0]}.</p>
+      <p class="hero-lead" data-hero-item>{team.blurb.split('. ')[0]}.</p>
 
-      <div class="cluster hero-actions">
+      <div class="cluster hero-actions" data-hero-item>
         <a href={url('/robots/')} class="btn btn-primary">
           See our robots
           <Icon name="arrow" size={16} />
@@ -120,11 +120,11 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
   <section class="band" id="team">
     <div class="shell">
       <p class="eyebrow">01 / Who we are</p>
-      <h2 class="band-title">
+      <h2 class="band-title" data-reveal>
         A student team that builds <span class="accent-word">real machines</span>
       </h2>
 
-      <p class="band-lead" data-reveal>{team.blurb}</p>
+      <p class="band-lead">{team.blurb}</p>
 
       <ul class="subteams" data-reveal data-stagger>
         {
@@ -145,7 +145,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
         </Placeholder>
       </div>
 
-      <a href={url('/about/')} class="link-arrow band-link" data-reveal="fade">
+      <a href={url('/about/')} class="link-arrow band-link">
         Read our story
         <Icon name="arrow" size={16} />
       </a>
@@ -156,11 +156,11 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
   <section class="band" id="build">
     <div class="shell">
       <p class="eyebrow">02 / The build</p>
-      <h2 class="band-title">
+      <h2 class="band-title" data-reveal>
         What we are <span class="accent-word">building</span>
       </h2>
 
-      <p class="band-lead" data-reveal>
+      <p class="band-lead">
         BIOBUZZ will be our first competition season. Until then we are
         learning on an offseason robot, and everything we work out along the
         way gets written down here.
@@ -225,11 +225,11 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
   <section class="band" id="software">
     <div class="shell">
       <p class="eyebrow">03 / Software</p>
-      <h2 class="band-title">
+      <h2 class="band-title" data-reveal>
         Tools we <span class="accent-word">wrote ourselves</span>
       </h2>
 
-      <p class="band-lead" data-reveal>
+      <p class="band-lead">
         Three strands, one of them running today. These are internal team
         tools, so there is nothing here to sign up for.
       </p>
@@ -289,7 +289,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
         </p>
       </div>
 
-      <a href={url('/software/')} class="link-arrow band-link" data-reveal="fade">
+      <a href={url('/software/')} class="link-arrow band-link">
         All our software
         <Icon name="arrow" size={16} />
       </a>
@@ -300,9 +300,9 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
   <section class="band" id="gallery">
     <div class="shell">
       <p class="eyebrow">04 / In the pits</p>
-      <h2 class="band-title">Season <span class="accent-word">in photos</span></h2>
+      <h2 class="band-title" data-reveal>Season <span class="accent-word">in photos</span></h2>
 
-      <p class="band-lead" data-reveal>
+      <p class="band-lead">
         Six slots, waiting on photos. Drop files into src/assets/gallery/ and
         they appear here automatically, no code change needed.
       </p>
@@ -329,7 +329,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
         }
       </div>
 
-      <a href={url('/gallery/')} class="link-arrow band-link" data-reveal="fade">
+      <a href={url('/gallery/')} class="link-arrow band-link">
         Full gallery
         <Icon name="arrow" size={16} />
       </a>
@@ -340,7 +340,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
   <section class="band" id="updates">
     <div class="shell">
       <p class="eyebrow">05 / Latest</p>
-      <h2 class="band-title">From the <span class="accent-word">workshop</span></h2>
+      <h2 class="band-title" data-reveal>From the <span class="accent-word">workshop</span></h2>
 
       {
         posts.length > 0 ? (
@@ -382,7 +382,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
         )
       }
 
-      <a href={url('/updates/')} class="link-arrow band-link" data-reveal="fade">
+      <a href={url('/updates/')} class="link-arrow band-link">
         All updates
         <Icon name="arrow" size={16} />
       </a>
@@ -393,7 +393,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
   <section class="band" id="outreach">
     <div class="shell">
       <p class="eyebrow">06 / Outreach</p>
-      <h2 class="band-title">
+      <h2 class="band-title" data-reveal>
         The teams we <span class="accent-word">mentor</span>
       </h2>
 
@@ -424,7 +424,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
   <section class="sponsor-band" id="sponsors">
     <div class="shell">
       <p class="sponsor-eyebrow">Sponsors</p>
-      <h2 class="sponsor-title">Help us build the first one</h2>
+      <h2 class="sponsor-title" data-reveal>Help us build the first one</h2>
 
       <p class="sponsor-body">
         Sponsorship pays for the aluminium, the motors, the registration fees,
@@ -494,7 +494,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
 
   .hero-inner {
     position: relative;
-    z-index: 2;
+    z-index: var(--z-float);
     /* Flush left, like everything else. */
     text-align: left;
   }
@@ -504,9 +504,9 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     align-items: center;
     gap: var(--sp-2);
     font-family: var(--font-display);
-    font-size: 0.74rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     color: var(--ink-faint);
     margin-bottom: var(--sp-5);
@@ -520,7 +520,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     font-family: var(--font-display);
     font-weight: 700;
     line-height: 0.92;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--track-tight);
     text-transform: uppercase;
     margin: 0;
   }
@@ -542,7 +542,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     margin-top: var(--sp-3);
     font-size: var(--step-1);
     font-weight: 700;
-    letter-spacing: 0.42em;
+    letter-spacing: var(--track-wordmark);
     color: var(--accent);
   }
 
@@ -577,12 +577,12 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     align-items: center;
     gap: var(--sp-3);
     font-family: var(--font-display);
-    font-size: 0.68rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.22em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     color: var(--ink-faint);
-    z-index: 2;
+    z-index: var(--z-float);
   }
 
   .scroll-hint-line {
@@ -618,7 +618,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     font-size: var(--step-4);
     font-weight: 700;
     line-height: 1.02;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--track-tight);
     text-transform: uppercase;
     margin: 0 0 var(--sp-5);
     max-width: 20ch;
@@ -668,9 +668,9 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
   .subteam-num {
     display: block;
     font-family: var(--font-display);
-    font-size: 0.72rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: var(--track-label);
     color: var(--highlight);
     margin-bottom: var(--sp-4);
   }
@@ -679,7 +679,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     font-family: var(--font-display);
     font-size: var(--step-0);
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: var(--track-caps);
     text-transform: uppercase;
     margin-bottom: var(--sp-3);
   }
@@ -714,9 +714,9 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
 
   .feature-meta {
     font-family: var(--font-display);
-    font-size: 0.72rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     color: var(--ink-faint);
     display: flex;
@@ -730,7 +730,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     font-weight: 700;
     line-height: 1.05;
     text-transform: uppercase;
-    letter-spacing: -0.01em;
+    letter-spacing: var(--track-snug);
   }
 
   .feature-summary {
@@ -754,9 +754,9 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
 
   .upnext-num {
     font-family: var(--font-display);
-    font-size: 0.72rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     color: var(--ink-faint);
   }
@@ -770,7 +770,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     font-size: var(--step-0);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: var(--track-caps);
   }
 
   .upnext-body p {
@@ -782,9 +782,9 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
 
   .upnext-tag {
     font-family: var(--font-display);
-    font-size: 0.68rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     padding: var(--sp-2) var(--sp-3);
     border: 2px solid var(--line-strong);
@@ -819,9 +819,9 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
 
   .soft-num {
     font-family: var(--font-display);
-    font-size: 0.78rem;
+    font-size: var(--text-meta);
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: var(--track-label);
     color: var(--highlight);
   }
 
@@ -830,7 +830,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     font-size: var(--step-1);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.02em;
+    letter-spacing: var(--track-caps);
   }
 
   .soft-body p {
@@ -847,9 +847,9 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     grid-column: 2;
     justify-self: start;
     font-family: var(--font-display);
-    font-size: 0.68rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     padding: var(--sp-2) var(--sp-3);
     border: 2px solid var(--line-strong);
@@ -884,7 +884,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     font-size: var(--step-0);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: var(--track-label);
     margin-bottom: var(--sp-5);
   }
 
@@ -911,9 +911,9 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
 
   .data-table thead th {
     font-family: var(--font-display);
-    font-size: 0.7rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     color: var(--ink-faint);
     background: rgba(89, 149, 237, 0.06);
@@ -1003,9 +1003,9 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     align-items: center;
     gap: var(--sp-4);
     font-family: var(--font-display);
-    font-size: 0.7rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     color: var(--ink-faint);
   }
@@ -1023,7 +1023,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     font-weight: 700;
     line-height: 1.1;
     text-transform: uppercase;
-    letter-spacing: -0.01em;
+    letter-spacing: var(--track-snug);
   }
 
   .post-title a {
@@ -1079,9 +1079,9 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
 
   .sponsor-eyebrow {
     font-family: var(--font-display);
-    font-size: 0.74rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.22em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     /* Not full black: a softened navy on yellow is easier to hold at small
        sizes than maximum contrast, and stays well past the AA threshold. */
@@ -1094,7 +1094,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     font-size: var(--step-4);
     font-weight: 700;
     line-height: 1.02;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--track-tight);
     text-transform: uppercase;
     max-width: 18ch;
     color: var(--prussian);
@@ -1143,9 +1143,9 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     border-bottom: 2px solid rgba(16, 37, 66, 0.28);
 
     font-family: var(--font-display);
-    font-size: 0.74rem;
+    font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
 
     /*
