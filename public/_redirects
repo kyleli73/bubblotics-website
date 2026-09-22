@@ -1,7 +1,11 @@
 # Netlify reads this file for redirects.
 #
 # The scouting app used to be served from this site at /scout/, before it
-# moved to its own subdomain. Anyone with the old link or an old home-screen
-# shortcut lands on the real app instead of a stale copy. 301 = permanent.
+# moved to its own subdomain. Two real files still live in public/scout/:
+# index.html, which forwards to the new app, and sw.js, which retires the old
+# copy's service worker on phones that installed it (see the comment in that
+# file). Netlify serves an existing file in preference to a rule here, so
+# those two keep working; anything else under /scout/ is sent on directly.
+# 301 = permanent.
 /scout      https://scouting.bubblotics.ca/          301
 /scout/*    https://scouting.bubblotics.ca/:splat    301

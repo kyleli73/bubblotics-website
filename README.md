@@ -484,35 +484,34 @@ Fill in a handle to turn one on.
 
 ## Publishing changes
 
-The site is deployed by dragging one file onto Netlify, the same way the
-scouting app is. No terminal login, no waiting on GitHub.
+**Today the site is hosted on GitHub Pages.** Pushing to the `main` branch
+rebuilds and publishes it in about a minute. With GitHub Desktop that is one
+click: **Push origin**. The [Actions tab](https://github.com/kyleli73/bubblotics-website/actions)
+shows the build; a green tick means it is live.
 
-### Every time you publish
+**Dragging a zip onto Netlify does not update bubblotics.ca yet.** It works
+for the scouting app because that Netlify project has `scouting.bubblotics.ca`
+attached. The main site needs the one-time move in
+[Moving to Netlify](#moving-to-netlify-one-time) first. After that, publishing
+is:
 
-1. In a terminal in this folder, run:
+1. Run `npm run zip`. It builds the site and writes
+   `bubblotics-website.zip` next to this README. If the build fails, the
+   error names the file at fault and no zip is made, so a broken build can
+   never be deployed by accident.
+2. Drag `bubblotics-website.zip` onto the
+   [website's Deploys page](https://app.netlify.com/projects/bubblotics-website/deploys).
 
-   ```bash
-   npm run zip
-   ```
+**Never drag the website zip onto the scouting app's Netlify project.** Netlify
+would replace the scouting app at `scouting.bubblotics.ca` with the website.
+The two projects are separate on purpose.
 
-   It builds the site and writes `bubblotics-website.zip` next to this
-   README. If the build fails, the error names the file at fault (usually a
-   typo in the block at the top of a markdown file) and no zip is made, so
-   a broken build can never be deployed by accident.
-2. Open the [Deploys page](https://app.netlify.com/projects/bubblotics-website/deploys)
-   and drag `bubblotics-website.zip` onto the drop area at the bottom.
-3. Wait for "Published" (usually under a minute), then check
-   [bubblotics.ca](https://bubblotics.ca).
+### If the site does not update
 
-**Rolling back:** every deploy is kept. On the Deploys page, click an older
-one and choose **Publish deploy** to put it back instantly.
-
-### Keeping the source on GitHub
-
-Deploying does not save your source code anywhere; the repository does.
-Commit and push as usual (GitHub Desktop's **Push origin** works) so the
-next person has the latest version. The two are independent: a push no
-longer changes the live site, and a deploy does not need a push.
+On GitHub Pages: open the Actions tab. A red X means the build failed, and
+clicking into it shows the error. The usual cause is a typo in the block at
+the top of a markdown file: a missing quote, a bad date, or a `-` where a
+space should be. A failed build never replaces the live site.
 
 ---
 
@@ -520,10 +519,12 @@ longer changes the live site, and a deploy does not need a push.
 
 | What | Where |
 |---|---|
-| Deploys, rollbacks | [Netlify → Deploys](https://app.netlify.com/projects/bubblotics-website/deploys) |
-| Custom domain, HTTPS | [Netlify → Domain management](https://app.netlify.com/projects/bubblotics-website/domain-management) |
-| Security headers, redirects | `public/_headers` and `public/_redirects` in this repo |
-| Source code | [github.com/kyleli73/bubblotics-website](https://github.com/kyleli73/bubblotics-website) |
+| Source code, deploys (today) | [github.com/kyleli73/bubblotics-website](https://github.com/kyleli73/bubblotics-website) |
+| Build logs (today) | [Actions tab](https://github.com/kyleli73/bubblotics-website/actions) |
+| Custom domain, HTTPS (today) | [Settings → Pages](https://github.com/kyleli73/bubblotics-website/settings/pages) |
+| Deploys, rollbacks (after the move) | [Netlify → Deploys](https://app.netlify.com/projects/bubblotics-website/deploys) |
+| Custom domain, HTTPS (after the move) | [Netlify → Domain management](https://app.netlify.com/projects/bubblotics-website/domain-management) |
+| Security headers, redirects (Netlify only) | `public/_headers` and `public/_redirects` in this repo |
 | DNS records | [Cloudflare → DNS](https://dash.cloudflare.com/?to=/:account/bubblotics.ca/dns/records) |
 | Domain renewal, auto-renew | [Cloudflare → Registrar](https://dash.cloudflare.com/?to=/:account/domains) |
 
@@ -535,9 +536,11 @@ and no error, which looks like a broken page but is only a stale address.
 
 ## Moving to Netlify (one time)
 
-The site used to be hosted on GitHub Pages and published by pushing to
-GitHub. It moved to Netlify so that publishing is a drag and drop, and
-because Netlify can send the security headers GitHub Pages cannot.
+The site is hosted on GitHub Pages and published by pushing to GitHub.
+Moving it to Netlify makes publishing a drag and drop, the same as the
+scouting app, and lets the site send the security headers GitHub Pages
+cannot. It takes about fifteen minutes, once. Until step 5 is done nothing
+visitors see changes, so it is safe to stop partway.
 
 1. Run `npm run zip`, then drag `bubblotics-website.zip` onto
    [app.netlify.com/drop](https://app.netlify.com/drop) **while signed in**.

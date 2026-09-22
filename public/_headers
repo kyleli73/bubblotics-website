@@ -1,6 +1,7 @@
 # Netlify reads this file and sends these headers with every response.
-# GitHub Pages, the site's previous host, could not send headers at all,
-# which is one of the reasons the site moved.
+# GitHub Pages, where the site is hosted until the move described in the
+# README, ignores it: Pages cannot send custom headers at all. So none of this
+# takes effect until the site is on Netlify.
 #
 # Netlify adds Strict-Transport-Security (HSTS) by itself once HTTPS is on,
 # so it is not repeated here.
