@@ -500,7 +500,11 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     font-weight: 700;
     letter-spacing: var(--track-label);
     text-transform: uppercase;
-    color: var(--ink-faint);
+    /* --ink-muted, not --ink-faint: faint grey measured 4.12:1 on the hero
+       navy at this 12px size, under the 4.5:1 minimum, and the lit water
+       behind it would take it to 3.0. Muted grey stays at 5.8:1 or better
+       wherever the light falls. */
+    color: var(--ink-muted);
     margin-bottom: var(--sp-5);
   }
 

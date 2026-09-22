@@ -50,7 +50,9 @@ const { sections } = Astro.props;
               <span class="rail-num" aria-hidden="true">
                 {String(i + 1).padStart(2, '0')}
               </span>
-              <span class="rail-label">{s.label}</span>
+              <span class="rail-label-clip">
+                <span class="rail-label">{s.label}</span>
+              </span>
             </a>
           </li>
         ))
@@ -69,12 +71,16 @@ const { sections } = Astro.props;
    * Everything here is tuned for smoothness, which an earlier version
    * lacked, for three reasons worth remembering:
    *
-   *   1. The width animates between two EXACT values: the capsule's real
-   *      width and the width the longest label needs (measured by the
-   *      script below once the font has loaded). The old version animated
-   *      each label's max-width from 0 to 14ch, far wider than any label,
-   *      so the panel shot out in the first third of the animation and
-   *      then sat still for the rest, which reads as a jerk.
+   *   1. The width adapts to the labels on its own. Each row is a small
+   *      grid: the number, then a label column that animates from 0fr to
+   *      1fr. An fr column in a shrink-to-fit box grows to exactly its
+   *      content's natural width, so the panel opens to precisely what the
+   *      longest name needs, whatever the names are, with no measuring.
+   *      The version before this measured the links in script, but that
+   *      measurement left out their right padding and caught the labels
+   *      mid-shift, so the panel opened 18px too narrow and "Software" ran
+   *      into the edge. The one before that animated max-width to 14ch,
+   *      far wider than any label, so it shot out and then stalled.
    *
    *   2. The corner radius never changes. It used to animate from 999px to
    *      24px, but a radius is capped at half the element's size, so the
@@ -94,14 +100,12 @@ const { sections } = Astro.props;
     display: none;
 
     --rail-pad: 6px;
-    --row-h: 32px;
+    /* Rows breathe a little more on tall screens: 32px up to 36px. */
+    --row-h: clamp(32px, 3.5vh, 36px);
     --row-gap: 2px;
     --num-w: 16px;
     --link-pad: 12px;
-    /* Numbers exactly centred in the capsule. */
-    --rail-closed: calc(
-      2 * var(--rail-pad) + 2 * var(--link-pad) + var(--num-w)
-    );
+    --label-gap: 10px;
   }
 
   /*
@@ -130,7 +134,6 @@ const { sections } = Astro.props;
 
   .rail-panel {
     position: relative;
-    width: var(--rail-closed);
     padding: var(--rail-pad);
     overflow: hidden;
     border-radius: 26px;
@@ -140,23 +143,16 @@ const { sections } = Astro.props;
     -webkit-backdrop-filter: blur(16px) saturate(1.4);
     box-shadow: var(--shadow-1);
 
-    /* Closing: waits a beat so the labels are gone before the edge moves. */
     transition:
-      width 380ms var(--ease-smooth) 70ms,
       background 380ms var(--ease-smooth) 70ms,
       box-shadow 380ms var(--ease-smooth) 70ms;
   }
 
   .rail:hover .rail-panel,
   .rail:focus-within .rail-panel {
-    /* Fallback width until the script has measured the real one. */
-    width: var(--rail-open, 8.5rem);
     background: var(--surface-menu);
     box-shadow: var(--shadow-2);
-
-    /* Opening: straight away, and a little slower, so it feels weighted. */
     transition:
-      width 480ms var(--ease-smooth),
       background 480ms var(--ease-smooth),
       box-shadow 480ms var(--ease-smooth);
   }
@@ -190,16 +186,37 @@ const { sections } = Astro.props;
     gap: var(--row-gap);
   }
 
+  /*
+   * Closing waits 70ms so the labels have faded before the column folds;
+   * opening starts at once and runs a little longer, so it feels weighted.
+   */
   .rail-link {
-    display: flex;
+    display: grid;
+    grid-template-columns: var(--num-w) 0fr;
     align-items: center;
-    gap: 10px;
     height: var(--row-h);
     padding: 0 var(--link-pad);
     border-radius: var(--radius-pill);
     text-decoration: none;
     white-space: nowrap;
-    transition: background var(--dur-fast) var(--ease);
+    transition:
+      grid-template-columns 380ms var(--ease-smooth) 70ms,
+      background var(--dur-fast) var(--ease);
+  }
+
+  .rail:hover .rail-link,
+  .rail:focus-within .rail-link {
+    grid-template-columns: var(--num-w) 1fr;
+    transition:
+      grid-template-columns 480ms var(--ease-smooth),
+      background var(--dur-fast) var(--ease);
+  }
+
+  /* The cell that clips the name while its column is narrower than it.
+     min-width: 0 lets the column shrink below the text's width at all. */
+  .rail-label-clip {
+    min-width: 0;
+    overflow: hidden;
   }
 
   /* Hover on the other rows: a much fainter wash than the active one, so
@@ -222,6 +239,8 @@ const { sections } = Astro.props;
   }
 
   .rail-label {
+    display: block;
+    padding-left: var(--label-gap);
     font-family: var(--font-display);
     font-size: var(--text-meta);
     font-weight: 700;
@@ -267,6 +286,8 @@ const { sections } = Astro.props;
     .rail:focus-within .rail-panel,
     .rail-indicator,
     .rail-link,
+    .rail:hover .rail-link,
+    .rail:focus-within .rail-link,
     .rail-num,
     .rail-label,
     .rail:hover .rail-label,
@@ -285,20 +306,6 @@ const { sections } = Astro.props;
       ...rail.querySelectorAll<HTMLAnchorElement>('[data-rail-link]'),
     ];
 
-    /*
-     * The open width, measured rather than guessed. Every label is laid out
-     * at full width even while hidden, so the widest link's scrollWidth is
-     * exactly the space the longest name needs. Measured after the web font
-     * has loaded, since the fallback font's letters are a different width.
-     */
-    const measure = () => {
-      const pad = parseFloat(getComputedStyle(panel).paddingLeft) || 0;
-      const widest = Math.max(...linkEls.map((a) => a.scrollWidth));
-      if (widest > 0) {
-        panel.style.setProperty('--rail-open', `${Math.ceil(widest + pad * 2)}px`);
-      }
-    };
-    document.fonts.ready.then(measure);
 
     /*
      * Marks the rail entry for whichever section currently occupies the
