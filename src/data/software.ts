@@ -115,7 +115,7 @@ export const homeSoftware: {
   {
     name: 'Vision',
     purpose:
-      'Camera-based targeting for the BIOBUZZ game elements, once the game is released and we know what there is to aim at.',
+      'Camera-based targeting for the BIOBUZZ game elements, now that kickoff has shown us what there is to aim at.',
     status: 'planned',
   },
 ];

@@ -1,0 +1,7 @@
+# Netlify reads this file for redirects.
+#
+# The scouting app used to be served from this site at /scout/, before it
+# moved to its own subdomain. Anyone with the old link or an old home-screen
+# shortcut lands on the real app instead of a stale copy. 301 = permanent.
+/scout      https://scouting.bubblotics.ca/          301
+/scout/*    https://scouting.bubblotics.ca/:splat    301

@@ -167,7 +167,7 @@ const { model, name, caption } = Astro.props;
     transform: translateX(-50%);
     background:
       radial-gradient(ellipse at 45% 45%, rgba(89, 149, 237, 0.26), transparent 60%),
-      radial-gradient(ellipse at 62% 58%, rgba(255, 160, 0, 0.1), transparent 55%);
+      radial-gradient(ellipse at 62% 58%, rgba(254, 198, 1, 0.1), transparent 55%);
     filter: blur(12px);
     pointer-events: none;
     z-index: 0;
@@ -181,7 +181,6 @@ const { model, name, caption } = Astro.props;
   .holo {
     position: relative;
     border-radius: var(--radius-xl);
-    border: 1px solid var(--glass-border);
     background:
       radial-gradient(ellipse at 50% 120%, rgba(89, 149, 237, 0.16), transparent 60%),
       rgba(7, 15, 28, 0.72);
@@ -369,7 +368,6 @@ const { model, name, caption } = Astro.props;
     justify-content: space-between;
     gap: var(--sp-4);
     padding: var(--sp-4) var(--sp-5);
-    border-top: 1px solid var(--glass-border);
     background: rgba(7, 15, 28, 0.5);
   }
 
@@ -410,7 +408,7 @@ const { model, name, caption } = Astro.props;
     min-height: 40px;
     padding: var(--sp-2) var(--sp-4);
     border-radius: var(--radius-pill);
-    border: 1px solid var(--line-strong);
+    border: 0;
     background: rgba(89, 149, 237, 0.1);
     color: var(--ink);
     font-size: var(--step--1);
@@ -422,7 +420,6 @@ const { model, name, caption } = Astro.props;
 
   .holo-btn:hover {
     background: var(--highlight);
-    border-color: var(--highlight);
     color: var(--ink-inverse);
   }
 
@@ -430,7 +427,6 @@ const { model, name, caption } = Astro.props;
 
   .holo-parts {
     padding: var(--sp-4) var(--sp-5) var(--sp-5);
-    border-top: 1px solid var(--glass-border);
   }
 
   .holo-parts[hidden] {
@@ -466,7 +462,7 @@ const { model, name, caption } = Astro.props;
     padding: var(--sp-2) var(--sp-2);
     text-align: left;
     border: 0;
-    border-bottom: 1px solid var(--line);
+    border-radius: var(--radius-sm);
     background: none;
     color: var(--ink-muted);
     font-size: var(--step--1);
@@ -474,7 +470,7 @@ const { model, name, caption } = Astro.props;
     letter-spacing: var(--track-caps);
     transition:
       color var(--dur-fast) var(--ease),
-      border-color var(--dur-fast) var(--ease);
+      background var(--dur-fast) var(--ease);
   }
 
   .holo-parts :global(.holo-num) {
@@ -488,14 +484,14 @@ const { model, name, caption } = Astro.props;
 
   .holo-parts button:hover {
     color: var(--ink);
-    border-bottom-color: var(--line-strong);
+    background: var(--surface-1);
   }
 
   /* aria-pressed doubles as the styling hook, so the visual state and the
      state announced to a screen reader can never disagree. */
   .holo-parts button[aria-pressed='true'] {
     color: var(--highlight);
-    border-bottom-color: var(--highlight);
+    background: rgba(254, 198, 1, 0.12);
   }
 
   .holo-parts button[aria-pressed='true'] :global(.holo-num) {

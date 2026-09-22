@@ -44,13 +44,18 @@ import { stats } from '../data/site';
 <style>
   .stats-band {
     position: relative;
-    border-block: var(--edge);
-    background: rgba(89, 149, 237, 0.04);
+    padding-block: var(--sp-6) var(--sp-4);
   }
 
+  /*
+   * Four tiles with space between them. These were cells in a ruled grid,
+   * separated by 2px lines; as separate rounded surfaces each number reads
+   * as its own fact, and there is no grid of lines to line up.
+   */
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+    gap: var(--sp-3);
     list-style: none;
     margin: 0;
     padding: 0;
@@ -59,41 +64,14 @@ import { stats } from '../data/site';
   @media (min-width: 760px) {
     .stats-grid {
       grid-template-columns: repeat(4, 1fr);
+      gap: var(--sp-4);
     }
   }
 
-  /*
-   * Dividers drawn as borders on the cells rather than as a gap, so the
-   * row reads as one ruled band. Every cell gets a right edge and the last
-   * in each row has it removed, which is what keeps the outer edge clean
-   * at both breakpoints.
-   */
   .stat {
     padding: var(--sp-6) var(--sp-5);
-    border-right: var(--edge);
-    border-bottom: var(--edge);
-  }
-
-  .stat:nth-child(2n) {
-    border-right: 0;
-  }
-
-  .stat:nth-last-child(-n + 2) {
-    border-bottom: 0;
-  }
-
-  @media (min-width: 760px) {
-    .stat {
-      border-bottom: 0;
-    }
-
-    .stat:nth-child(2n) {
-      border-right: var(--edge);
-    }
-
-    .stat:last-child {
-      border-right: 0;
-    }
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
   }
 
   .stat-value {

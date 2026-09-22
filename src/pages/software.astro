@@ -13,6 +13,7 @@ import PageHero from '../components/PageHero.astro';
 import CtaBand from '../components/CtaBand.astro';
 import { software, softwareIdeas } from '../data/software';
 import { team } from '../data/site';
+import { publishable } from '../lib/publish';
 
 const statusLabel: Record<string, string> = {
   live: 'Live',
@@ -46,9 +47,9 @@ const statusLabel: Record<string, string> = {
 
               <p class="app-purpose">{app.purpose}</p>
 
-              {app.stack && (
+              {app.stack && app.stack.some((s) => publishable(s)) && (
                 <ul class="stack">
-                  {app.stack.map((s) => (
+                  {app.stack.filter((s) => publishable(s)).map((s) => (
                     <li class="tag">{s}</li>
                   ))}
                 </ul>
@@ -123,14 +124,14 @@ const statusLabel: Record<string, string> = {
   /* Status is colour-coded, but the word is always there too: colour alone
      is not a label for anyone who cannot distinguish these hues. */
   .tag.is-live {
-    border-color: rgba(120, 220, 150, 0.45);
+    background: rgba(120, 220, 150, 0.14);
     background: rgba(120, 220, 150, 0.12);
     color: #8fe6b0;
   }
 
   .tag.is-in-progress {
-    border-color: rgba(255, 161, 1, 0.45);
-    background: rgba(255, 161, 1, 0.12);
+    background: rgba(254, 198, 1, 0.14);
+    background: rgba(254, 198, 1, 0.12);
     color: var(--highlight);
   }
 

@@ -168,7 +168,6 @@ const currentPath = Astro.url.pathname;
       border-color var(--dur) var(--ease),
       backdrop-filter var(--dur) var(--ease),
       transform var(--dur) var(--ease);
-    border-bottom: 1px solid transparent;
   }
 
   /* Added by the script once the page scrolls past the hero. */
@@ -176,7 +175,7 @@ const currentPath = Astro.url.pathname;
     background: rgba(7, 15, 28, 0.72);
     backdrop-filter: blur(18px) saturate(1.4);
     -webkit-backdrop-filter: blur(18px) saturate(1.4);
-    border-bottom-color: var(--line);
+    box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.7);
   }
 
   /* Slides out of the way when you scroll down, comes back the moment you
@@ -222,6 +221,7 @@ const currentPath = Astro.url.pathname;
     gap: var(--sp-2);
     padding: var(--sp-3) var(--sp-3);
     border: 0;
+    border-radius: var(--radius-pill);
     background: none;
     cursor: pointer;
 
@@ -236,12 +236,15 @@ const currentPath = Astro.url.pathname;
   }
 
   .nav-trigger:hover,
-  .nav-group:focus-within .nav-trigger {
+  .nav-group:focus-within .nav-trigger,
+  .nav-trigger[aria-expanded='true'] {
     color: var(--ink);
+    background: var(--surface-1);
   }
 
-  /* The group containing the current page. A 2px underline rather than the
-     old dot, to match the square edges the rest of the page uses. */
+  /* The group containing the current page: a small yellow dot under the
+     label. It was a 2px underline, which read as one more line on a page
+     that no longer draws any. */
   .nav-trigger.active {
     color: var(--ink);
   }
@@ -249,10 +252,12 @@ const currentPath = Astro.url.pathname;
   .nav-trigger.active::after {
     content: '';
     position: absolute;
-    left: var(--sp-3);
-    right: var(--sp-3);
-    bottom: 6px;
-    height: 2px;
+    left: 50%;
+    bottom: 3px;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+    border-radius: 50%;
     background: var(--highlight);
   }
 
@@ -278,12 +283,13 @@ const currentPath = Astro.url.pathname;
     padding: var(--sp-2);
     z-index: 10;
 
-    /* Square, 2px edged, solid enough to read over the hero bubbles. */
-    border: var(--edge);
-    background: rgba(7, 15, 28, 0.96);
+    /* A rounded floating panel, opaque enough to read over the hero
+       bubbles, lifted off the page by shadow rather than outlined. */
+    border-radius: var(--radius-lg);
+    background: var(--surface-menu);
     backdrop-filter: blur(18px) saturate(1.4);
     -webkit-backdrop-filter: blur(18px) saturate(1.4);
-    box-shadow: 0 18px 40px rgba(3, 8, 16, 0.55);
+    box-shadow: var(--shadow-2);
 
     /*
      * `hidden` is on the element in the markup, so the panel is genuinely
@@ -331,21 +337,19 @@ const currentPath = Astro.url.pathname;
   .nav-item {
     display: block;
     padding: var(--sp-3);
+    border-radius: var(--radius);
     text-decoration: none;
-    border-left: 2px solid transparent;
-    transition:
-      background var(--dur-fast) var(--ease),
-      border-color var(--dur-fast) var(--ease);
+    transition: background var(--dur-fast) var(--ease);
   }
 
   .nav-item:hover,
   .nav-item:focus-visible {
-    background: rgba(89, 149, 237, 0.12);
-    border-left-color: var(--highlight);
+    background: var(--surface-2);
   }
 
-  .nav-item.active {
-    border-left-color: var(--highlight);
+  /* The page you are on: its label turns yellow. */
+  .nav-item.active .nav-item-label {
+    color: var(--highlight);
   }
 
   .nav-item-label {
@@ -381,7 +385,8 @@ const currentPath = Astro.url.pathname;
     width: 46px;
     height: 46px;
     border-radius: var(--radius-pill);
-    border: 1px solid var(--line-strong);
+    border: 0;
+    background: var(--surface-2);
     color: var(--ink);
     background: rgba(89, 149, 237, 0.08);
     backdrop-filter: blur(8px);

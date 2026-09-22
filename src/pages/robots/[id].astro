@@ -28,6 +28,8 @@ import CtaBand from '../../components/CtaBand.astro';
 import CadHologram from '../../components/CadHologram.astro';
 import Icon from '../../components/Icon.astro';
 import { url } from '../../lib/paths';
+import { publishable } from '../../lib/publish';
+import Placeholder from '../../components/Placeholder.astro';
 
 export async function getStaticPaths() {
   const robots = await getCollection('robots', ({ data }) => !data.draft);
@@ -56,6 +58,15 @@ const d = robot.data;
 
 // `render` compiles the markdown body. <Content /> renders it as HTML.
 const { Content } = await render(robot);
+
+/*
+ * The engineering notes are the markdown body. While the body is still the
+ * template (it carries [PLACEHOLDER] markers), the section is left out of
+ * the public build so visitors never read writing instructions. See
+ * src/lib/publish.ts.
+ */
+const showNotes = publishable(robot.body);
+const liveSpecs = robot.data.specs.filter((s) => publishable(s.label, s.value));
 ---
 
 <BaseLayout title={d.name} description={d.summary}>
@@ -103,13 +114,7 @@ const { Content } = await render(robot);
               loading="eager"
             />
           ) : (
-            <div class="ph-image">
-              <span>[Placeholder]</span>
-              <small>
-                Save a photo to src/assets/robots/ and set `heroImage` in this
-                robot's markdown file.
-              </small>
-            </div>
+            <Placeholder compact path={`src/assets/robots/${robot.id}.jpg (then set heroImage)`} />
           )
         }
       </div>
@@ -118,7 +123,7 @@ const { Content } = await render(robot);
 
   <!-- ═══ SPECS ══════════════════════════════════════════════════════ -->
   {
-    d.specs.length > 0 && (
+    liveSpecs.length > 0 && (
       <section class="section section-tight">
         <div class="shell">
           <div class="section-head">
@@ -127,7 +132,7 @@ const { Content } = await render(robot);
           </div>
 
           <dl class="specs" data-reveal data-stagger>
-            {d.specs.map((s) => (
+            {liveSpecs.map((s) => (
               <div class="spec card">
                 <dt>{s.label}</dt>
                 <dd>{s.value}</dd>
@@ -246,6 +251,7 @@ const { Content } = await render(robot);
        the rest of the site: this section is for judges and for next year's
        team, so it should read like an engineering notebook, not marketing.
   ══════════════════════════════════════════════════════════════════════ -->
+  {showNotes && (
   <section class="section notes-section" id="engineering">
     <div class="shell">
       <div class="notes-layout">
@@ -264,6 +270,7 @@ const { Content } = await render(robot);
       </div>
     </div>
   </section>
+  )}
 
   <!-- ═══ PREV / NEXT ════════════════════════════════════════════════ -->
   {
@@ -362,7 +369,6 @@ const { Content } = await render(robot);
     aspect-ratio: 16 / 9;
     border-radius: var(--radius-xl);
     overflow: hidden;
-    border: 1px solid var(--glass-border);
     box-shadow: var(--shadow-lg), var(--glow);
     background: var(--prussian-900);
   }
@@ -428,7 +434,7 @@ const { Content } = await render(robot);
       ),
       radial-gradient(
         ellipse at 65% 60%,
-        rgba(255, 160, 0, 0.10),
+        rgba(254, 198, 1, 0.10),
         transparent 55%
       );
     filter: blur(10px);
@@ -454,7 +460,6 @@ const { Content } = await render(robot);
     align-items: center;
     gap: var(--sp-2);
     padding: var(--sp-3) var(--sp-4);
-    border-bottom: 1px solid var(--glass-border);
     background: rgba(7, 15, 28, 0.5);
   }
 
@@ -490,7 +495,6 @@ const { Content } = await render(robot);
 
   .cad-frame figcaption {
     padding: var(--sp-4) var(--sp-5);
-    border-top: 1px solid var(--glass-border);
     font-size: var(--step--1);
     color: var(--ink-muted);
   }
@@ -521,7 +525,6 @@ const { Content } = await render(robot);
   /* ── Engineering notes ───────────────────────────────────────────── */
 
   .notes-section {
-    border-top: 1px solid var(--line);
     background: linear-gradient(
       180deg,
       rgba(16, 37, 66, 0.3),

@@ -12,6 +12,8 @@ import CtaBand from '../components/CtaBand.astro';
 import Icon from '../components/Icon.astro';
 import Gallery from '../components/Gallery.astro';
 import { outreach, fllTeams, contact, team } from '../data/site';
+import { SHOW_UNFINISHED } from '../lib/publish';
+import Placeholder from '../components/Placeholder.astro';
 
 /*
  * Real figures only. [PLACEHOLDER] Add students reached and volunteer hours
@@ -54,8 +56,12 @@ const impact = [
       </ul>
       <p class="impact-note faint">
         The awards belong to the teams we mentor, not to us.
-        <span class="ph-tag">[Placeholder]</span> Students reached and
-        volunteer hours still need real numbers.
+        {SHOW_UNFINISHED && (
+          <>
+            <span class="ph-tag">[Placeholder]</span> Students reached and
+            volunteer hours still need real numbers.
+          </>
+        )}
       </p>
     </div>
   </section>
@@ -95,10 +101,7 @@ const impact = [
               </div>
 
               <div class="event-media">
-                <div class="ph-image">
-                  <span>[Placeholder]</span>
-                  <small>Photo from this event.</small>
-                </div>
+                <Placeholder compact path="src/assets/team/outreach-event.jpg" />
               </div>
             </article>
           ))
@@ -187,26 +190,26 @@ const impact = [
 </BaseLayout>
 
 <style>
+  /* The same rounded tiles as the home page's stat strip, so the site has
+     one way of showing a number. This was a full-width tinted band ruled
+     top and bottom with hairlines. */
   .impact-band {
-    border-block: 1px solid var(--line);
-    background: linear-gradient(
-      180deg,
-      rgba(89, 149, 237, 0.06),
-      rgba(16, 37, 66, 0.25)
-    );
+    padding-block: var(--sp-7);
   }
 
   .impact-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
-    gap: var(--sp-5);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+    gap: var(--sp-4);
     list-style: none;
     padding: 0;
     margin: 0;
   }
 
   .impact {
-    text-align: center;
+    padding: var(--sp-6) var(--sp-5);
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
   }
 
   .impact-value {
@@ -215,14 +218,17 @@ const impact = [
     font-size: var(--step-3);
     font-weight: 700;
     line-height: 1;
-    color: var(--highlight);
+    letter-spacing: var(--track-tight);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
   }
 
   .impact-label {
     display: block;
-    margin-top: var(--sp-2);
-    font-size: var(--step--1);
-    font-weight: 600;
+    margin-top: var(--sp-3);
+    font-family: var(--font-display);
+    font-size: var(--text-label);
+    font-weight: 700;
     letter-spacing: var(--track-label);
     text-transform: uppercase;
     color: var(--ink-faint);
@@ -298,7 +304,7 @@ const impact = [
   .event-media {
     aspect-ratio: 4 / 3;
     overflow: hidden;
-    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
   }
 
   .fll {

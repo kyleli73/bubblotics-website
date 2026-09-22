@@ -23,3 +23,6 @@ yarn-error.log*
 
 # Local dev server config for the Claude Code preview pane
 .claude/
+
+# The deploy zip made by `npm run zip`. Rebuilt on every deploy, never committed.
+bubblotics-website.zip

@@ -1,0 +1,37 @@
+# Netlify reads this file and sends these headers with every response.
+# GitHub Pages, the site's previous host, could not send headers at all,
+# which is one of the reasons the site moved.
+#
+# Netlify adds Strict-Transport-Security (HSTS) by itself once HTTPS is on,
+# so it is not repeated here.
+#
+# NOT YET: a Content-Security-Policy. The hologram viewer runs a WebAssembly
+# decoder and the page has one small inline script (the `has-js` flag in
+# BaseLayout.astro), so a strict policy needs testing against the real
+# deploy before it goes live. A wrong CSP breaks the page silently for
+# visitors and loudly only in the console. When you add one, deploy it as
+# Content-Security-Policy-Report-Only first and watch the console.
+
+/*
+  # Stop the site being embedded in an iframe on someone else's page, which
+  # is how clickjacking works. Nothing here needs to be embeddable. (This
+  # does not affect the Onshape viewer we embed; it only stops others
+  # framing us.)
+  X-Frame-Options: DENY
+
+  # Stop the browser second-guessing file types. Without it, a file served
+  # as text could be reinterpreted as a script.
+  X-Content-Type-Options: nosniff
+
+  # Other sites we link to learn which site sent the visitor, not the full
+  # page address.
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # Turn off device APIs the site never uses.
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+# Files under /_astro/ have a fingerprint in their name that changes whenever
+# their content does, so a browser can keep them forever and never has to ask
+# again. This is most of why a repeat visit loads instantly.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable

@@ -15,6 +15,8 @@ import RobotCard from '../../components/RobotCard.astro';
 import CtaBand from '../../components/CtaBand.astro';
 import Icon from '../../components/Icon.astro';
 import { url } from '../../lib/paths';
+import { SHOW_UNFINISHED } from '../../lib/publish';
+import Placeholder from '../../components/Placeholder.astro';
 
 const all = (await getCollection('robots', ({ data }) => !data.draft)).sort(
   (a, b) => b.data.order - a.data.order
@@ -53,13 +55,7 @@ const rest = all.filter((r) => r.id !== featured?.id);
                   loading="eager"
                 />
               ) : (
-                <div class="ph-image">
-                  <span>[Placeholder]</span>
-                  <small>
-                    Add a hero photo of {featured.data.name} and set
-                    `heroImage` in its markdown file.
-                  </small>
-                </div>
+                <Placeholder compact path={`src/assets/robots/${featured.id}.jpg (then set heroImage)`} />
               )}
             </div>
 
@@ -128,12 +124,16 @@ const rest = all.filter((r) => r.id !== featured?.id);
         ) : (
           <div class="empty-state card">
             <h3>No robots yet</h3>
-            <p>
-              <span class="ph-tag">[Placeholder]</span> Add a markdown file to
-              <code>src/content/robots/</code> and a page appears here. The
-              README has a step-by-step walkthrough and a template you can
-              copy.
-            </p>
+            {SHOW_UNFINISHED ? (
+              <p>
+                <span class="ph-tag">[Placeholder]</span> Add a markdown file to
+                <code>src/content/robots/</code> and a page appears here. The
+                README has a step-by-step walkthrough and a template you can
+                copy.
+              </p>
+            ) : (
+              <p>Each robot gets its own page here as it is built.</p>
+            )}
           </div>
         )
       }

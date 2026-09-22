@@ -61,7 +61,7 @@ interesting way.
 
 ## For sponsors
 
-The [sponsors page](../sponsors/) sets out what a season actually costs and
+The [sponsors page](../sponsors/) sets out what sponsorship pays for and
 what we can offer in return. If your organisation is weighing it up, email us
 and we will bring the robot to you.
 

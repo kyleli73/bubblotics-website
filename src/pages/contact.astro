@@ -26,6 +26,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
 import Icon from '../components/Icon.astro';
 import { contact, activeSocials, team } from '../data/site';
+import { SHOW_UNFINISHED } from '../lib/publish';
 
 const reasons = [
   { value: 'Sponsorship', label: 'I want to sponsor the team' },
@@ -164,6 +165,7 @@ const reasons = [
       </div>
 
       <div class="faq" data-reveal data-stagger>
+        {SHOW_UNFINISHED && (
         <details class="card faq-item">
           <summary>How do I join the team?</summary>
           <p>
@@ -173,6 +175,7 @@ const reasons = [
             question keeping most people from asking.
           </p>
         </details>
+        )}
 
         <details class="card faq-item">
           <summary>Can you bring the robot to our school?</summary>
@@ -191,6 +194,7 @@ const reasons = [
           </p>
         </details>
 
+        {SHOW_UNFINISHED && (
         <details class="card faq-item">
           <summary>Do you take part donations?</summary>
           <p>
@@ -199,6 +203,7 @@ const reasons = [
             and who to contact about it.
           </p>
         </details>
+        )}
       </div>
     </div>
   </section>
@@ -241,7 +246,6 @@ const reasons = [
   .channel-static:hover {
     transform: none;
     box-shadow: none;
-    border-color: var(--glass-border);
   }
 
   .channel-icon {
@@ -350,14 +354,20 @@ const reasons = [
     min-height: 48px;
     padding: var(--sp-3) var(--sp-4);
     border-radius: var(--radius);
-    border: 1px solid var(--line-strong);
-    background: rgba(7, 15, 28, 0.5);
+    border: 0;
+    /*
+     * A filled field instead of an outlined one. The fill is lighter than
+     * the card it sits on, not darker: the old translucent-dark well was
+     * held apart from the card only by its border, and without the border
+     * it would have all but vanished.
+     */
+    background: rgba(137, 172, 220, 0.1);
     color: var(--ink);
     /* 1rem exactly. iOS Safari zooms the whole page in when a focused
        input has text smaller than 16px, which is jarring mid-form. */
     font-size: 1rem;
     transition:
-      border-color var(--dur-fast) var(--ease),
+      background var(--dur-fast) var(--ease),
       box-shadow var(--dur-fast) var(--ease);
   }
 
@@ -369,15 +379,17 @@ const reasons = [
   .field input:focus,
   .field select:focus,
   .field textarea:focus {
+    /* The ring is the only edge a field ever shows, and only while you are
+       typing in it. Where the cursor is must never be a guess. */
     outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(89, 149, 237, 0.22);
+    background: rgba(137, 172, 220, 0.14);
+    box-shadow: 0 0 0 2px var(--accent);
   }
 
   /* Marks a field the script found empty on submit. */
   .field.invalid input,
   .field.invalid textarea {
-    border-color: #ff8f6b;
+    box-shadow: 0 0 0 2px #ff8f6b;
   }
 
   .form-submit {
@@ -397,8 +409,6 @@ const reasons = [
 
   .form-fallback {
     margin-top: var(--sp-5);
-    padding-top: var(--sp-5);
-    border-top: 1px solid var(--line);
     font-size: var(--step--1);
     color: var(--ink-muted);
   }

@@ -95,13 +95,22 @@
      survives if the accent above is ever retuned. */
   --gold: var(--bus-yellow);
 
-  /* ── Structural edges ────────────────────────────────────────────────
-     The home page is built as stacked full-bleed bands rather than
-     floating cards, so the boundary between two sections is a real 2px
-     line rather than a shadow. Structural blocks stay square: the radius
-     tokens below are for controls and media, not for the page's skeleton. */
-  --edge-w: 2px;
-  --edge: var(--edge-w) solid var(--line-strong);
+  /* ── Surfaces ────────────────────────────────────────────────────────
+     Things are separated by space and by sitting on a slightly lighter
+     surface, never by drawing a line round them. An earlier version ruled
+     every section with a 2px border and boxed every card; it read as a
+     spreadsheet. Calm product sites draw almost no lines at all.
+
+     The raised surfaces are translucent cornflower rather than solid
+     colours, so a card looks right on the page background, on the hero,
+     and inside another panel, without a separate shade for each. */
+  --surface-1: rgba(89, 149, 237, 0.07); /* cards, panels, chips */
+  --surface-2: rgba(89, 149, 237, 0.12); /* hover, and anything nested */
+  --surface-menu: rgba(10, 21, 38, 0.94); /* opaque enough to read over text */
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px -10px rgba(0, 0, 0, 0.5);
+  --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.35),
+    0 28px 56px -18px rgba(0, 0, 0, 0.65);
 
   --line: rgba(137, 172, 220, 0.16); /* hairline borders */
   --line-strong: rgba(137, 172, 220, 0.32);
@@ -193,7 +202,7 @@
   --shadow: 0 12px 32px rgba(7, 15, 28, 0.45);
   --shadow-lg: 0 28px 70px rgba(7, 15, 28, 0.6);
   --glow: 0 0 44px rgba(89, 149, 237, 0.28);
-  --glow-warm: 0 0 36px rgba(255, 160, 0, 0.28);
+  --glow-warm: 0 0 36px rgba(254, 198, 1, 0.28);
   --glow-gold: 0 0 36px rgba(254, 198, 1, 0.26);
 
   /* ── Motion ──────────────────────────────────────────────────────────
@@ -489,12 +498,6 @@ p {
 .section {
   padding-block: var(--sp-9);
   position: relative;
-  /*
-   * The same 2px rule the home page draws between its bands. Putting it on
-   * .section means all nine interior pages pick up the rhythm without any
-   * of them being edited.
-   */
-  border-bottom: var(--edge);
 }
 
 .section-tight {
@@ -519,18 +522,12 @@ p {
   line-height: 1.55;
 }
 
-/* A hairline that fades out at both ends. Separates sections without the
-   hard edge of a plain border. */
+/* A section break that is all space and no line. Kept as a real <hr> so
+   screen readers still announce the break; it just draws nothing. */
 .rule {
-  height: 1px;
+  height: 0;
   border: 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--line-strong) 18%,
-    var(--line-strong) 82%,
-    transparent
-  );
+  background: none;
 }
 
 .grid {
@@ -601,7 +598,7 @@ p {
 
 .glass {
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
   backdrop-filter: blur(var(--glass-blur)) saturate(1.3);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.3);
 }
@@ -609,29 +606,30 @@ p {
 .card {
   position: relative;
   /*
-   * A flat panel with a real 2px edge, matching the bands on the home page.
-   *
-   * This used to be a rounded glass tile with a masked gradient ring and a
-   * lift on hover. On its own it looked fine; sitting one click away from a
-   * page built out of square ruled bands, it read as a different website.
-   * Consistency across the nine pages is worth more than the tile.
+   * A rounded surface with no border. It lifts slightly on hover, which is
+   * the cue that it responds; the brightening alone was too subtle to read
+   * as interactive once the borders were gone.
    */
-  background: rgba(89, 149, 237, 0.05);
-  border: var(--edge);
   padding: var(--sp-5);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
   isolation: isolate;
   transition:
+    transform var(--dur) var(--ease),
     background var(--dur-fast) var(--ease),
-    border-color var(--dur-fast) var(--ease);
+    box-shadow var(--dur) var(--ease);
 }
 
-/*
- * Hover is a brightening, not a lift. A card that rises off the page fights
- * the flat, ruled look everything else now has.
- */
 .card:hover {
-  background: rgba(89, 149, 237, 0.1);
-  border-color: var(--accent);
+  background: var(--surface-2);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card:hover {
+    transform: none;
+  }
 }
 
 .card-link {
@@ -653,18 +651,16 @@ p {
 }
 
 /*
- * The photo at the top of a card, bled to the card's edges.
- *
- * The negative margin cancels the card's padding so the image meets the
- * border. There were two border-radius declarations here, the second
- * silently overriding the first; both are gone now that cards are square.
+ * The photo at the top of a card, bled to the card's edges. The negative
+ * margin cancels the card's padding so the image meets the card's rounded
+ * top; the matching radius keeps those corners from poking out square.
  */
 .card-media {
   position: relative;
   aspect-ratio: 16 / 10;
   overflow: hidden;
   margin: calc(var(--sp-5) * -1) calc(var(--sp-5) * -1) var(--sp-5);
-  border-bottom: var(--edge);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   background: var(--prussian-900);
 }
 
@@ -679,54 +675,14 @@ p {
   transform: scale(1.045);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   PLACEHOLDER IMAGE
-   Deliberately obvious. A missing photo should look unfinished, not like a
-   design choice, so nobody ships the site with these still in place.
-   ───────────────────────────────────────────────────────────────────────── */
-
-.ph-image {
-  display: grid;
-  place-content: center;
-  gap: var(--sp-2);
-  width: 100%;
-  height: 100%;
-  min-height: 180px;
-  text-align: center;
-  padding: var(--sp-5);
-  color: var(--ink-faint);
-  /* Same treatment as the Placeholder component: dashed 2px edge and a
-     diagonal hatch, so a gap looks the same wherever it appears. */
-  border: 2px dashed var(--line-strong);
-  background-image: repeating-linear-gradient(
-    45deg,
-    rgba(137, 172, 220, 0.055) 0 10px,
-    transparent 10px 20px
-  );
-}
-
-.ph-image span {
-  font-family: var(--font-display);
-  font-size: var(--step--1);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: var(--track-label);
-  color: var(--accent);
-}
-
-.ph-image small {
-  font-size: var(--step--1);
-  line-height: 1.4;
-  max-width: 30ch;
-}
-
-/* Inline marker for placeholder text. Search the built site for the yellow
-   dashed outline and you have found everything still to write. */
+/* Inline marker for unfinished text. It only renders under `npm run dev`
+   (see src/lib/publish.ts), so the yellow pills you see locally are the
+   list of everything still to write; none of them reach the public site. */
 .ph-tag {
   display: inline-block;
   padding: 0.1em 0.5em;
-  border: 1px dashed var(--highlight);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
+  background: rgba(254, 198, 1, 0.16);
   color: var(--highlight);
   font-size: 0.9em;
   font-weight: 600;
@@ -803,20 +759,19 @@ p {
 }
 
 .btn-primary:hover {
-  box-shadow: 0 10px 28px rgba(255, 160, 0, 0.34);
+  box-shadow: 0 10px 28px rgba(254, 198, 1, 0.34);
 }
 
 .btn-ghost {
   --btn-bg: transparent;
   --btn-fg: var(--ink);
-  border: 1px solid var(--line-strong);
+  background: rgba(137, 172, 220, 0.14);
   backdrop-filter: blur(8px);
 }
 
 .btn-ghost:hover {
   --btn-fg: var(--ink-inverse);
   background: var(--snow);
-  border-color: var(--snow);
   box-shadow: var(--shadow);
 }
 
@@ -857,7 +812,7 @@ p {
   align-items: center;
   gap: var(--sp-1);
   padding: 0.25em 0.75em;
-  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
   border-radius: var(--radius-pill);
   background: rgba(89, 149, 237, 0.1);
   color: var(--ink-muted);
@@ -868,14 +823,12 @@ p {
 }
 
 .tag-warm {
-  border-color: rgba(255, 160, 0, 0.45);
-  background: rgba(255, 160, 0, 0.13);
+  background: rgba(254, 198, 1, 0.14);
   color: var(--highlight);
 }
 
 .tag-solid {
   background: var(--accent);
-  border-color: var(--accent);
   color: var(--ink-inverse);
 }
 
@@ -935,7 +888,7 @@ p {
 }
 
 .prose img {
-  border: var(--edge);
+  border-radius: var(--radius-lg);
 }
 
 .prose code {
@@ -1059,8 +1012,14 @@ main {
   padding-top: calc(var(--header-h) + var(--sp-8));
   padding-bottom: var(--sp-8);
   overflow: hidden;
-  border-bottom: var(--edge);
-  background: var(--prussian);
+  /* Brand navy at the top, fading into the page colour, so the title
+     band melts into the content below instead of stopping at a line. */
+  background: linear-gradient(
+    180deg,
+    var(--prussian) 0%,
+    rgba(16, 37, 66, 0.55) 60%,
+    rgba(16, 37, 66, 0) 100%
+  );
 }
 
 /*

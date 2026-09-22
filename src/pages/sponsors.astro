@@ -15,6 +15,7 @@ import PageHero from '../components/PageHero.astro';
 import Icon from '../components/Icon.astro';
 import { sponsorTiers, contact, team } from '../data/site';
 import { url } from '../lib/paths';
+import { publishable } from '../lib/publish';
 
 const hasAnySponsor = sponsorTiers.some((t) => t.members.length > 0);
 
@@ -51,6 +52,10 @@ const why = [
     body: '[PLACEHOLDER] Our outreach reaches students who have never touched a robot. Sponsorship is what pays for the kits we bring them.',
   },
 ];
+
+/* Reasons go public once the team confirms the wording: delete the
+   [PLACEHOLDER] marker. See src/lib/publish.ts. */
+const liveWhy = why.filter((w) => publishable(w.title, w.body));
 ---
 
 <BaseLayout
@@ -136,6 +141,7 @@ const why = [
   </section>
 
   <!-- ═══ WHY IT MATTERS ═════════════════════════════════════════════ -->
+  {liveWhy.length > 0 && (
   <section class="section">
     <div class="shell">
       <div class="section-head">
@@ -145,7 +151,7 @@ const why = [
 
       <div class="grid grid-3" data-reveal data-stagger>
         {
-          why.map((w) => (
+          liveWhy.map((w) => (
             <article class="card why-card">
               <span class="why-icon">
                 <Icon name={w.icon} size={20} />
@@ -158,6 +164,7 @@ const why = [
       </div>
     </div>
   </section>
+  )}
 
   <!-- ═══ FINAL CTA ══════════════════════════════════════════════════ -->
   <section class="section">
@@ -201,7 +208,6 @@ const why = [
     gap: var(--sp-3);
     padding-bottom: var(--sp-3);
     margin-bottom: var(--sp-5);
-    border-bottom: 1px solid var(--line-strong);
   }
 
   .tier-head h3 {
@@ -233,7 +239,8 @@ const why = [
     place-items: center;
     min-height: 110px;
     padding: var(--sp-4);
-    border: var(--edge);
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
     /* Sponsor logos usually arrive as dark artwork on white. A light panel
        is the only reliable way to show them all without asking every
        sponsor for a reversed version. */
@@ -260,7 +267,8 @@ const why = [
     gap: var(--sp-4);
     padding: var(--sp-5);
     margin-bottom: var(--sp-5);
-    border: 2px dashed var(--line-strong);
+    border-radius: var(--radius-lg);
+    background: rgba(254, 198, 1, 0.08);
     text-decoration: none;
     color: var(--ink-muted);
     transition:
@@ -270,8 +278,8 @@ const why = [
   }
 
   .open-slot:hover {
-    border-color: var(--highlight);
-    background: rgba(255, 160, 0, 0.07);
+    background: rgba(254, 198, 1, 0.14);
+    background: rgba(254, 198, 1, 0.07);
     transform: translateY(-2px);
     color: var(--ink);
   }

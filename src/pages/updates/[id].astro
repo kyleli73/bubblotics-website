@@ -15,9 +15,10 @@ import UpdateCard from '../../components/UpdateCard.astro';
 import Icon from '../../components/Icon.astro';
 import { url, formatDate } from '../../lib/paths';
 import { contact } from '../../data/site';
+import { isLivePost } from '../../lib/publish';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('updates', ({ data }) => !data.draft);
+  const posts = await getCollection('updates', isLivePost);
   const sorted = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
   return sorted.map((post) => ({
@@ -197,7 +198,6 @@ const { Content } = await render(post);
     margin: var(--sp-6) 0 0;
     border-radius: var(--radius-xl);
     overflow: hidden;
-    border: 1px solid var(--glass-border);
     box-shadow: var(--shadow-lg);
   }
 
@@ -217,6 +217,5 @@ const { Content } = await render(post);
   }
 
   .related {
-    border-top: 1px solid var(--line);
   }
 </style>

@@ -22,7 +22,7 @@ site. You do not need to understand the code.
 10. [Updating awards, sponsors, and contact info](#updating-awards-sponsors-and-contact-info)
 11. [Publishing changes](#publishing-changes)
 12. [Where the site's settings live](#where-the-sites-settings-live)
-13. [First-time GitHub Pages setup](#first-time-github-pages-setup)
+13. [Moving to Netlify (one time)](#moving-to-netlify-one-time)
 14. [Finding every placeholder](#finding-every-placeholder)
 15. [Design and brand notes](#design-and-brand-notes)
 16. [Security headers](#security-headers)
@@ -484,37 +484,35 @@ Fill in a handle to turn one on.
 
 ## Publishing changes
 
-Every push to the `main` branch rebuilds and republishes the site
-automatically. It takes about a minute.
+The site is deployed by dragging one file onto Netlify, the same way the
+scouting app is. No terminal login, no waiting on GitHub.
 
-### From GitHub's website (no terminal)
+### Every time you publish
 
-Best for a quick text fix.
+1. In a terminal in this folder, run:
 
-1. Find the file on github.com.
-2. Click the pencil icon.
-3. Make the change.
-4. Scroll down, write a short note in the commit box ("Add provincials
-   recap"), and click **Commit changes**.
-5. The **Actions** tab shows the rebuild. Green tick means it is live.
+   ```bash
+   npm run zip
+   ```
 
-### From your computer
+   It builds the site and writes `bubblotics-website.zip` next to this
+   README. If the build fails, the error names the file at fault (usually a
+   typo in the block at the top of a markdown file) and no zip is made, so
+   a broken build can never be deployed by accident.
+2. Open the [Deploys page](https://app.netlify.com/projects/bubblotics-website/deploys)
+   and drag `bubblotics-website.zip` onto the drop area at the bottom.
+3. Wait for "Published" (usually under a minute), then check
+   [bubblotics.ca](https://bubblotics.ca).
 
-```bash
-git add .
-git commit -m "Add provincials recap"
-git push
-```
+**Rolling back:** every deploy is kept. On the Deploys page, click an older
+one and choose **Publish deploy** to put it back instantly.
 
-### If the site does not update
+### Keeping the source on GitHub
 
-Open the **Actions** tab on GitHub. A red X means the build failed, and
-clicking into it shows the error. The usual cause is a typo in the block at
-the top of a markdown file: a missing quote, a bad date, or a `-` where a
-space should be. The error message names the file.
-
-A failed build never replaces the live site, so a mistake takes the change
-offline, not the whole website.
+Deploying does not save your source code anywhere; the repository does.
+Commit and push as usual (GitHub Desktop's **Push origin** works) so the
+next person has the latest version. The two are independent: a push no
+longer changes the live site, and a deploy does not need a push.
 
 ---
 
@@ -522,52 +520,57 @@ offline, not the whole website.
 
 | What | Where |
 |---|---|
-| Source code, deploys | [github.com/kyleli73/bubblotics-website](https://github.com/kyleli73/bubblotics-website) |
-| Build logs | [Actions tab](https://github.com/kyleli73/bubblotics-website/actions) |
-| Custom domain, HTTPS | [Settings → Pages](https://github.com/kyleli73/bubblotics-website/settings/pages) |
+| Deploys, rollbacks | [Netlify → Deploys](https://app.netlify.com/projects/bubblotics-website/deploys) |
+| Custom domain, HTTPS | [Netlify → Domain management](https://app.netlify.com/projects/bubblotics-website/domain-management) |
+| Security headers, redirects | `public/_headers` and `public/_redirects` in this repo |
+| Source code | [github.com/kyleli73/bubblotics-website](https://github.com/kyleli73/bubblotics-website) |
 | DNS records | [Cloudflare → DNS](https://dash.cloudflare.com/?to=/:account/bubblotics.ca/dns/records) |
 | Domain renewal, auto-renew | [Cloudflare → Registrar](https://dash.cloudflare.com/?to=/:account/domains) |
 
+Netlify moved its domain settings to `/projects/<name>/domain-management`.
+Older links under `/configuration/` load the dashboard with nothing in it
+and no error, which looks like a broken page but is only a stale address.
+
 ---
 
-## First-time GitHub Pages setup
+## Moving to Netlify (one time)
 
-Only needed once, by whoever creates the repository.
+The site used to be hosted on GitHub Pages and published by pushing to
+GitHub. It moved to Netlify so that publishing is a drag and drop, and
+because Netlify can send the security headers GitHub Pages cannot.
 
-1. Push this project to a GitHub repository.
-2. Go to **Settings → Pages**.
-3. Under "Build and deployment", set **Source** to **GitHub Actions**.
-   Not "Deploy from a branch". That is the older method and it ignores the
-   workflow in this project entirely.
-4. The site path is worked out automatically from whether `public/CNAME`
-   exists. No CNAME means the project-site path (`/bubblotics-website`); a
-   CNAME means the domain root. You do not edit `astro.config.mjs`.
+1. Run `npm run zip`, then drag `bubblotics-website.zip` onto
+   [app.netlify.com/drop](https://app.netlify.com/drop) **while signed in**.
+   (Signed out, Netlify deletes the site after an hour.)
+2. In the new project's settings, change the project name to
+   `bubblotics-website`, so the links in this README work.
+3. Open the preview at `https://bubblotics-website.netlify.app` and click
+   around. Nothing about the domain has changed yet, so this is safe.
+4. In [Netlify → Domain management](https://app.netlify.com/projects/bubblotics-website/domain-management),
+   add `bubblotics.ca` as the custom domain, and `www.bubblotics.ca` when
+   it offers.
+5. In [Cloudflare → DNS](https://dash.cloudflare.com/?to=/:account/bubblotics.ca/dns/records):
+   - Delete the `A` (and any `AAAA`) records on `bubblotics.ca` that point
+     at GitHub (`185.199.x.x` / `2606:50c0:...`).
+   - Add a `CNAME`, name `@`, target `bubblotics-website.netlify.app`.
+     Cloudflare flattens a CNAME on the bare domain automatically.
+   - Change the `www` CNAME's target to `bubblotics-website.netlify.app`.
+   - **Grey cloud (DNS only) on both.** Proxied, Netlify cannot issue the
+     certificate.
+   - Type names as `@` and `www`, never the full domain: Cloudflare appends
+     `bubblotics.ca` itself.
+   - Leave every other record alone. `scouting`, `send`, the `MX`/`TXT`
+     email records and DMARC belong to the scouting app and to email.
+6. Back in Netlify, provision the HTTPS certificate. **It usually fails the
+   first time** with a red box that looks fatal. It is not: wait a minute,
+   click **Verify DNS configuration**, then provision again.
+7. In [GitHub → Settings → Pages](https://github.com/kyleli73/bubblotics-website/settings/pages),
+   remove the custom domain so GitHub stops claiming it. The workflow in
+   `.github/workflows/` can be disabled in the Actions tab too; left on, it
+   only rebuilds a copy nobody can reach.
 
-### Moving to a custom domain
-
-1. Point the DNS at GitHub Pages. For an apex domain that is four `A`
-   records and four `AAAA` records, plus a `CNAME` for `www`. The exact
-   values are in GitHub's docs, and there is a ready-to-import zone file in
-   the project history.
-   **Set them to "DNS only" if you use Cloudflare.** With Cloudflare's proxy
-   on, GitHub cannot complete its certificate check and visitors get an SSL
-   error instead of the site.
-2. **Set the domain in Settings → Pages → Custom domain, and save.**
-   This step is required and easy to miss. Because this repo publishes from
-   a GitHub Actions workflow rather than from a branch, GitHub ignores the
-   `CNAME` file completely: *"any existing CNAME file is ignored and is not
-   required"*. The file here only drives this project's own build path.
-3. `echo yourdomain > public/CNAME` and commit, so the build serves from the
-   domain root and every link matches.
-4. Tick **Enforce HTTPS** once the certificate has been issued, which takes
-   a few minutes after step 2.
-
-**Getting `BASE` wrong is the single most common GitHub Pages mistake.** The
-site loads, but every stylesheet, image, and link 404s. If the published site
-appears as unstyled black text on white, this is why.
-
-5. Push a commit. Watch the **Actions** tab. When it goes green, the site is
-   live at the URL shown under Settings → Pages.
+`public/CNAME` stays. The build reads it to know the site is served from
+the domain root; Netlify ignores it.
 
 ---
 
@@ -579,17 +582,21 @@ Anything not yet written is marked `[PLACEHOLDER]`. To list them all:
 grep -rn "PLACEHOLDER" src/
 ```
 
-On the live site they show as yellow dashed outlines, so they are hard to miss
-while reading a page.
+**They only appear when you run the site locally** (`npm run dev`), as
+yellow pills and captions naming the exact file to save. The public build
+leaves them out: an unwritten FAQ answer, an unconfirmed value on the About
+page, a half-written blog post or a robot's template notes simply do not
+appear until the marker is deleted. Photo slots show as quiet branded
+panels publicly, and with their file paths locally.
 
-The most important ones to fill in first:
+The rule lives in `src/lib/publish.ts`. To publish something, write the
+real text and delete its marker; it appears on the next build.
 
-- `src/data/site.ts` — city, rookie year, the four stat numbers, and the
-  `seasons` array
-- `src/content/robots/*.md` — the two robot files are entirely templates
-- `src/assets/gallery/` — empty; the gallery shows placeholder tiles until
-  photos are added
-- `src/assets/brand/logo.svg` — done, the real mark is in place
+To see exactly what the public will see, build and preview it:
+
+```bash
+npm run build && npm run preview
+```
 
 ---
 
@@ -601,44 +608,35 @@ at the top of `src/styles/global.css`:
 | Name | Hex | Where it is used |
 |---|---|---|
 | Prussian Blue | `#102542` | Page and panel backgrounds |
-| Cornflower Blue | `#5995ED` | Accents, links, glow |
-| Logo Orange | `#FFA000` | Primary buttons, focus rings, emphasis |
-| School Bus Yellow | `#FEC601` | Standout awards, and nothing else |
+| Cornflower Blue | `#5995ED` | Accents, links, raised surfaces |
+| School Bus Yellow | `#FEC601` | The accent: primary buttons, focus rings, the sponsor panel, one word per heading |
 | Platinum | `#EFF2F1` | Light surfaces |
 | Bright Snow | `#FCFAF9` | Body text on dark |
+| Logo Orange | `#FFA000` | Only inside the logo artwork itself |
 
-### Why there is an orange as well as the yellow
+### Yellow, and the logo's orange
 
-The logo does not use School Bus Yellow. Sampling the artwork directly, its
-warm accent is `#FFA000`, a true orange, and its blue is `#479AF5`. It does
-use Bright Snow exactly as the guide specifies.
+The guide names School Bus Yellow as the accent, and the interface uses it.
+The logo artwork's own warm colour is not that yellow: sampled from the file,
+it is `#FFA000`, a true orange. The two never sit edge to edge on the site,
+which is what keeps the pairing from looking like a mistake. If you put the
+logo beside a yellow button, you will see the near-miss.
 
-Orange artwork sitting beside yellow interface accents reads as a near-miss
-rather than a deliberate pair, so the interface follows the logo. `--highlight`
-is the orange and does all the work: buttons, focus rings, the eyebrow tick,
-the one emphasised word per heading.
+Keep the yellow rare. It marks what matters and stops working the moment it
+is everywhere.
 
-School Bus Yellow survives in exactly one place, as `--gold`: the standout
-marker on the Awards page. Yellow reads as gold there, which is the meaning
-you actually want on a trophy, and a colour used in one place still means
-something when a judge scans the page.
+**Surfaces, not lines.** Nothing on the site is outlined or boxed. Sections
+are separated by space; content sits on soft raised surfaces
+(`--surface-1`, `--surface-2`) with rounded corners from one radius scale.
+When one rounded shape sits inside another, the inner radius is the outer
+radius minus the padding between them, so the curves stay parallel.
 
-**If you add anything warm, use `var(--highlight)`.** Reach for `var(--gold)`
-only if it is literally about winning something. The moment gold appears in a
-second place it stops signalling anything.
-
-Every pairing was checked against WCAG AA: orange on the page background is
-9.4:1, dark text on an orange button is 9.4:1, and the faintest grey is 5.1:1.
-If you change a colour, re-check it. Half of any FTC audience is reading this
-on a phone in a bright gym.
-
-**Typefaces.** Source Sans 3 for body copy, as the guide specifies. The guide
-names "Nelvetica Neue" for headlines, which is not available as a web font, so
-`--font-display` in `global.css` uses the closest neo-grotesque stack
-(Helvetica Neue and friends), which renders natively on Apple devices with no
-download. If the team licenses the real face, drop the files into
-`public/fonts/`, add an `@font-face` block, and put its name at the front of
-`--font-display`. Nothing else changes.
+**Typefaces.** Source Sans 3 for everything, as the guide specifies: Bold
+for headings, Regular for body, Italic for captions. The guide names
+"Nelvetica Neue" for titles and Ethnocentric for the wordmark; neither is
+licensed for the web. If the team buys them, add an `@font-face` block and
+put the name at the front of `--font-display` (or `--font-wordmark`) in
+`global.css`. Nothing else changes.
 
 **Animation.** All of it is in `src/scripts/motion.ts`, driven by HTML
 attributes so no page imports the animation library directly:
@@ -668,64 +666,23 @@ contrast. Half of any FTC audience is reading this on a phone in a bright gym.
 
 ## Security headers
 
-The site sends no HTTP security headers. That is not an oversight: **GitHub
-Pages does not let you set response headers at all.** There is no config file
-for it, and a `_headers` file (which works on Netlify and Cloudflare Pages)
-is simply ignored.
+On Netlify, `public/_headers` sends:
 
-What a static page *can* set for itself is in `BaseLayout.astro`:
+- **X-Frame-Options: DENY**, so nobody can frame the site for clickjacking
+- **X-Content-Type-Options: nosniff**
+- **Referrer-Policy: strict-origin-when-cross-origin**
+- **Permissions-Policy**, switching off camera, microphone, location and
+  payment APIs the site never uses
+- **Cache-Control: immutable** on fingerprinted files in `/_astro/`, which is
+  why repeat visits load instantly
 
-- **Referrer-Policy**, via `<meta name="referrer">`. Real and effective.
+Netlify adds **HSTS** by itself once HTTPS is on.
 
-What it **cannot**:
-
-- **HSTS** — header only. No meta equivalent exists.
-- **X-Frame-Options** and CSP `frame-ancestors` — both are ignored inside a
-  meta tag. A meta CSP would *look* like clickjacking protection while
-  providing none, which is worse than having nothing, so we do not ship one.
-- **X-Content-Type-Options** — header only.
-
-### Is this worth fixing?
-
-For this site, honestly: not urgently. It is a static brochure with no login,
-no form that posts anywhere, and no user data. Clickjacking a page of robot
-photos achieves very little.
-
-It becomes worth fixing the moment the site handles data. The scouting app
-did, which is one of the reasons it moved to its own host, where proper
-headers can be set.
-
-### How to fix it, when you want to
-
-DNS is already on Cloudflare, so the plumbing exists. Everything below is in
-the [bubblotics.ca dashboard](https://dash.cloudflare.com/?to=/:account/bubblotics.ca)
-(these links use `:account`, which Cloudflare resolves for whoever is signed
-in, so no account ID is needed):
-
-1. In [Cloudflare → DNS → Records](https://dash.cloudflare.com/?to=/:account/bubblotics.ca/dns/records), set the apex and `www` records to
-   **Proxied** (orange cloud).
-2. In [Cloudflare → SSL/TLS](https://dash.cloudflare.com/?to=/:account/bubblotics.ca/ssl-tls), **the encryption mode must be Full
-   (strict).** Flexible causes an infinite redirect loop with GitHub Pages.
-   This is the step that breaks sites.
-3. In [Cloudflare → Rules](https://dash.cloudflare.com/?to=/:account/bubblotics.ca/rules), add a Transform Rule -> Modify Response
-   Header, adding:
-
-   ```
-   Strict-Transport-Security: max-age=31536000; includeSubDomains
-   X-Frame-Options: DENY
-   X-Content-Type-Options: nosniff
-   Permissions-Policy: camera=(), microphone=(), geolocation=()
-   ```
-
-Two warnings. Enabling the proxy on a working site can break it, and the
-failure (a redirect loop) is not always immediate. Change one thing, check
-the site, then change the next. And **leave any subdomain pointing at another
-host on DNS-only (grey cloud)** — proxying in front of a provider that issues
-its own certificate causes cert errors.
-
-Skip CSP unless you have time to iterate. This site loads a WebAssembly Draco
-decoder and can embed Onshape and YouTube, and a strict policy will silently
-break one of them.
+Not yet: a **Content-Security-Policy**. The hologram viewer runs a
+WebAssembly decoder and the page has one small inline script, so a strict
+policy needs testing against a real deploy. Add it as
+`Content-Security-Policy-Report-Only` first, watch the browser console, and
+only then enforce it.
 
 ---
 

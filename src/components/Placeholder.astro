@@ -1,33 +1,43 @@
 ---
 /*
- * A labelled gap where a real asset goes.
+ * A frame where a real photo will go.
  *
- * ── Why this exists as a component ─────────────────────────────────────
- * The alternative is filler: a stock photo, a grey rectangle, a paragraph
- * of lorem ipsum. Filler is worse than an obvious hole, because it hides
- * the hole. Six months from now nobody remembers which photos were real.
+ * ── Two audiences, two looks ────────────────────────────────────────────
+ * Publicly (the deployed site) this is a quiet branded panel: a soft navy
+ * gradient with the team mark faintly in the middle. It reads as a design
+ * element, not as something broken, and it claims nothing. There is no
+ * stock photo pretending to be the team and no "coming soon" sign.
  *
- * So a placeholder here is loud on purpose (dashed edge, diagonal hatch)
- * and it names the exact path to drop the file into. Whoever finally has
- * the photo does not have to read any code to find out where it goes: the
- * page they are looking at already told them.
+ * Locally (`npm run dev`) the same panel is labelled, and a caption under
+ * it says exactly what the photo should show and which file to save it as.
+ * That is the brief for whoever takes the picture, and it never ships.
+ *
+ * An earlier version showed the labels and file paths to everyone, behind a
+ * dashed border. It did its job for the team and made the public site look
+ * unfinished. See src/lib/publish.ts for the rule this follows.
  *
  * Usage:
  *   <Placeholder path="src/assets/team/team-photo.jpg" ratio="16 / 9">
  *     A wide shot of the whole team.
  *   </Placeholder>
  *
- * The slot is the art direction: what the photo should actually show. Keep
- * it specific, since it is the brief for whoever takes the picture.
+ * `compact` fills its parent instead of setting its own shape, for use
+ * inside a card's media area that already has an aspect ratio. It shows no
+ * caption, only the path, even locally.
  */
 
+import Logo from './Logo.astro';
+import { SHOW_UNFINISHED } from '../lib/publish';
+
 interface Props {
-  /** Exact path the asset should be saved to. Shown verbatim. */
+  /** Exact path the asset should be saved to. Shown locally only. */
   path: string;
-  /** CSS aspect-ratio for the box, e.g. "16 / 9" or "1 / 1". */
+  /** CSS aspect-ratio for the frame, e.g. "16 / 9" or "1 / 1". */
   ratio?: string;
-  /** Short label in the corner, e.g. "Photo", "Screenshot". */
+  /** Short label shown locally, e.g. "Photo", "Robot". */
   kind?: string;
+  /** Fill the parent instead of setting a shape. */
+  compact?: boolean;
   class?: string;
 }
 
@@ -35,66 +45,111 @@ const {
   path,
   ratio = '16 / 9',
   kind = 'Photo',
+  compact = false,
   class: className = '',
 } = Astro.props;
+
+const dev = SHOW_UNFINISHED;
 ---
 
-<figure class={`ph ${className}`} style={`--ph-ratio: ${ratio};`}>
+<figure
+  class:list={['ph', { 'ph-compact': compact }, className]}
+  style={compact ? undefined : `--ph-ratio: ${ratio};`}
+  aria-hidden={dev ? undefined : 'true'}
+>
   <div class="ph-box">
-    <span class="ph-kind">{kind}</span>
-    <span class="ph-word">Placeholder</span>
+    <span class="ph-mark">
+      <Logo variant="mark" size={compact ? 44 : 64} />
+    </span>
+
+    {
+      dev && (
+        <span class="ph-label">
+          {kind} placeholder
+        </span>
+      )
+    }
   </div>
 
-  <figcaption class="ph-caption">
-    <span class="ph-brief"><slot /></span>
-    <code class="ph-path">{path}</code>
-  </figcaption>
+  {
+    dev && !compact && (
+      <figcaption class="ph-caption">
+        <span class="ph-brief">
+          <slot />
+        </span>
+        <code class="ph-path">{path}</code>
+      </figcaption>
+    )
+  }
+
+  {dev && compact && <code class="ph-path ph-path-overlay">{path}</code>}
 </figure>
 
 <style>
   .ph {
+    position: relative;
     margin: 0;
   }
 
   .ph-box {
+    position: relative;
     display: grid;
-    place-content: center;
-    gap: var(--sp-2);
+    place-items: center;
     aspect-ratio: var(--ph-ratio);
-    padding: var(--sp-5);
-    text-align: center;
-
-    /* Square, like every other structural block on this page. */
-    border: 2px dashed var(--line-strong);
+    overflow: hidden;
+    border-radius: var(--radius-lg);
 
     /*
-     * Diagonal hatch. Reads unmistakably as "nothing here yet" at any size,
-     * including in a screenshot sent to someone who has not seen the site,
-     * which a plain grey box does not.
+     * A light source at the top right fading into deep navy, with a trace
+     * of warmth at the bottom left. Close enough to how a lit photo reads
+     * that the frame sits comfortably among real images once some arrive.
      */
-    background-image: repeating-linear-gradient(
-      45deg,
-      rgba(137, 172, 220, 0.055) 0 10px,
-      transparent 10px 20px
-    );
+    background:
+      radial-gradient(
+        70% 90% at 85% 10%,
+        rgba(89, 149, 237, 0.3),
+        transparent 60%
+      ),
+      radial-gradient(
+        50% 60% at 10% 100%,
+        rgba(254, 198, 1, 0.07),
+        transparent 60%
+      ),
+      linear-gradient(160deg, #13294a 0%, #0c1b31 55%, #09152a 100%);
   }
 
-  .ph-kind {
+  /* Fills the card's media area; the card already clips the corners. */
+  .ph-compact,
+  .ph-compact .ph-box {
+    height: 100%;
+  }
+
+  .ph-compact .ph-box {
+    aspect-ratio: auto;
+    border-radius: 0;
+  }
+
+  /* The team mark, faint. Present enough to say whose frame this is,
+     quiet enough that it never competes with the page. */
+  .ph-mark {
+    display: block;
+    opacity: 0.16;
+    filter: grayscale(1) brightness(1.6);
+  }
+
+  .ph-label {
+    position: absolute;
+    top: var(--sp-4);
+    left: var(--sp-4);
+    padding: 4px var(--sp-3);
+    border-radius: var(--radius-pill);
+    background: rgba(254, 198, 1, 0.16);
     font-family: var(--font-display);
     font-size: var(--text-label);
     font-weight: 700;
     letter-spacing: var(--track-label);
     text-transform: uppercase;
     color: var(--highlight);
-  }
-
-  .ph-word {
-    font-family: var(--font-display);
-    font-size: var(--step-0);
-    font-weight: 700;
-    letter-spacing: var(--track-caps);
-    text-transform: uppercase;
-    color: var(--ink-faint);
   }
 
   /* Captions are Source Sans 3 Italic, per the branding guide. */
@@ -119,5 +174,16 @@ const {
     /* Long paths must not force the page to scroll sideways on a phone. */
     overflow-wrap: anywhere;
     color: var(--accent-soft);
+  }
+
+  .ph-path-overlay {
+    position: absolute;
+    left: var(--sp-3);
+    right: var(--sp-3);
+    bottom: var(--sp-3);
+    margin: 0;
+    padding: 4px var(--sp-3);
+    border-radius: var(--radius-sm);
+    background: rgba(7, 15, 28, 0.78);
   }
 </style>

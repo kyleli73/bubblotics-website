@@ -14,8 +14,10 @@ import UpdateCard from '../../components/UpdateCard.astro';
 import CtaBand from '../../components/CtaBand.astro';
 import Icon from '../../components/Icon.astro';
 import { url, formatDate } from '../../lib/paths';
+import { isLivePost, SHOW_UNFINISHED } from '../../lib/publish';
+import Placeholder from '../../components/Placeholder.astro';
 
-const posts = (await getCollection('updates', ({ data }) => !data.draft)).sort(
+const posts = (await getCollection('updates', isLivePost)).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
 );
 
@@ -47,10 +49,7 @@ const [featured, ...rest] = posts;
                   loading="eager"
                 />
               ) : (
-                <div class="ph-image">
-                  <span>[Placeholder]</span>
-                  <small>Set `coverImage` in this post's markdown file.</small>
-                </div>
+                <Placeholder compact path={`src/assets/updates/${featured.id}.jpg (then set coverImage)`} />
               )}
               <span class="tag tag-warm featured-flag">Latest</span>
             </div>
@@ -120,11 +119,18 @@ const [featured, ...rest] = posts;
         posts.length === 0 && (
           <div class="card empty-state">
             <h3>No posts yet</h3>
-            <p>
-              <span class="ph-tag">[Placeholder]</span> Add a markdown file to
-              <code>src/content/updates/</code> and it appears here. The README
-              walks through it.
-            </p>
+            {SHOW_UNFINISHED ? (
+              <p>
+                <span class="ph-tag">[Placeholder]</span> Add a markdown file to
+                <code>src/content/updates/</code> and it appears here. The README
+                walks through it.
+              </p>
+            ) : (
+              <p>
+                Posts start as the season gets going. Follow us on Instagram
+                in the meantime.
+              </p>
+            )}
           </div>
         )
       }

@@ -196,8 +196,7 @@ const navCols = [nav.slice(0, half), nav.slice(half)];
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    border: 1px solid var(--line-strong);
-    background: rgba(89, 149, 237, 0.08);
+    background: var(--surface-2);
     color: var(--ink-muted);
     transition:
       transform var(--dur) var(--ease),
@@ -209,7 +208,6 @@ const navCols = [nav.slice(0, half), nav.slice(half)];
   .social:hover {
     transform: translateY(-3px);
     background: var(--highlight);
-    border-color: var(--highlight);
     color: var(--ink-inverse);
     box-shadow: var(--glow-warm);
   }

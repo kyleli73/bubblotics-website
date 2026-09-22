@@ -1,8 +1,4 @@
-# The scouting app is served from /scout/ but is not meant to be found by
-# search. It is an internal team tool, it is not linked from anywhere on the
-# site, and it should not turn up in results for people outside the team.
-# Sign-in still guards the data; this just keeps it out of the index.
 User-agent: *
-Disallow: /scout/
+Allow: /
 
 Sitemap: https://bubblotics.ca/sitemap-index.xml

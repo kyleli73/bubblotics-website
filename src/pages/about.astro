@@ -10,6 +10,7 @@ import CtaBand from '../components/CtaBand.astro';
 import StatStrip from '../components/StatStrip.astro';
 import Icon from '../components/Icon.astro';
 import { team, subteams } from '../data/site';
+import { publishable } from '../lib/publish';
 
 /*
  * [PLACEHOLDER] The whole timeline is invented. Replace each entry with
@@ -62,6 +63,10 @@ const values = [
     body: '[PLACEHOLDER] Every season we hand down documentation, tooling, and mentorship so the next group starts further ahead than we did.',
   },
 ];
+
+/* Values go public once the team confirms them: delete a value's
+   [PLACEHOLDER] marker and it appears. See src/lib/publish.ts. */
+const liveValues = values.filter((v) => publishable(v.title, v.body));
 ---
 
 <BaseLayout
@@ -118,6 +123,7 @@ const values = [
   </section>
 
   <!-- ═══ VALUES ═════════════════════════════════════════════════════ -->
+  {liveValues.length > 0 && (
   <section class="section section-tight">
     <div class="shell">
       <div class="section-head">
@@ -127,7 +133,7 @@ const values = [
 
       <div class="grid grid-3" data-reveal data-stagger>
         {
-          values.map((v) => (
+          liveValues.map((v) => (
             <article class="card value-card">
               <span class="value-icon">
                 <Icon name={v.icon} size={22} />
@@ -140,6 +146,7 @@ const values = [
       </div>
     </div>
   </section>
+  )}
 
   <!-- ═══ TIMELINE ═══════════════════════════════════════════════════ -->
   <section class="section">
@@ -313,7 +320,7 @@ const values = [
     height: 16px;
     border-radius: 50%;
     background: var(--prussian-950);
-    border: 2px solid var(--accent);
+    border: 0;
     box-shadow: 0 0 0 4px rgba(89, 149, 237, 0.14);
   }
 

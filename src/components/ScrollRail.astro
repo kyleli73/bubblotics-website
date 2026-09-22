@@ -10,7 +10,9 @@
  * ── Decisions worth knowing ────────────────────────────────────────────
  *
  * Desktop only. On a phone it would eat a fifth of the screen width to say
- * something the scrollbar already says, so it is hidden below 1200px.
+ * something the scrollbar already says, so it only appears from 1380px, the
+ * first width with a margin wide enough to hold it beside the content with
+ * room to breathe.
  *
  * It is a real <nav> of real anchor links, not decoration. Clicking a number
  * jumps to that section, and the whole rail is reachable by keyboard. The
@@ -49,20 +51,34 @@ const { sections } = Astro.props;
 </nav>
 
 <style>
+  /*
+   * ── The capsule ─────────────────────────────────────────────────────
+   * At rest the rail is a slim floating capsule of numbers. On hover or
+   * keyboard focus it widens to show the section names and turns almost
+   * opaque, lifted off the page by a shadow.
+   *
+   * That opacity is the point. The first version was bare numbers on the
+   * page, and when its labels slid out they landed on top of whatever
+   * body text sat beside them, so the two ran together into one unreadable
+   * layer. A solid surface under the labels means the rail always reads
+   * as a separate object above the page, never as part of it.
+   */
   .rail {
     display: none;
   }
 
   /*
-   * 1200px, not the 940px the nav uses. The rail sits outside the content
-   * shell, so it needs room for the shell plus its own width on both sides;
-   * below this it would overlap the text.
+   * 1380px. The rail must fit in the margin beside the content at rest.
+   * The content column is 1200px wide with 32px of padding and the capsule
+   * ends 90px from the left edge, so at 1320px it cleared the text by just
+   * 2px, which reads as touching. 1380px leaves at least 32px of air. When expanded it deliberately floats over
+   * the page, which the opaque surface makes safe.
    */
-  @media (min-width: 1200px) {
+  @media (min-width: 1380px) {
     .rail {
       display: block;
       position: fixed;
-      left: var(--sp-6);
+      left: var(--sp-5);
       top: 50%;
       transform: translateY(-50%);
       z-index: var(--z-rail);
@@ -71,99 +87,115 @@ const { sections } = Astro.props;
 
   @media (min-width: 1500px) {
     .rail {
-      left: var(--sp-7);
+      left: var(--sp-6);
     }
   }
 
   .rail ol {
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding: var(--sp-3) var(--sp-2);
     display: flex;
     flex-direction: column;
-    gap: var(--sp-4);
-    /* Counters come from the markup, so the list must not add its own. */
-    counter-reset: none;
+    gap: 2px;
+
+    border-radius: var(--radius-pill);
+    background: rgba(10, 21, 38, 0.55);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    box-shadow: var(--shadow-1);
+
+    transition:
+      background var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease),
+      border-radius var(--dur) var(--ease);
+  }
+
+  /* Expanded: near-opaque, deeper shadow, and a radius that suits a panel
+     rather than a pill once it is wider than it is tall. */
+  .rail:hover ol,
+  .rail:focus-within ol {
+    background: var(--surface-menu);
+    box-shadow: var(--shadow-2);
+    border-radius: var(--radius-lg);
   }
 
   .rail-link {
     display: flex;
     align-items: center;
     gap: var(--sp-3);
+    min-height: 32px;
+    padding: 0 var(--sp-3);
+    border-radius: var(--radius-pill);
     text-decoration: none;
-    /* The label is hidden until hover or activation, so the resting rail is
-       a quiet column of numbers rather than a second menu competing with
-       the header. */
-    padding: 2px 0;
+    transition: background var(--dur-fast) var(--ease);
+  }
+
+  .rail-link:hover,
+  .rail-link:focus-visible {
+    background: var(--surface-2);
   }
 
   .rail-num {
     font-family: var(--font-display);
     font-size: var(--text-label);
     font-weight: 700;
-    letter-spacing: var(--track-label);
+    letter-spacing: var(--track-caps);
+    font-variant-numeric: tabular-nums;
     color: var(--ink-faint);
     transition: color var(--dur-fast) var(--ease);
   }
 
   .rail-label {
     font-family: var(--font-display);
-    font-size: var(--text-label);
+    font-size: var(--text-meta);
     font-weight: 700;
-    letter-spacing: var(--track-label);
-    text-transform: uppercase;
+    letter-spacing: var(--track-caps);
     white-space: nowrap;
-    color: var(--ink-faint);
+    /* Full ink, not muted: once the panel is open, the names are the
+       thing being read and should be the brightest text in it. */
+    color: var(--ink);
 
-    /* Slides out from behind the number. Width animates rather than
-       display, so it can transition; visibility keeps it out of the way
-       for a pointer when it is closed. */
+    /* Collapsed until the rail opens. Width animates rather than display,
+       so it can transition. */
     max-width: 0;
     opacity: 0;
     overflow: hidden;
     transition:
       max-width var(--dur) var(--ease),
-      opacity var(--dur-fast) var(--ease),
-      color var(--dur-fast) var(--ease);
+      opacity var(--dur-fast) var(--ease);
   }
 
-  .rail-link:hover .rail-label,
-  .rail-link:focus-visible .rail-label,
-  .rail-link.is-active .rail-label {
+  .rail:hover .rail-label,
+  .rail:focus-within .rail-label {
     max-width: 14ch;
     opacity: 1;
   }
 
-  .rail-link:hover .rail-num,
-  .rail-link:hover .rail-label,
-  .rail-link:focus-visible .rail-num {
-    color: var(--ink);
+  .rail:hover .rail-num,
+  .rail:focus-within .rail-num {
+    color: var(--ink-muted);
   }
 
-  /* The active section. Yellow, and the only place on the rail it appears,
-     which is what makes it readable at a glance. */
+  /*
+   * The section you are in. Yellow number with a soft yellow pill behind
+   * it, the only yellow on the rail, which is what makes position legible
+   * at a glance even while the rail is collapsed.
+   */
+  .rail-link.is-active {
+    background: rgba(254, 198, 1, 0.14);
+  }
+
   .rail-link.is-active .rail-num,
+  .rail:hover .rail-link.is-active .rail-num,
+  .rail:focus-within .rail-link.is-active .rail-num,
   .rail-link.is-active .rail-label {
     color: var(--highlight);
   }
 
-  /* A tick that grows to the left of the active number, so position is
-     legible without reading any of the digits. */
-  .rail-link::before {
-    content: '';
-    width: 0;
-    height: 2px;
-    background: var(--highlight);
-    transition: width var(--dur) var(--ease);
-  }
-
-  .rail-link.is-active::before {
-    width: 18px;
-  }
-
   @media (prefers-reduced-motion: reduce) {
+    .rail ol,
     .rail-link,
-    .rail-link::before,
     .rail-num,
     .rail-label {
       transition: none;

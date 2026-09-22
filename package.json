@@ -9,7 +9,8 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "astro check"
+    "check": "astro check",
+    "zip": "astro build && cd dist && rm -f ../bubblotics-website.zip && zip -qr ../bubblotics-website.zip . && cd .. && echo \"\\nReady to deploy: bubblotics-website.zip (drag it onto Netlify)\""
   },
   "dependencies": {
     "@fontsource-variable/source-sans-3": "^5.1.1",

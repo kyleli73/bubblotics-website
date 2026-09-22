@@ -30,25 +30,22 @@ import Bubbles from '../components/Bubbles.astro';
 import StatStrip from '../components/StatStrip.astro';
 import ScrollRail from '../components/ScrollRail.astro';
 import Placeholder from '../components/Placeholder.astro';
+import Gallery from '../components/Gallery.astro';
 import Icon from '../components/Icon.astro';
 import { team, subteams, outreach, sponsorTiers } from '../data/site';
 import { homeSoftware, picklistColumns } from '../data/software';
-import { url } from '../lib/paths';
+import { url, formatDate } from '../lib/paths';
+import { isLivePost, SHOW_UNFINISHED } from '../lib/publish';
 
 const robots = (await getCollection('robots', ({ data }) => !data.draft)).sort(
   (a, b) => b.data.order - a.data.order
 );
 const currentRobot = robots[0];
 
-const posts = (await getCollection('updates', ({ data }) => !data.draft))
+const posts = (await getCollection('updates', isLivePost))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
   .slice(0, 2);
 
-const dateFmt = new Intl.DateTimeFormat('en-CA', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-});
 
 /* Rail stops, in document order. Each id must exist as a section below. */
 const railSections = [
@@ -212,8 +209,8 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
         <div class="upnext-body">
           <h3>Not yet built</h3>
           <p>
-            The BIOBUZZ robot starts once the game is released. This row
-            fills in when it exists.
+            BIOBUZZ was revealed at kickoff on September 12, 2026. Our first
+            competition robot will be built for it.
           </p>
         </div>
         <span class="upnext-tag">Pending</span>
@@ -302,31 +299,14 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
       <p class="eyebrow">04 / In the pits</p>
       <h2 class="band-title" data-reveal>Season <span class="accent-word">in photos</span></h2>
 
-      <p class="band-lead">
-        Six slots, waiting on photos. Drop files into src/assets/gallery/ and
-        they appear here automatically, no code change needed.
-      </p>
-
-      <div class="gal-grid" data-reveal data-stagger>
-        {
-          Array.from({ length: 6 }, (_, i) => (
-            <Placeholder
-              path={`src/assets/gallery/0${i + 1}-name.jpg`}
-              ratio="4 / 3"
-            >
-              {
-                [
-                  'Build session, hands on the robot.',
-                  'The team at a competition.',
-                  'A close crop of a mechanism.',
-                  'Drive practice.',
-                  'Mentoring an FLL team.',
-                  'Something that went wrong, honestly captioned.',
-                ][i]
-              }
-            </Placeholder>
-          ))
-        }
+      <!--
+        The real Gallery component: it reads src/assets/gallery/ at build
+        time, so photos appear here the moment they are added. Until then
+        it shows one designed panel pointing at Instagram rather than a
+        grid of empty frames.
+      -->
+      <div class="gal-wrap">
+        <Gallery limit={6} columns={3} />
       </div>
 
       <a href={url('/gallery/')} class="link-arrow band-link">
@@ -359,7 +339,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
                 <div class="post-body">
                   <p class="post-meta">
                     <time datetime={post.data.date.toISOString()}>
-                      {dateFmt.format(post.data.date)}
+                      {formatDate(post.data.date)}
                     </time>
                     {post.data.tags[0] && (
                       <span class="post-tag">{post.data.tags[0]}</span>
@@ -377,7 +357,9 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
           </ul>
         ) : (
           <p class="band-lead">
-            No posts yet. See the README for how to add one.
+            Posts start as the season gets going. Follow{' '}
+            <a href="https://instagram.com/bubblotics">@bubblotics</a> in the
+            meantime.
           </p>
         )
       }
@@ -423,6 +405,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
   -->
   <section class="sponsor-band" id="sponsors">
     <div class="shell">
+      <div class="sponsor-panel">
       <p class="sponsor-eyebrow">Sponsors</p>
       <h2 class="sponsor-title" data-reveal>Help us build the first one</h2>
 
@@ -466,10 +449,13 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
         }
       </ul>
 
-      <p class="sponsor-note">
-        Logos go in public/images/sponsors/ and are listed in
-        src/data/site.ts.
-      </p>
+      {SHOW_UNFINISHED && (
+        <p class="sponsor-note">
+          Logos go in public/images/sponsors/ and are listed in
+          src/data/site.ts.
+        </p>
+      )}
+      </div>
     </div>
   </section>
 </BaseLayout>
@@ -488,8 +474,14 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     padding-top: calc(var(--header-h) + var(--sp-8));
     padding-bottom: var(--sp-9);
     overflow: hidden;
-    background: var(--prussian);
-    border-bottom: var(--edge);
+    /* Brand navy fading into the page colour at the bottom, so the hero
+       dissolves into the stats below instead of ending at a hard edge. */
+    background: linear-gradient(
+      180deg,
+      var(--prussian) 0%,
+      var(--prussian) 55%,
+      var(--prussian-950) 100%
+    );
   }
 
   .hero-inner {
@@ -548,8 +540,6 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
 
   .hero-tagline {
     margin-top: var(--sp-6);
-    padding-left: var(--sp-4);
-    border-left: 3px solid var(--highlight);
     font-family: var(--font-display);
     font-size: var(--step-2);
     font-weight: 700;
@@ -598,13 +588,12 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
   }
 
   /* ═══ BANDS ══════════════════════════════════════════════════════════
-     Every major section is a band with a 2px rule under it. The rule is a
-     bottom border rather than a top one so the last band before the yellow
-     sponsors block does not double up on its edge. */
+     Sections are separated by space alone. Each band used to end in a 2px
+     rule; generous vertical rhythm does the same job without drawing
+     anything, and the content inside sits on soft raised surfaces. */
 
   .band {
     padding-block: var(--sp-9);
-    border-bottom: var(--edge);
   }
 
   @media (min-width: 900px) {
@@ -639,12 +628,10 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
 
   .subteams {
     display: grid;
-    gap: 0;
+    gap: var(--sp-4);
     list-style: none;
     margin: var(--sp-8) 0 0;
     padding: 0;
-    border-top: var(--edge);
-    border-left: var(--edge);
   }
 
   @media (min-width: 700px) {
@@ -661,8 +648,13 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
 
   .subteam {
     padding: var(--sp-6);
-    border-right: var(--edge);
-    border-bottom: var(--edge);
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
+    transition: background var(--dur-fast) var(--ease);
+  }
+
+  .subteam:hover {
+    background: var(--surface-2);
   }
 
   .subteam-num {
@@ -694,21 +686,39 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     margin-top: var(--sp-8);
   }
 
-  /* ═══ FEATURE ROBOT ══════════════════════════════════════════════════ */
+  /* ═══ FEATURE ROBOT ══════════════════════════════════════════════════
+     A raised panel holding the photo and the copy. The photo's corners are
+     the panel's radius minus its padding, so the two curves stay parallel.
+     Mismatched nested corners (a 24px card inside a 32px panel with 12px
+     of padding) are the detail that makes rounded UI look assembled. */
 
   .feature {
+    --feature-pad: var(--sp-3);
     display: grid;
-    gap: var(--sp-6);
+    gap: var(--sp-5);
     margin-top: var(--sp-8);
-    padding-top: var(--sp-7);
-    border-top: var(--edge);
+    padding: var(--feature-pad);
+    border-radius: var(--radius-xl);
+    background: var(--surface-1);
+  }
+
+  .feature-media :global(.ph-box) {
+    border-radius: calc(var(--radius-xl) - var(--feature-pad));
+  }
+
+  .feature-body {
+    padding: 0 var(--sp-4) var(--sp-5);
   }
 
   @media (min-width: 860px) {
     .feature {
-      grid-template-columns: 1fr 1fr;
-      gap: var(--sp-8);
-      align-items: start;
+      grid-template-columns: 1.1fr 1fr;
+      gap: var(--sp-7);
+      align-items: center;
+    }
+
+    .feature-body {
+      padding: var(--sp-5) var(--sp-6) var(--sp-5) 0;
     }
   }
 
@@ -740,16 +750,19 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     color: var(--ink-muted);
   }
 
-  /* ═══ SEASON 02, EMPTY ═══════════════════════════════════════════════ */
+  /* ═══ SEASON 02, NOT YET BUILT ══════════════════════════════════════ */
 
   .upnext {
     display: flex;
     align-items: center;
     gap: var(--sp-5);
     flex-wrap: wrap;
-    margin-top: var(--sp-7);
-    padding: var(--sp-6);
-    border: 2px dashed var(--line-strong);
+    margin-top: var(--sp-4);
+    padding: var(--sp-5) var(--sp-6);
+    border-radius: var(--radius-lg);
+    /* Quieter than the feature panel above it: this row is a promise, not
+       a product, and should read as the lesser of the two. */
+    background: rgba(89, 149, 237, 0.04);
   }
 
   .upnext-num {
@@ -786,40 +799,43 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     font-weight: 700;
     letter-spacing: var(--track-label);
     text-transform: uppercase;
-    padding: var(--sp-2) var(--sp-3);
-    border: 2px solid var(--line-strong);
-    color: var(--ink-faint);
+    padding: 5px var(--sp-3);
+    border-radius: var(--radius-pill);
+    background: rgba(252, 250, 249, 0.07);
+    color: var(--ink-muted);
   }
 
-  /* ═══ SOFTWARE ═══════════════════════════════════════════════════════ */
+  /* ═══ SOFTWARE ═══════════════════════════════════════════════════════
+     Three cards side by side on desktop. The status pill is pushed to the
+     bottom of each card so the three pills line up across the row however
+     long each description runs. */
 
   .soft-list {
+    display: grid;
+    gap: var(--sp-4);
     list-style: none;
     margin: var(--sp-8) 0 0;
     padding: 0;
-    border-top: var(--edge);
+  }
+
+  @media (min-width: 900px) {
+    .soft-list {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 
   .soft {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: var(--sp-4) var(--sp-5);
-    align-items: start;
-    padding: var(--sp-6) 0;
-    border-bottom: var(--edge);
-  }
-
-  @media (min-width: 800px) {
-    .soft {
-      grid-template-columns: auto 1fr auto;
-      gap: var(--sp-6);
-      align-items: center;
-    }
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+    padding: var(--sp-6);
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
   }
 
   .soft-num {
     font-family: var(--font-display);
-    font-size: var(--text-meta);
+    font-size: var(--text-label);
     font-weight: 700;
     letter-spacing: var(--track-label);
     color: var(--highlight);
@@ -831,11 +847,11 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: var(--track-caps);
+    line-height: 1.15;
   }
 
   .soft-body p {
     margin-top: var(--sp-3);
-    max-width: 62ch;
     font-size: var(--step--1);
     line-height: 1.65;
     color: var(--ink-muted);
@@ -844,36 +860,32 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
   /* Status is colour-coded, but the word is always there too: colour alone
      is not a label for anyone who cannot distinguish these hues. */
   .soft-status {
-    grid-column: 2;
-    justify-self: start;
+    align-self: flex-start;
+    margin-top: auto;
     font-family: var(--font-display);
     font-size: var(--text-label);
     font-weight: 700;
     letter-spacing: var(--track-label);
     text-transform: uppercase;
-    padding: var(--sp-2) var(--sp-3);
-    border: 2px solid var(--line-strong);
-    color: var(--ink-faint);
+    padding: 5px var(--sp-3);
+    border-radius: var(--radius-pill);
+    background: rgba(252, 250, 249, 0.07);
+    color: var(--ink-muted);
     white-space: nowrap;
   }
 
-  @media (min-width: 800px) {
-    .soft-status {
-      grid-column: 3;
-    }
-  }
-
   .soft-status.is-in-progress {
-    border-color: var(--highlight);
+    background: rgba(254, 198, 1, 0.14);
     color: var(--highlight);
   }
 
   .soft-status.is-live {
-    border-color: #8fe6b0;
+    background: rgba(120, 220, 150, 0.14);
     color: #8fe6b0;
   }
 
-  /* ═══ DATA TABLE ═════════════════════════════════════════════════════ */
+  /* ═══ DATA TABLE ═════════════════════════════════════════════════════
+     Rows are told apart by alternating tint rather than ruled lines. */
 
   .table-block {
     margin-top: var(--sp-8);
@@ -892,7 +904,8 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
      is what produces the sideways-scrolling body on a phone. */
   .table-scroll {
     overflow-x: auto;
-    border: var(--edge);
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
   }
 
   .data-table {
@@ -906,7 +919,6 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
   .data-table td {
     text-align: left;
     padding: var(--sp-4) var(--sp-5);
-    border-bottom: 1px solid var(--line);
   }
 
   .data-table thead th {
@@ -915,9 +927,14 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     font-weight: 700;
     letter-spacing: var(--track-label);
     text-transform: uppercase;
-    color: var(--ink-faint);
-    background: rgba(89, 149, 237, 0.06);
-    border-bottom: var(--edge);
+    /* --ink-muted, not --ink-faint: faint grey on this tinted row measured
+       4.26:1 at 12px, under the 4.5:1 minimum for small text. */
+    color: var(--ink-muted);
+    background: rgba(89, 149, 237, 0.08);
+  }
+
+  .data-table tbody tr:nth-child(even) {
+    background: rgba(252, 250, 249, 0.025);
   }
 
   .data-table tbody th {
@@ -928,11 +945,6 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
 
   .data-table tbody td {
     color: var(--ink-muted);
-  }
-
-  .data-table tbody tr:last-child th,
-  .data-table tbody tr:last-child td {
-    border-bottom: 0;
   }
 
   /* Footnotes and captions are Source Sans 3 Italic, per the guide. */
@@ -947,29 +959,25 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
 
   /* ═══ GALLERY ════════════════════════════════════════════════════════ */
 
-  .gal-grid {
-    display: grid;
-    gap: var(--sp-5);
-    margin-top: var(--sp-8);
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  .gal-wrap {
+    margin-top: var(--sp-7);
   }
 
   /*
-   * Grayscale, lifting to full colour on hover. Applies to real photos once
-   * they exist; the placeholders are already monochrome, so this is here
-   * ready rather than doing anything visible today.
+   * Grayscale, lifting to full colour on hover, once real photos exist.
+   * The Gallery component renders them; this only sets the treatment.
    */
-  .gal-grid :global(img) {
+  .gal-wrap :global(img) {
     filter: grayscale(1) contrast(1.05);
     transition: filter var(--dur) var(--ease);
   }
 
-  .gal-grid :global(img:hover) {
+  .gal-wrap :global(.tile:hover img) {
     filter: grayscale(0);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .gal-grid :global(img) {
+    .gal-wrap :global(img) {
       transition: none;
     }
   }
@@ -977,24 +985,46 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
   /* ═══ UPDATES ════════════════════════════════════════════════════════ */
 
   .post-list {
+    display: grid;
+    gap: var(--sp-4);
     list-style: none;
     margin: var(--sp-8) 0 0;
     padding: 0;
-    border-top: var(--edge);
   }
 
   .post {
+    --post-pad: var(--sp-3);
     display: grid;
     gap: var(--sp-5);
-    padding: var(--sp-7) 0;
-    border-bottom: var(--edge);
+    padding: var(--post-pad);
+    border-radius: var(--radius-xl);
+    background: var(--surface-1);
+    transition: background var(--dur-fast) var(--ease);
+  }
+
+  .post:hover {
+    background: var(--surface-2);
+  }
+
+  /* Concentric with the card, as with the feature panel. */
+  .post-media :global(.ph-box),
+  .post-media :global(img) {
+    border-radius: calc(var(--radius-xl) - var(--post-pad));
+  }
+
+  .post-body {
+    padding: 0 var(--sp-4) var(--sp-4);
   }
 
   @media (min-width: 800px) {
     .post {
       grid-template-columns: 300px 1fr;
-      gap: var(--sp-7);
-      align-items: start;
+      gap: var(--sp-6);
+      align-items: center;
+    }
+
+    .post-body {
+      padding: var(--sp-4) var(--sp-5) var(--sp-4) 0;
     }
   }
 
@@ -1011,9 +1041,10 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
   }
 
   .post-tag {
-    padding: 3px var(--sp-3);
-    border: 2px solid var(--line-strong);
-    color: var(--accent);
+    padding: 4px var(--sp-3);
+    border-radius: var(--radius-pill);
+    background: rgba(89, 149, 237, 0.16);
+    color: var(--accent-soft);
   }
 
   .post-title {
@@ -1062,18 +1093,30 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     margin-top: var(--sp-6);
   }
 
-  /* ═══ SPONSORS BANNER ════════════════════════════════════════════════ */
+  /* ═══ SPONSORS PANEL ═════════════════════════════════════════════════
+     The one yellow surface on the site. It used to be a full-bleed band
+     with square edges; as a rounded panel inset from the page margins it
+     reads as a single object to act on, which is what an ask should be. */
 
   .sponsor-band {
+    padding-block: var(--sp-8) var(--sp-9);
+  }
+
+  .sponsor-panel {
+    position: relative;
+    overflow: hidden;
+    padding: var(--sp-8) var(--sp-6);
+    border-radius: var(--radius-xl);
     background: var(--bus-yellow);
     color: var(--prussian);
-    padding-block: var(--sp-9);
-    border-bottom: var(--edge);
+    /* A warm glow underneath rather than a grey drop shadow, so it looks
+       lit rather than stuck on. */
+    box-shadow: 0 32px 80px -32px rgba(254, 198, 1, 0.4);
   }
 
   @media (min-width: 900px) {
-    .sponsor-band {
-      padding-block: var(--sp-10);
+    .sponsor-panel {
+      padding: var(--sp-9) var(--sp-8);
     }
   }
 
@@ -1113,24 +1156,20 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
   .btn-invert {
     background: var(--prussian);
     color: var(--bus-yellow);
-    border-color: var(--prussian);
   }
 
   .btn-invert:hover {
     background: var(--prussian-950);
-    border-color: var(--prussian-950);
     color: var(--bus-yellow);
   }
 
   .logo-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
-    gap: 0;
+    gap: var(--sp-3);
     list-style: none;
     margin: var(--sp-8) 0 0;
     padding: 0;
-    border-top: 2px solid rgba(16, 37, 66, 0.28);
-    border-left: 2px solid rgba(16, 37, 66, 0.28);
   }
 
   .logo-slot {
@@ -1139,8 +1178,8 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     min-height: 92px;
     padding: var(--sp-4);
     text-align: center;
-    border-right: 2px solid rgba(16, 37, 66, 0.28);
-    border-bottom: 2px solid rgba(16, 37, 66, 0.28);
+    border-radius: var(--radius-lg);
+    background: rgba(16, 37, 66, 0.07);
 
     font-family: var(--font-display);
     font-size: var(--text-label);
@@ -1148,27 +1187,25 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     letter-spacing: var(--track-label);
     text-transform: uppercase;
 
-    /*
-     * 0.68, not the 0.45 this started at. Navy at 0.45 over yellow measures
-     * 2.55:1, which fails AA and is genuinely hard to read; the word "Open"
-     * looked like a print artefact rather than a label. 0.68 clears 4.5:1
-     * and still reads as clearly quieter than a filled slot.
-     */
-    color: rgba(16, 37, 66, 0.68);
+    /* Checked against the tinted tile, not the bare yellow: the tint
+       darkens the ground slightly, so the text had to darken with it to
+       stay above 4.5:1. */
+    color: rgba(16, 37, 66, 0.74);
   }
 
   .logo-slot.is-filled {
+    background: rgba(16, 37, 66, 0.12);
     color: var(--prussian);
   }
 
   .logo-slot a {
     color: inherit;
     text-decoration: none;
-    border-bottom: 2px solid transparent;
   }
 
   .logo-slot a:hover {
-    border-bottom-color: var(--prussian);
+    text-decoration: underline;
+    text-underline-offset: 4px;
   }
 
   .sponsor-note {

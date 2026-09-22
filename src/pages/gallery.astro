@@ -10,6 +10,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
 import Gallery from '../components/Gallery.astro';
 import CtaBand from '../components/CtaBand.astro';
+import { SHOW_UNFINISHED } from '../lib/publish';
 ---
 
 <BaseLayout
@@ -26,10 +27,13 @@ import CtaBand from '../components/CtaBand.astro';
     <div class="shell">
       <Gallery columns={3} />
 
-      <p class="gallery-note faint">
-        Photos are stored in <code>src/assets/gallery/</code>. Drop new ones in
-        and they appear here automatically. The README explains it in full.
-      </p>
+      {SHOW_UNFINISHED && (
+        <p class="gallery-note faint">
+          Photos are stored in <code>src/assets/gallery/</code>. Drop new ones
+          in and they appear here automatically. The README explains it in
+          full.
+        </p>
+      )}
     </div>
   </section>
 
