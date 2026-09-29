@@ -54,3 +54,14 @@ export function formatDate(date: Date): string {
     timeZone: 'UTC', // dates in frontmatter have no time; UTC avoids off-by-one
   });
 }
+
+/* Formats a date with the weekday included. */
+export function formatDateWithDay(date: Date): string {
+  return date.toLocaleDateString('en-CA', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
+}

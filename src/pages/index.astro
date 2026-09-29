@@ -32,9 +32,9 @@ import ScrollRail from '../components/ScrollRail.astro';
 import Placeholder from '../components/Placeholder.astro';
 import Gallery from '../components/Gallery.astro';
 import Icon from '../components/Icon.astro';
-import { team, subteams, outreach, sponsorTiers } from '../data/site';
+import { team, subteams, outreach, sponsorTiers, nextEvent } from '../data/site';
 import { homeSoftware, picklistColumns } from '../data/software';
-import { url, formatDate } from '../lib/paths';
+import { url, formatDate, formatDateWithDay } from '../lib/paths';
 import { isLivePost, SHOW_UNFINISHED } from '../lib/publish';
 
 const robots = (await getCollection('robots', ({ data }) => !data.draft)).sort(
@@ -200,20 +200,19 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
       }
 
       <!--
-        The next season, stated as not existing. An empty slot that says
-        why it is empty is worth more than hiding the row until there is
-        something to put in it: it shows a visitor where this is going.
+        The next competition. Data-driven from nextEvent in src/data/site.ts.
+        dateConfirmed is set to false until FIRST publishes the official
+        2026-27 schedule.
       -->
       <div class="upnext" data-reveal>
         <span class="upnext-num">Season 02</span>
         <div class="upnext-body">
-          <h3>Not yet built</h3>
+          <h3>BIOBUZZ robot</h3>
           <p>
-            BIOBUZZ was revealed at kickoff on September 12, 2026. Our first
-            competition robot will be built for it.
+            First event: {nextEvent.name}, {formatDateWithDay(nextEvent.date)}{!nextEvent.dateConfirmed && ' (date to be confirmed)'}
           </p>
         </div>
-        <span class="upnext-tag">Pending</span>
+        <span class="upnext-tag">CAD done</span>
       </div>
     </div>
   </section>

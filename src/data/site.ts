@@ -54,6 +54,38 @@ export const team = {
 };
 
 /*
+ * The team's next competitive event. This is carried forward from last
+ * season's date (2025-11-15) into the expected window for the 2026-27
+ * season. Set dateConfirmed to true and fix the date once FIRST publishes
+ * the 2026-27 schedule.
+ */
+export type NextEvent = {
+  name: string;
+  date: Date;
+  dateConfirmed: boolean;
+  venue: string;
+  city: string;
+  lastYear?: {
+    date: string;
+    code: string;
+    url: string;
+  };
+};
+
+export const nextEvent: NextEvent = {
+  name: 'North York Qualifier',
+  date: new Date('2026-11-14'),
+  dateConfirmed: false,
+  venue: 'Brebeuf College School',
+  city: 'North York, Ontario',
+  lastYear: {
+    date: '2025-11-15',
+    code: 'CAONNYQ',
+    url: 'https://ftcscout.org/events/2025/CAONNYQ',
+  },
+};
+
+/*
  * Home page stat counters. These animate from zero when scrolled into view.
  *
  * `value` must be a plain number for the counter to work. Put any symbol in
