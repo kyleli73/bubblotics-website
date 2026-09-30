@@ -27,10 +27,7 @@ const totalAwards = seasons.reduce(
 const totalEvents = seasons.reduce((n, s) => n + s.competitions.length, 0);
 ---
 
-<BaseLayout
-  title="Awards"
-  description="Every competition Bubblotics has attended and every award the team has won, season by season."
->
+<BaseLayout title="Awards">
   <PageHero
     eyebrow="Results"
     title="Awards and <span class='accent-word'>results</span>"

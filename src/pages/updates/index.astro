@@ -24,10 +24,7 @@ const posts = (await getCollection('updates', isLivePost)).sort(
 const [featured, ...rest] = posts;
 ---
 
-<BaseLayout
-  title="Updates"
-  description="Build season progress, competition recaps, and news from Bubblotics."
->
+<BaseLayout title="Updates">
   <PageHero
     eyebrow="Updates"
     title="From the <span class='accent-word'>workshop</span>"

@@ -37,10 +37,7 @@ const reasons = [
 ];
 ---
 
-<BaseLayout
-  title="Contact"
-  description={`Get in touch with ${team.name}, FTC Team ${team.number}. Email ${contact.email} or find us on Instagram.`}
->
+<BaseLayout title="Contact">
   <PageHero
     eyebrow="Contact"
     title="Say <span class='accent-word'>hello</span>"
@@ -60,8 +57,7 @@ const reasons = [
               <span class="channel-label">Email</span>
               <span class="channel-value">{contact.email}</span>
               <span class="channel-note">
-                The fastest way to reach us. We usually reply within a few
-                days.
+                We will try to reply within 2 to 3 business days.
               </span>
             </span>
           </a>
@@ -80,10 +76,6 @@ const reasons = [
                 <span class="channel-body">
                   <span class="channel-label">{s.name}</span>
                   <span class="channel-value">{s.handle}</span>
-                  <span class="channel-note">
-                    Build updates and competition days, posted through the
-                    season.
-                  </span>
                 </span>
               </a>
             ))
@@ -95,10 +87,7 @@ const reasons = [
             </span>
             <span class="channel-body">
               <span class="channel-label">Based in</span>
-              <span class="channel-value">{team.location}</span>
-              <span class="channel-note">
-                We compete across Ontario, including provincials.
-              </span>
+              <span class="channel-value">Aurora, Ontario, at SolversMind Robotics.</span>
             </span>
           </div>
         </div>
@@ -165,45 +154,12 @@ const reasons = [
       </div>
 
       <div class="faq" data-reveal data-stagger>
-        {SHOW_UNFINISHED && (
         <details class="card faq-item">
           <summary>How do I join the team?</summary>
           <p>
-            <span class="ph-tag">[Placeholder]</span> Explain who is eligible,
-            when recruitment happens, and what the time commitment looks like.
-            Say plainly whether prior experience is needed, because that is the
-            question keeping most people from asking.
+            Anyone!
           </p>
         </details>
-        )}
-
-        <details class="card faq-item">
-          <summary>Can you bring the robot to our school?</summary>
-          <p>
-            Usually yes. Email us with the date, the age group, and roughly how
-            many students, and we will tell you what we can do. See the
-            outreach page for what a visit normally involves.
-          </p>
-        </details>
-
-        <details class="card faq-item">
-          <summary>How does sponsorship work?</summary>
-          <p>
-            Tiers and benefits are on the sponsors page. Email us and we will
-            send the full package, including logo placement mockups.
-          </p>
-        </details>
-
-        {SHOW_UNFINISHED && (
-        <details class="card faq-item">
-          <summary>Do you take part donations?</summary>
-          <p>
-            <span class="ph-tag">[Placeholder]</span> Say whether the team
-            accepts in-kind donations of materials, machining time, or tools,
-            and who to contact about it.
-          </p>
-        </details>
-        )}
       </div>
     </div>
   </section>

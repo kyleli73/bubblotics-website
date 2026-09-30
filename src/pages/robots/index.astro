@@ -12,7 +12,6 @@ import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHero from '../../components/PageHero.astro';
 import RobotCard from '../../components/RobotCard.astro';
-import CtaBand from '../../components/CtaBand.astro';
 import Icon from '../../components/Icon.astro';
 import { url } from '../../lib/paths';
 import { SHOW_UNFINISHED } from '../../lib/publish';
@@ -27,14 +26,11 @@ const featured = all.find((r) => r.data.featured) ?? all[0];
 const rest = all.filter((r) => r.id !== featured?.id);
 ---
 
-<BaseLayout
-  title="Robots"
-  description="Every competition robot Bubblotics has built, season by season, with design notes and results."
->
+<BaseLayout title="Robots">
   <PageHero
     eyebrow="The build"
-    title="What we have <span class='accent-word'>built so far</span>"
-    lead="We are a rookie team, so this is a short list. It starts with the offseason robot we are learning on, and grows from our first competition season onward."
+    title="Robots"
+    lead={SHOW_UNFINISHED ? '[PLACEHOLDER] Robots page intro' : ''}
   />
 
   {
@@ -139,12 +135,6 @@ const rest = all.filter((r) => r.id !== featured?.id);
       }
     </div>
   </section>
-
-  <CtaBand
-    eyebrow="Behind the build"
-    title="The parts cost real money"
-    body="Motors, aluminium stock, spare batteries, and a registration fee before the season even starts. Sponsors are why any of it gets built."
-  />
 </BaseLayout>
 
 <style>

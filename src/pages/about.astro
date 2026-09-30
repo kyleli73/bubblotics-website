@@ -8,74 +8,35 @@ import PageHero from '../components/PageHero.astro';
 import Gallery from '../components/Gallery.astro';
 import CtaBand from '../components/CtaBand.astro';
 import StatStrip from '../components/StatStrip.astro';
-import Icon from '../components/Icon.astro';
 import { team, subteams } from '../data/site';
-import { publishable } from '../lib/publish';
+import { SHOW_UNFINISHED, publishable } from '../lib/publish';
 
-/*
- * [PLACEHOLDER] The whole timeline is invented. Replace each entry with
- * something that actually happened, and delete any that do not apply. Three
- * or four real milestones beat eight vague ones.
- */
 const timeline = [
-  /*
-   * Short by design. Four invented milestones would be worse than three real
-   * ones, and this team's story is genuinely short so far.
-   * [PLACEHOLDER] Kyle: correct the dates and add detail.
-   */
   {
     year: 'Before us',
-    title: 'SolversMind starts running FIRST teams',
-    body: 'Dahai Zhang, known to everyone as Mr. π, founds SolversMind Robotics in Aurora. Over the following years he mentors nineteen FIRST LEGO League teams and an FRC team, and SolversMind becomes the only community organisation in Canada to send both an FRC and an FLL team to the World Championship in the same season.',
+    title: 'SolversMind Robotics',
+    body: '"Coach Dahai Zhang promotes first-principles thinking throughout SolversMind training."',
+    quote: true,
+    quoteSource: 'https://solversmind.ca/ourmission',
   },
   {
-    year: 'February 2026',
-    title: 'Bubblotics forms',
-    body: 'Team 35858 is founded as the SolversMind FIRST Tech Challenge team, alongside FRC 10015 Bubbles and the five FLL teams. Fifteen students, none of whom have competed in FTC before.',
+    year: 'September 2026',
+    title: 'BIOBUZZ kickoff and CAD',
+    body: null,
   },
   {
-    year: '2026',
-    title: 'An offseason robot, and our own software',
-    body: 'Rather than meet a new game and a first build season at once, we spend the DECODE offseason building a robot to learn on and writing the scouting software we will use at our first event.',
-  },
-  {
-    year: '2026-27',
-    title: 'BIOBUZZ: our first season',
-    body: 'Our first competition season. Everything on the awards page starts here.',
+    year: 'November 8, 2026',
+    title: 'North York Qualifier',
+    body: null,
   },
 ];
 
-const values = [
-  {
-    icon: 'spark' as const,
-    title: 'Build it twice',
-    // [PLACEHOLDER] Replace with the team's actual working principles.
-    body: '[PLACEHOLDER] A first prototype exists to be wrong. We would rather find a failure in the shop in November than on the field in March.',
-  },
-  {
-    icon: 'users' as const,
-    title: 'Everyone touches the robot',
-    body: '[PLACEHOLDER] No member spends a season without a wrench or a keyboard in their hands. Business students machine parts, and builders write outreach copy.',
-  },
-  {
-    icon: 'heart' as const,
-    title: 'Leave it better',
-    body: '[PLACEHOLDER] Every season we hand down documentation, tooling, and mentorship so the next group starts further ahead than we did.',
-  },
-];
-
-/* Values go public once the team confirms them: delete a value's
-   [PLACEHOLDER] marker and it appears. See src/lib/publish.ts. */
-const liveValues = values.filter((v) => publishable(v.title, v.body));
 ---
 
-<BaseLayout
-  title="Our Story"
-  description={`How ${team.name} started, how the team is organised, and what we are working toward.`}
->
+<BaseLayout title="Our Story">
   <PageHero
     eyebrow="Our story"
-    title="Built by students, <span class='accent-word'>season after season</span>"
+    title="More Than Robots®"
     lead={team.blurb}
   />
 
@@ -87,66 +48,16 @@ const liveValues = values.filter((v) => publishable(v.title, v.body));
       <div class="mission">
         <div>
           <p class="eyebrow">Mission</p>
-          <h2 data-reveal>Why we do this</h2>
+          <h2 data-reveal>We exist to promote and share our passion for engineering and STEM across our communities.</h2>
         </div>
         <div class="prose" data-reveal="left">
           <p>
-            Bubblotics is the FIRST Tech Challenge team at SolversMind
-            Robotics in Aurora, alongside FRC Team 10015 Bubbles. We are
-            fifteen students, and BIOBUZZ will be our first season.
-          </p>
-          <p>
-            We inherit how SolversMind works, and it is the part we care
-            about most. Coaches teach and supervise, but the engineering is
-            genuinely ours: <em>&ldquo;We do not use coach-completed work as a
-            shortcut to competition results.&rdquo;</em> Their order of
-            priorities is ours too, in their words: students come first,
-            learning before awards, understanding before memorisation, and
-            leadership grown through real responsibility.
-          </p>
-          <p>
-            Two habits come from Coach Dahai Zhang, who founded SolversMind.
-            First-principles thinking: break a problem into its basic
-            elements and look at the forces, constraints and evidence before
-            deciding anything. And the Feynman technique: if you cannot
-            explain it clearly in your own words, you do not understand it
-            yet. Both are why our robot pages read the way they do.
-          </p>
-          <p>
-            We also mentor the five FIRST LEGO League teams SolversMind runs.
-            Several of us came up through that programme ourselves, so it is
-            not charity work: it is the same pipeline that got us here.
+            Everything is 100% student-built.
           </p>
         </div>
       </div>
     </div>
   </section>
-
-  <!-- ═══ VALUES ═════════════════════════════════════════════════════ -->
-  {liveValues.length > 0 && (
-  <section class="section section-tight">
-    <div class="shell">
-      <div class="section-head">
-        <p class="eyebrow">How we work</p>
-        <h2 data-reveal>Three things we hold to</h2>
-      </div>
-
-      <div class="grid grid-3" data-reveal data-stagger>
-        {
-          liveValues.map((v) => (
-            <article class="card value-card">
-              <span class="value-icon">
-                <Icon name={v.icon} size={22} />
-              </span>
-              <h3>{v.title}</h3>
-              <p>{v.body}</p>
-            </article>
-          ))
-        }
-      </div>
-    </div>
-  </section>
-  )}
 
   <!-- ═══ TIMELINE ═══════════════════════════════════════════════════ -->
   <section class="section">
@@ -155,7 +66,7 @@ const liveValues = values.filter((v) => publishable(v.title, v.body));
         <p class="eyebrow">Timeline</p>
         <h2 data-reveal>How we got here</h2>
         <p>
-          Rookie year {team.rookieYear}. What follows is the short version.
+          Est. 2026
         </p>
       </div>
 
@@ -166,11 +77,33 @@ const liveValues = values.filter((v) => publishable(v.title, v.body));
               <span class="timeline-year">{item.year}</span>
               <div class="timeline-body">
                 <h3>{item.title}</h3>
-                <p>{item.body}</p>
+                {item.body && item.quote ? (
+                  <blockquote>
+                    <p>{item.body}</p>
+                    {item.quoteSource && (
+                      <p class="quote-source">
+                        <a href={item.quoteSource} target="_blank" rel="noopener noreferrer">
+                          From SolversMind
+                        </a>
+                      </p>
+                    )}
+                  </blockquote>
+                ) : item.body ? (
+                  <p>{item.body}</p>
+                ) : null}
               </div>
             </li>
           ))
         }
+        <!-- Empty future entries -->
+        <li class="timeline-item timeline-future" data-reveal="left" aria-hidden="true">
+          <span class="timeline-year"></span>
+          <div class="timeline-body"></div>
+        </li>
+        <li class="timeline-item timeline-future" data-reveal="left" aria-hidden="true">
+          <span class="timeline-year"></span>
+          <div class="timeline-body"></div>
+        </li>
       </ol>
     </div>
   </section>
@@ -181,10 +114,6 @@ const liveValues = values.filter((v) => publishable(v.title, v.body));
       <div class="section-head">
         <p class="eyebrow">Structure</p>
         <h2 data-reveal>Four subteams, <span class="accent-word">one robot</span></h2>
-        <p>
-          Work is split so nothing waits on one person, and everyone still
-          knows how the whole machine goes together.
-        </p>
       </div>
 
       <div class="grid grid-4" data-reveal data-stagger>
@@ -206,21 +135,25 @@ const liveValues = values.filter((v) => publishable(v.title, v.body));
     <div class="shell">
       <div class="section-head">
         <p class="eyebrow">The team</p>
-        <h2 data-reveal>Faces behind the robot</h2>
+        {SHOW_UNFINISHED && (
+          <h2 data-reveal>[PLACEHOLDER] Team photo heading</h2>
+        )}
       </div>
       <Gallery limit={6} columns={3} />
     </div>
   </section>
 
-  <CtaBand
-    eyebrow="Join or support"
-    title="Want in?"
-    body="Students, mentors, and sponsors are all welcome. Tell us which one you are and we will get back to you."
-    primaryLabel="Contact us"
-    primaryHref="/contact/"
-    secondaryLabel="Sponsor the team"
-    secondaryHref="/sponsors/"
-  />
+  {SHOW_UNFINISHED && (
+    <CtaBand
+      eyebrow="Join or support"
+      title="[PLACEHOLDER] Want in?"
+      body="[PLACEHOLDER] Call to action for joining or supporting the team."
+      primaryLabel="Contact us"
+      primaryHref="/contact/"
+      secondaryLabel="Sponsor the team"
+      secondaryHref="/sponsors/"
+    />
+  )}
 </BaseLayout>
 
 <style>
@@ -348,6 +281,34 @@ const liveValues = values.filter((v) => publishable(v.title, v.body));
     font-size: var(--step--1);
     line-height: 1.65;
     max-width: 60ch;
+  }
+
+  .timeline-body blockquote {
+    margin: 0;
+    padding: 0;
+    border: none;
+    font-style: italic;
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+    line-height: 1.65;
+    max-width: 60ch;
+  }
+
+  .timeline-body blockquote p {
+    margin: 0 0 var(--sp-3);
+  }
+
+  .quote-source {
+    font-size: var(--step--2);
+    color: var(--ink-faint);
+  }
+
+  .quote-source a {
+    color: var(--accent-soft);
+  }
+
+  .timeline-future {
+    opacity: 0.3;
   }
 
   /* ── Subteams ────────────────────────────────────────────────────── */

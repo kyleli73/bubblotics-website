@@ -15,7 +15,7 @@ import PageHero from '../components/PageHero.astro';
 import Icon from '../components/Icon.astro';
 import { sponsorTiers, contact, team } from '../data/site';
 import { url } from '../lib/paths';
-import { publishable } from '../lib/publish';
+import { publishable, SHOW_UNFINISHED } from '../lib/publish';
 
 const hasAnySponsor = sponsorTiers.some((t) => t.members.length > 0);
 
@@ -58,10 +58,7 @@ const why = [
 const liveWhy = why.filter((w) => publishable(w.title, w.body));
 ---
 
-<BaseLayout
-  title="Sponsors"
-  description={`Support ${team.name}, FTC Team ${team.number}. Sponsorship tiers, what your contribution pays for, and how to get in touch.`}
->
+<BaseLayout title="Sponsors">
   <PageHero
     eyebrow="Sponsors"
     title="Back the <span class='accent-word'>team</span>"
@@ -128,10 +125,12 @@ const liveWhy = why.filter((w) => publishable(w.title, w.body));
 
             <ul class="benefits">
               {tier.benefits.map((b) => (
-                <li>
-                  <Icon name="check" size={14} />
-                  {b}
-                </li>
+                (!b.includes('[PLACEHOLDER]') || SHOW_UNFINISHED) && (
+                  <li>
+                    <Icon name="check" size={14} />
+                    {b}
+                  </li>
+                )
               ))}
             </ul>
           </div>

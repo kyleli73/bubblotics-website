@@ -32,9 +32,8 @@ import ScrollRail from '../components/ScrollRail.astro';
 import Placeholder from '../components/Placeholder.astro';
 import Gallery from '../components/Gallery.astro';
 import Icon from '../components/Icon.astro';
-import { team, subteams, outreach, sponsorTiers, nextEvent } from '../data/site';
-import { homeSoftware, picklistColumns } from '../data/software';
-import { url, formatDate, formatDateWithDay } from '../lib/paths';
+import { team, subteams, outreach, sponsorTiers, nextEvent, currentRobot as siteCurrentRobot } from '../data/site';
+import { url, formatDate } from '../lib/paths';
 import { isLivePost, SHOW_UNFINISHED } from '../lib/publish';
 
 const robots = (await getCollection('robots', ({ data }) => !data.draft)).sort(
@@ -51,7 +50,6 @@ const posts = (await getCollection('updates', isLivePost))
 const railSections = [
   { id: 'team', label: 'Team' },
   { id: 'build', label: 'Build' },
-  { id: 'software', label: 'Software' },
   { id: 'gallery', label: 'Gallery' },
   { id: 'updates', label: 'Updates' },
   { id: 'outreach', label: 'Outreach' },
@@ -94,7 +92,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
 
       <p class="hero-tagline" data-hero-item>{team.tagline}</p>
 
-      <p class="hero-lead" data-hero-item>{team.blurb.split('. ')[0]}.</p>
+      <p class="hero-lead" data-hero-item>{team.heroLine}</p>
 
       <div class="cluster hero-actions" data-hero-item>
         <a href={url('/robots/')} class="btn btn-primary">
@@ -113,12 +111,46 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
 
   <StatStrip />
 
+  <!-- ═══ ABOUT FIRST ═════════════════════════════════════════════════ -->
+  <section class="band" id="first-program">
+    <div class="shell">
+      <p class="eyebrow">About FIRST</p>
+
+      <div class="first-quotes" data-reveal>
+        <blockquote class="first-quote">
+          <p>"The mission of FIRST is to provide life-changing robotics programs that give young people the skills, confidence, and resilience to build a better world."</p>
+          <p class="quote-source">
+            <a href="https://www.firstinspires.org/about" target="_blank" rel="noopener noreferrer">
+              From FIRST
+            </a>
+          </p>
+        </blockquote>
+
+        <blockquote class="first-quote">
+          <p>"FIRST® Tech Challenge students work together with their mentors to design and build dynamic robots to compete in an exciting game released every September."</p>
+          <p class="quote-source">
+            <a href="https://www.firstinspires.org/programs/ftc/" target="_blank" rel="noopener noreferrer">
+              From FIRST
+            </a>
+          </p>
+        </blockquote>
+      </div>
+
+      <p class="first-link">
+        <a href="https://www.firstinspires.org/" target="_blank" rel="noopener noreferrer" class="link-arrow">
+          firstinspires.org
+          <Icon name="arrow" size={16} />
+        </a>
+      </p>
+    </div>
+  </section>
+
   <!-- ═══ 01 · WHO WE ARE ════════════════════════════════════════════ -->
   <section class="band" id="team">
     <div class="shell">
       <p class="eyebrow">01 / Who we are</p>
       <h2 class="band-title" data-reveal>
-        A student team that builds <span class="accent-word">real machines</span>
+        <span class="accent-word">100% student-built</span>
       </h2>
 
       <p class="band-lead">{team.blurb}</p>
@@ -158,9 +190,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
       </h2>
 
       <p class="band-lead">
-        BIOBUZZ will be our first competition season. Until then we are
-        learning on an offseason robot, and everything we work out along the
-        way gets written down here.
+        We have built an offseason robot for DECODE, and now we have a BIOBUZZ robot in progress for our first event at North York.
       </p>
 
       {
@@ -185,7 +215,6 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
                 {currentRobot.data.season}
               </p>
               <h3 class="feature-title">{currentRobot.data.name}</h3>
-              <p class="feature-summary">{currentRobot.data.summary}</p>
 
               <a
                 href={url(`/robots/${currentRobot.id}/`)}
@@ -201,101 +230,25 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
 
       <!--
         The next competition. Data-driven from nextEvent in src/data/site.ts.
-        dateConfirmed is set to false until FIRST publishes the official
-        2026-27 schedule.
       -->
       <div class="upnext" data-reveal>
         <span class="upnext-num">Season 02</span>
         <div class="upnext-body">
-          <h3>BIOBUZZ robot</h3>
+          <h3>{siteCurrentRobot.name}</h3>
+          <p>{siteCurrentRobot.name} is a work in progress right now.</p>
           <p>
-            First event: {nextEvent.name}, {formatDateWithDay(nextEvent.date)}{!nextEvent.dateConfirmed && ' (date to be confirmed)'}
+            First event: {nextEvent.name}, {nextEvent.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </p>
         </div>
-        <span class="upnext-tag">CAD done</span>
+        <span class="upnext-tag">{siteCurrentRobot.status}</span>
       </div>
     </div>
   </section>
 
-  <!-- ═══ 03 · SOFTWARE ══════════════════════════════════════════════ -->
-  <section class="band" id="software">
-    <div class="shell">
-      <p class="eyebrow">03 / Software</p>
-      <h2 class="band-title" data-reveal>
-        Tools we <span class="accent-word">wrote ourselves</span>
-      </h2>
-
-      <p class="band-lead">
-        Three strands, one of them running today. These are internal team
-        tools, so there is nothing here to sign up for.
-      </p>
-
-      <ol class="soft-list" data-reveal data-stagger>
-        {
-          homeSoftware.map((item, i) => (
-            <li class="soft">
-              <span class="soft-num">{String(i + 1).padStart(2, '0')}</span>
-              <div class="soft-body">
-                <h3>{item.name}</h3>
-                <p>{item.purpose}</p>
-              </div>
-              <span class:list={['soft-status', `is-${item.status}`]}>
-                {statusLabel[item.status]}
-              </span>
-            </li>
-          ))
-        }
-      </ol>
-
-      <!--
-        What the scouting app produces, as a table of columns rather than
-        rows of data. We have not been to an event, so there is no data.
-        See the note in src/data/software.ts before adding example rows.
-      -->
-      <div class="table-block" data-reveal>
-        <h3 class="table-title">What the picklist holds</h3>
-
-        <div class="table-scroll">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th scope="col">Field</th>
-                <th scope="col">Source</th>
-                <th scope="col">What it is for</th>
-              </tr>
-            </thead>
-            <tbody>
-              {
-                picklistColumns.map((row) => (
-                  <tr>
-                    <th scope="row">{row.field}</th>
-                    <td>{row.source}</td>
-                    <td>{row.use}</td>
-                  </tr>
-                ))
-              }
-            </tbody>
-          </table>
-        </div>
-
-        <p class="table-note">
-          Structure only. There are no numbers here because we have not
-          competed yet, and inventing some would make every other figure on
-          this site worth doubting.
-        </p>
-      </div>
-
-      <a href={url('/software/')} class="link-arrow band-link">
-        All our software
-        <Icon name="arrow" size={16} />
-      </a>
-    </div>
-  </section>
-
-  <!-- ═══ 04 · GALLERY ═══════════════════════════════════════════════ -->
+  <!-- ═══ 03 · GALLERY ═══════════════════════════════════════════════ -->
   <section class="band" id="gallery">
     <div class="shell">
-      <p class="eyebrow">04 / In the pits</p>
+      <p class="eyebrow">03 / In the pits</p>
       <h2 class="band-title" data-reveal>Season <span class="accent-word">in photos</span></h2>
 
       <!--
@@ -315,10 +268,10 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     </div>
   </section>
 
-  <!-- ═══ 05 · UPDATES ═══════════════════════════════════════════════ -->
+  <!-- ═══ 04 · UPDATES ═══════════════════════════════════════════════ -->
   <section class="band" id="updates">
     <div class="shell">
-      <p class="eyebrow">05 / Latest</p>
+      <p class="eyebrow">04 / Latest</p>
       <h2 class="band-title" data-reveal>From the <span class="accent-word">workshop</span></h2>
 
       {
@@ -370,10 +323,10 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     </div>
   </section>
 
-  <!-- ═══ 06 · OUTREACH ══════════════════════════════════════════════ -->
+  <!-- ═══ 05 · OUTREACH ══════════════════════════════════════════════ -->
   <section class="band" id="outreach">
     <div class="shell">
-      <p class="eyebrow">06 / Outreach</p>
+      <p class="eyebrow">05 / Outreach</p>
       <h2 class="band-title" data-reveal>
         The teams we <span class="accent-word">mentor</span>
       </h2>
@@ -406,13 +359,12 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     <div class="shell">
       <div class="sponsor-panel">
       <p class="sponsor-eyebrow">Sponsors</p>
-      <h2 class="sponsor-title" data-reveal>Help us build the first one</h2>
 
-      <p class="sponsor-body">
-        Sponsorship pays for the aluminium, the motors, the registration fees,
-        and the bus. It also puts your name in front of every student, parent,
-        and mentor at the events we attend.
-      </p>
+      {SHOW_UNFINISHED && (
+        <p class="sponsor-body">
+          [PLACEHOLDER] What sponsorship pays for. Waiting on the sponsorship package.
+        </p>
+      )}
 
       <a href={url('/sponsors/')} class="btn btn-invert">
         Sponsor us
@@ -1230,5 +1182,55 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     font-style: italic;
     font-size: var(--step--1);
     color: rgba(16, 37, 66, 0.7);
+  }
+
+  /* ═══ ABOUT FIRST ════════════════════════════════════════════════════ */
+
+  .first-quotes {
+    display: grid;
+    gap: var(--sp-6);
+    margin: var(--sp-8) 0;
+  }
+
+  @media (min-width: 860px) {
+    .first-quotes {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .first-quote {
+    padding: var(--sp-6);
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
+    margin: 0;
+  }
+
+  .first-quote p {
+    font-size: var(--step-0);
+    line-height: 1.7;
+    color: var(--ink-muted);
+    margin: 0 0 var(--sp-4);
+  }
+
+  .first-quote p:last-child {
+    margin: 0;
+  }
+
+  .quote-source {
+    font-size: var(--step--1);
+  }
+
+  .quote-source a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .quote-source a:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .first-link {
+    margin: var(--sp-6) 0 0;
   }
 </style>

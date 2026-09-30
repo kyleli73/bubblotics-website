@@ -40,9 +40,8 @@ export const team = {
 
   tagline: 'Engineered to rise.',
 
-  // One sentence, used in page metadata and link previews.
-  metaDescription:
-    'Bubblotics is FIRST Tech Challenge Team 35858, a rookie student robotics team in Aurora, Ontario, part of SolversMind Robotics. First season: BIOBUZZ 2026-27.',
+  // Hero line used on home page below the tagline.
+  heroLine: 'An FTC team based in Aurora, Ontario.',
 
   /*
    * Home page "who we are" block. Written for a team whose first season has
@@ -50,7 +49,21 @@ export const team = {
    * results that do not exist yet.
    */
   blurb:
-    'We are a rookie FIRST Tech Challenge team of fifteen students in Aurora, Ontario, part of SolversMind Robotics. BIOBUZZ will be our first competition season. We are spending the run-up building the things a team needs before its first match: an offseason robot to learn on, our own scouting software, and four subteams that each know what they are responsible for. Between now and then we mentor five FIRST LEGO League teams, which is where several of us started.',
+    'We are a rookie FIRST Tech Challenge team of fifteen students in Aurora, Ontario. BIOBUZZ is our first competition season. We mentor five FIRST LEGO League teams: Solvers of X & Y, Chrono Solvers, Future Solvers, Unknown Solvers and Solvers of Infinity.',
+};
+
+/*
+ * The current season's robot. Used on the home page to show progress toward
+ * the first event.
+ */
+export type CurrentRobot = {
+  name: string;
+  status: string;
+};
+
+export const currentRobot: CurrentRobot = {
+  name: 'Bubblebee',
+  status: 'CAD done',
 };
 
 /*
@@ -74,8 +87,8 @@ export type NextEvent = {
 
 export const nextEvent: NextEvent = {
   name: 'North York Qualifier',
-  date: new Date('2026-11-14'),
-  dateConfirmed: false,
+  date: new Date('2026-11-08'),
+  dateConfirmed: true,
   venue: 'Brebeuf College School',
   city: 'North York, Ontario',
   lastYear: {
@@ -182,24 +195,23 @@ export const seasons: SeasonEntry[] = [
 export const subteams = [
   {
     name: 'Mechanical',
-    // [PLACEHOLDER] Confirm each description.
     description:
-      'Designs the robot in Onshape, then machines, prints, and assembles it. Owns drivetrain, intake, scoring mechanisms, and every iteration in between.',
+      'Mechanical does the CAD in Onshape, manufactures parts with CNC machining and 3D printing, and does the electronics and wiring on the robot.',
   },
   {
     name: 'Programming',
     description:
-      'Writes the autonomous routines and driver controls, tunes odometry and vision, and maintains the tooling the team relies on during matches.',
+      'Programming programs auto and teleop, and makes any software or websites the team needs, like this one.',
   },
   {
     name: 'Business and Outreach',
     description:
-      'Runs sponsorship, the engineering portfolio, and the community events that put robotics in front of students who have not seen it before.',
+      'They get sponsors, make the engineering portfolio, and plan outreach events.',
   },
   {
     name: 'Strategy and Scouting',
     description:
-      'Tracks every match at every event, turns it into data the drive team can use, and builds the alliance selection picklist.',
+      'At events, our scouting subteam is basically everyone except the drive team, and they use our scouting app.',
   },
 ];
 
@@ -219,25 +231,26 @@ export const subteams = [
 export const outreach = [
   {
     title: 'Mentoring five FIRST LEGO League teams',
-    date: 'Ongoing, 2025-26 UNEARTHED season',
+    date: 'Ongoing, 2024-25 SUBMERGED and 2025-26 UNEARTHED seasons',
     audience: 'Five FLL teams across Aurora, Newmarket, Richmond Hill and Markham',
     description:
-      'We mentor the five FIRST LEGO League teams run by SolversMind Robotics, working with younger students on robot design, programming, and the explanations judges ask them for. Several of us competed in FLL ourselves, so this is the programme that got us here rather than a side project. The results below are theirs, not ours.',
+      'All of our team members have come from world-class FLL teams, like Solvers of X & Y.',
     image: null as string | null,
   },
 ];
 
 /*
- * The FLL teams we mentor, and what they achieved in the 2025-26 UNEARTHED
- * season. Source: solversmind.ca.
+ * The FLL teams we mentor, and what they achieved across seasons.
+ * Source: https://solversmind.ca/fllteams/2025-2026-season and
+ * https://solversmind.ca/fllteams/2024-2025-season
  *
- * [PLACEHOLDER] Only 52777 publishes a team number on the SolversMind site.
- * Add the other four numbers when you have them.
+ * Awards are grouped by season, newest first (2025-26 UNEARTHED, then
+ * 2024-25 SUBMERGED).
  */
 export type FllTeam = {
   name: string;
   number?: string;
-  awards: string[];
+  awards: { season: string; award: string }[];
 };
 
 export const fllTeams: FllTeam[] = [
@@ -245,33 +258,46 @@ export const fllTeams: FllTeam[] = [
     name: 'Solvers of X & Y',
     number: '52777',
     awards: [
-      "Champion's Award, 1st place (Regional)",
-      "Champion's Award, 1st place (Provincial)",
-      'Robot Design Finalist Award (World Championship)',
+      { season: '2025-26 UNEARTHED', award: "Champion's Award, 1st place (Regional)" },
+      { season: '2025-26 UNEARTHED', award: "Champion's Award, 1st place (Provincial)" },
+      { season: '2025-26 UNEARTHED', award: 'Robot Design Finalist Award (World Championship)' },
+      { season: '2024-25 SUBMERGED', award: 'Innovation Project Finalist Award (FIRST Championship)' },
+      { season: '2024-25 SUBMERGED', award: "Champion's Award, 1st place (Provincial)" },
+      { season: '2024-25 SUBMERGED', award: 'Robot Performance Award, 2nd place (Provincial)' },
+      { season: '2024-25 SUBMERGED', award: 'Innovation Project Award (Regional)' },
     ],
   },
   {
     name: 'Chrono Solvers',
     awards: [
-      'Robot Performance Award, 1st place (Regional)',
-      "Champion's Award, 2nd place (Regional)",
-      'Breakthrough Award, 2nd place (Canada Cup)',
+      { season: '2025-26 UNEARTHED', award: 'Robot Performance Award, 1st place (Regional)' },
+      { season: '2025-26 UNEARTHED', award: "Champion's Award, 2nd place (Regional)" },
+      { season: '2025-26 UNEARTHED', award: 'Breakthrough Award, 2nd place (Canada Cup)' },
     ],
   },
   {
     name: 'Future Solvers',
     awards: [
-      'Core Values Award, 1st place (Regional)',
-      'Alliance Challenge Award (Provincial)',
+      { season: '2025-26 UNEARTHED', award: 'Core Values Award, 1st place (Regional)' },
+      { season: '2025-26 UNEARTHED', award: 'Alliance Challenge Award (Provincial)' },
     ],
   },
   {
     name: 'Unknown Solvers',
-    awards: ['Robot Performance Award, 2nd place (Regional)'],
+    number: '52736',
+    awards: [
+      { season: '2025-26 UNEARTHED', award: 'Robot Performance Award, 2nd place (Regional)' },
+      { season: '2024-25 SUBMERGED', award: 'Robot Design Award, 1st place (Provincial)' },
+      { season: '2024-25 SUBMERGED', award: "Champion's Award, 1st place (Regional)" },
+      { season: '2024-25 SUBMERGED', award: 'Robot Performance Award, 1st place (Regional)' },
+      { season: '2024-25 SUBMERGED', award: 'Coach Award (Regional)' },
+    ],
   },
   {
     name: 'Solvers of Infinity',
-    awards: ['Robot Design Award, 2nd place (Regional)'],
+    awards: [
+      { season: '2025-26 UNEARTHED', award: 'Robot Design Award, 2nd place (Regional)' },
+    ],
   },
 ];
 
@@ -306,9 +332,7 @@ export const sponsorTiers: SponsorTier[] = [
      */
     contribution: 'Our home organisation',
     benefits: [
-      'Provides our workspace, tools and mentorship',
-      'Runs the FLL programme most of our members came up through',
-      'Named on every page of this site',
+      'Everything: our workspace, tools and mentorship',
     ],
     members: [
       {
@@ -323,16 +347,14 @@ export const sponsorTiers: SponsorTier[] = [
     name: 'Season sponsor',
     contribution: 'Open',
     benefits: [
-      'Logo on the robot and on team apparel',
-      'Named in our engineering portfolio and at every event we attend',
-      'Logo on this website',
+      '[PLACEHOLDER] Benefits, waiting on the sponsorship package',
     ],
     members: [],
   },
   {
     name: 'Community supporter',
     contribution: 'Any amount, or an in-kind donation of parts or machining',
-    benefits: ['Named on this website', 'Thanked in our season recap'],
+    benefits: ['[PLACEHOLDER] Benefits, waiting on the sponsorship package'],
     members: [],
   },
 ];
@@ -430,11 +452,6 @@ export const navGroups: NavGroup[] = [
         label: 'Robots',
         href: '/robots/',
         blurb: 'What we have built, season by season',
-      },
-      {
-        label: 'Software',
-        href: '/software/',
-        blurb: 'The tools we wrote ourselves',
       },
     ],
   },

@@ -8,7 +8,6 @@
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
-import CtaBand from '../components/CtaBand.astro';
 import Icon from '../components/Icon.astro';
 import Gallery from '../components/Gallery.astro';
 import { outreach, fllTeams, contact, team } from '../data/site';
@@ -26,15 +25,10 @@ const impact = [
     value: String(fllTeams.reduce((n, t) => n + t.awards.length, 0)),
     label: 'Awards won by those teams',
   },
-  { value: '[XXX]', label: 'Students reached' },
-  { value: '[XXX]', label: 'Volunteer hours' },
 ];
 ---
 
-<BaseLayout
-  title="Outreach"
-  description="Bubblotics mentors five FIRST LEGO League teams at SolversMind Robotics in Aurora, Ontario."
->
+<BaseLayout title="Outreach">
   <PageHero
     eyebrow="Outreach"
     title="Robotics <span class='accent-word'>past the shop door</span>"
@@ -120,7 +114,7 @@ const impact = [
         <h2 data-reveal>The teams we <span class="accent-word">mentor</span></h2>
         <p>
           Five FIRST LEGO League teams at {team.parentOrg}, and what they
-          achieved in the 2025-26 UNEARTHED season. These are their results,
+          achieved in the 2024-25 SUBMERGED and 2025-26 UNEARTHED seasons. These are their results,
           not ours.
         </p>
       </div>
@@ -137,7 +131,10 @@ const impact = [
                 {t.awards.map((a) => (
                   <li>
                     <Icon name="trophy" size={13} />
-                    {a}
+                    <div>
+                      <div>{a.award}</div>
+                      <span class="award-season">{a.season}</span>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -181,12 +178,6 @@ const impact = [
       <Gallery limit={6} columns={3} />
     </div>
   </section>
-
-  <CtaBand
-    eyebrow="Support outreach"
-    title="Outreach costs money too"
-    body="Demo kits, travel, and the spare parts that get broken by curious eight-year-olds. Sponsorship covers all of it."
-  />
 </BaseLayout>
 
 <style>
@@ -347,6 +338,13 @@ const impact = [
     color: var(--highlight);
     flex-shrink: 0;
     margin-top: 3px;
+  }
+
+  .award-season {
+    display: block;
+    font-size: var(--step--2);
+    color: var(--ink-faint);
+    margin-top: 2px;
   }
 
   /* ── Book us ─────────────────────────────────────────────────────── */
