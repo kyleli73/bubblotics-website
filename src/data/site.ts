@@ -67,10 +67,12 @@ export const currentRobot: CurrentRobot = {
 };
 
 /*
- * The team's next competitive event. This is carried forward from last
- * season's date (2025-11-15) into the expected window for the 2026-27
- * season. Set dateConfirmed to true and fix the date once FIRST publishes
- * the 2026-27 schedule.
+ * The first competition of the season. The date came from the team (it had
+ * not been published by FIRST when this was written, and last season's
+ * North York Qualifier was 2025-11-15). Always format it with formatDate()
+ * from src/lib/paths.ts, which works in UTC: formatting a date-only value in
+ * local time shows the day before in Ontario, which is how "November 8"
+ * rendered as "November 7" once already.
  */
 export type NextEvent = {
   name: string;

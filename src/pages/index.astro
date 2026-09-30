@@ -237,7 +237,7 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
           <h3>{siteCurrentRobot.name}</h3>
           <p>{siteCurrentRobot.name} is a work in progress right now.</p>
           <p>
-            First event: {nextEvent.name}, {nextEvent.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            First event: {nextEvent.name}, {formatDate(nextEvent.date)}
           </p>
         </div>
         <span class="upnext-tag">{siteCurrentRobot.status}</span>
