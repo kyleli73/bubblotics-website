@@ -90,12 +90,34 @@ export function supabase(): SupabaseClient {
   return client;
 }
 
+let reader: SupabaseClient | undefined;
+
+/*
+ * A second client for reading issues, which never signs in. Anyone can read
+ * issues, so a session adds nothing here, and it can break things: on the
+ * editor's own browser the shared client sends the saved session, and once
+ * that session goes stale every read fails with "JWT expired" (PGRST301),
+ * which would blank the public pages for the one person who publishes them.
+ * Its own storageKey stops supabase-js warning about two clients sharing one.
+ */
+function readerClient(): SupabaseClient {
+  reader ??= createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      storageKey: 'bubblotics-newsletter-reader',
+    },
+  });
+  return reader;
+}
+
 /*
  * Newest issue first. Two issues can share a date, so created_at breaks the
  * tie. The public page and the team page both use this order.
  */
 export async function listNewsletters(): Promise<NewsletterSummary[]> {
-  const { data, error } = await supabase()
+  const { data, error } = await readerClient()
     .from('newsletters')
     .select('id, title, issue_date, slug, summary, cover_url, created_at')
     .order('issue_date', { ascending: false })
@@ -109,7 +131,7 @@ export async function listNewsletters(): Promise<NewsletterSummary[]> {
  * slug is unique, so there is at most one row to return.
  */
 export async function getNewsletter(slug: string): Promise<Newsletter | null> {
-  const { data, error } = await supabase()
+  const { data, error } = await readerClient()
     .from('newsletters')
     .select('id, title, issue_date, slug, body_html, summary, cover_url, created_at, updated_at')
     .eq('slug', slug)

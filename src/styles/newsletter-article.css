@@ -15,7 +15,10 @@
   font-size: 1.125rem;
   line-height: 1.65;
   color: var(--ink);
-  overflow-wrap: anywhere;
+  /* break-word, not anywhere: both wrap a long pasted link instead of
+     widening the page, but anywhere also lets table columns shrink below
+     the longest word, which split dates like "Novembe r" on phones. */
+  overflow-wrap: break-word;
 }
 
 /* The global reset zeroes every margin, so each block sets its own rhythm. */
