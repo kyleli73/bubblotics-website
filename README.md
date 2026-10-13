@@ -20,13 +20,17 @@ site. You do not need to understand the code.
 8. [Adding the logo](#adding-the-logo)
 9. [Adding photos](#adding-photos)
 10. [Updating awards, sponsors, and contact info](#updating-awards-sponsors-and-contact-info)
-11. [Publishing changes](#publishing-changes)
-12. [Where the site's settings live](#where-the-sites-settings-live)
-13. [Moving to Netlify (one time)](#moving-to-netlify-one-time)
-14. [Finding every placeholder](#finding-every-placeholder)
-15. [Design and brand notes](#design-and-brand-notes)
-16. [Security headers](#security-headers)
-17. [When something breaks](#when-something-breaks)
+11. [Competition schedule](#competition-schedule)
+12. [Publishing a newsletter](#publishing-a-newsletter)
+13. [Where newsletters live](#where-newsletters-live)
+14. [Analytics](#analytics)
+15. [Publishing changes](#publishing-changes)
+16. [Where the site's settings live](#where-the-sites-settings-live)
+17. [Moving to Netlify (one time)](#moving-to-netlify-one-time)
+18. [Finding every placeholder](#finding-every-placeholder)
+19. [Design and brand notes](#design-and-brand-notes)
+20. [Security headers](#security-headers)
+21. [When something breaks](#when-something-breaks)
 
 ---
 
@@ -44,7 +48,7 @@ page, edit it, then hand-edit the index too, and the nav bar would be
 duplicated across fifteen files. By season three that is a real burden on
 whoever inherits this.
 
-The full dependency list is five packages:
+The full dependency list is six packages:
 
 | Package | What it does |
 |---|---|
@@ -53,6 +57,7 @@ The full dependency list is five packages:
 | `lenis` | Smooth scrolling |
 | `three` | The hologram CAD viewer (loaded only on robot pages that have a model) |
 | `@fontsource-variable/source-sans-3` | The body typeface from the branding guide |
+| `@supabase/supabase-js` | Reads the newsletter from Supabase (the newsletter page and the team page only) |
 
 ---
 
@@ -482,6 +487,103 @@ Fill in a handle to turn one on.
 
 ---
 
+## Competition schedule
+
+The schedule on the home page and the timeline on Our Story both come from one
+list: **`events`** in **`src/data/site.ts`**.
+
+```ts
+{
+  name: 'Waterloo Qualifier',
+  date: '2026-12-06',
+  venue: 'University of Waterloo',
+  city: 'Waterloo',
+  code: 'CAONWAQ',
+},
+```
+
+- Write the date as `YYYY-MM-DD`. It is a date only, with no time.
+- `code` is the FTCScout event code. It sets the link to
+  `https://ftcscout.org/events/2026/<code>`. Check the code on FTCScout first.
+- Keep the list in date order. The home page shows the entries in the order
+  they are written.
+- Results do not go in this list. They go in `seasons`, after the event (see
+  "After a competition" above).
+- The link uses the 2026 season. When the next season starts, change the year
+  in `ftcscoutUrl` in the same file.
+
+## Publishing a newsletter
+
+The newsletter is written as a Google Doc. This is how an issue gets from that
+doc onto the site.
+
+1. In the Google Doc, choose **File → Download → PDF Document (.pdf)**.
+2. Open **bubblotics.ca/team/** and sign in with the username `bubblotics`.
+   The password is not written in this repository. Ask the team's owner for it.
+3. Under **New issue**, enter the title and the issue date, choose the PDF, and
+   click **Upload**.
+
+The issue appears on **bubblotics.ca/newsletter/** straight away. There is no
+rebuild and no deploy.
+
+To change an issue later, use **Published issues** on the same page:
+
+- **View** opens the PDF.
+- **Edit** changes the title or the date. It does not change the PDF.
+- **Replace PDF** swaps in a new file. The new PDF gets a new web address, so
+  readers see the new file and not a saved copy of the old one. The old file is
+  deleted after the new one is in place.
+- **Delete** removes the issue and its PDF. It asks you to confirm first. There
+  is no undo.
+
+PDF files only, 20 MB or smaller. A title can be up to 120 characters.
+
+The sign-in stays on the device you use, so the next visit goes straight to the
+manager. Sign out on a computer other people use.
+
+## Where newsletters live
+
+- **Table:** `newsletters`, in the Supabase project the scouting app uses
+  (project `hhxwvxzlykycnuzkjccn`). It holds one row per issue: the title, the
+  issue date, and the file name.
+- **Files:** a public storage bucket named `newsletters`. Anyone with the link
+  can open a PDF, which is the point of a public newsletter.
+- **Rules:** `supabase/newsletters.sql` creates the table and the bucket and
+  sets who may change them. Run it once in the Supabase SQL Editor. It is safe
+  to run again. Until it has been run, the newsletter page shows "Couldn't load
+  the newsletters right now."
+- **Why only one account can write:** anyone can create a scouting account in
+  the same project, so "signed in" is not enough. A stranger with a scouting
+  account could otherwise post to the public site. The rules accept only the
+  newsletter account, and only once its email address is confirmed.
+- **The account** is created by hand: Authentication, then Users, then Add user,
+  with **Auto Confirm User** ticked. Its password is never written into this
+  repository, the website, or a commit.
+- **If the newsletter email ever changes,** change it in two places: the
+  `is_newsletter_editor` function in the SQL file, and `NEWSLETTER_EMAIL` in
+  `src/lib/newsletter.ts`.
+- **The Supabase key** in `src/lib/newsletter.ts` is the publishable key. It is
+  meant for browser code, and the rules above decide what it can do. Never put
+  a secret or service-role key in this repository.
+
+## Analytics
+
+The site counts visits and clicks with GoatCounter. The dashboard is at
+**https://bubblotics.goatcounter.com**. It needs the team's GoatCounter login.
+
+- **Visits:** every page view on the public site.
+- **Clicks:** each click on a link, button, or summary is counted as an event
+  named after its text. A "Sponsor Us" button shows up as `click/sponsor-us`.
+  To give a control a fixed name, add `data-track="Name"` to it.
+- **Leaving a click out:** add `data-no-track` to the element, or to any element
+  around it.
+- **Not counted:** development builds (`npm run dev`) and the team page.
+- **Cookies and personal data:** GoatCounter sets no cookies and collects no
+  personal data, so the site has no cookie banner.
+- **The script** is in `public/vendor/goatcounter-count.v4.js`. It is served
+  from this site, not from GoatCounter's servers. Its licence header is kept at
+  the top of the file.
+
 ## Publishing changes
 
 **Today the site is hosted on GitHub Pages.** Pushing to the `main` branch
@@ -525,6 +627,10 @@ space should be. A failed build never replaces the live site.
 | Deploys, rollbacks (after the move) | [Netlify → Deploys](https://app.netlify.com/projects/bubblotics-website/deploys) |
 | Custom domain, HTTPS (after the move) | [Netlify → Domain management](https://app.netlify.com/projects/bubblotics-website/domain-management) |
 | Security headers, redirects (Netlify only) | `public/_headers` and `public/_redirects` in this repo |
+| Visit and click counts | [GoatCounter](https://bubblotics.goatcounter.com) |
+| Newsletter table and PDF files | [Supabase, project `hhxwvxzlykycnuzkjccn`](https://supabase.com/dashboard/project/hhxwvxzlykycnuzkjccn) |
+| Newsletter account | [Supabase → Authentication → Users](https://supabase.com/dashboard/project/hhxwvxzlykycnuzkjccn/auth/users) |
+| Newsletter rules (SQL) | `supabase/newsletters.sql` in this repo |
 | DNS records | [Cloudflare → DNS](https://dash.cloudflare.com/?to=/:account/bubblotics.ca/dns/records) |
 | Domain renewal, auto-renew | [Cloudflare → Registrar](https://dash.cloudflare.com/?to=/:account/domains) |
 
