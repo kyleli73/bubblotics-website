@@ -32,7 +32,7 @@ import ScrollRail from '../components/ScrollRail.astro';
 import Placeholder from '../components/Placeholder.astro';
 import Gallery from '../components/Gallery.astro';
 import Icon from '../components/Icon.astro';
-import { team, subteams, outreach, sponsorTiers, nextEvent, currentRobot as siteCurrentRobot } from '../data/site';
+import { team, subteams, outreach, sponsorTiers, events, ftcscoutUrl, currentRobot as siteCurrentRobot } from '../data/site';
 import { url, formatDate } from '../lib/paths';
 import { isLivePost, SHOW_UNFINISHED } from '../lib/publish';
 
@@ -229,16 +229,27 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
       }
 
       <!--
-        The next competition. Data-driven from nextEvent in src/data/site.ts.
+        The competition schedule. Data-driven from events in src/data/site.ts,
+        so adding an event there adds a row here with no change to this file.
       -->
       <div class="upnext" data-reveal>
         <span class="upnext-num">Season 02</span>
         <div class="upnext-body">
           <h3>{siteCurrentRobot.name}</h3>
           <p>{siteCurrentRobot.name} is a work in progress right now.</p>
-          <p>
-            First event: {nextEvent.name}, {formatDate(nextEvent.date)}
-          </p>
+          <p class="upnext-label">Competition schedule</p>
+          <ul class="upnext-schedule">
+            {
+              events.map((event) => (
+                <li>
+                  <span class="upnext-date">{formatDate(new Date(event.date))}</span>
+                  <a href={ftcscoutUrl(event)} target="_blank" rel="noopener">
+                    {event.name}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
         </div>
         <span class="upnext-tag">{siteCurrentRobot.status}</span>
       </div>
@@ -746,6 +757,47 @@ const sponsors = sponsorTiers.flatMap((t) => t.members);
     font-size: var(--step--1);
     font-style: italic;
     color: var(--ink-muted);
+  }
+
+  /* A small caps label above the schedule, not a sentence, so it drops the
+     italic that the paragraphs above it inherit. */
+  .upnext-body .upnext-label {
+    margin-top: var(--sp-4);
+    font-family: var(--font-display);
+    font-size: var(--text-label);
+    font-weight: 700;
+    font-style: normal;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .upnext-schedule {
+    margin-top: var(--sp-1);
+    list-style: none;
+    padding: 0;
+  }
+
+  .upnext-schedule li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: var(--sp-4);
+  }
+
+  .upnext-date {
+    min-width: 17ch;
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+  }
+
+  /* 44px tall, so each event is an easy tap on a phone. */
+  .upnext-schedule a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: var(--step--1);
+    font-weight: 600;
   }
 
   .upnext-tag {

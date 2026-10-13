@@ -67,38 +67,52 @@ export const currentRobot: CurrentRobot = {
 };
 
 /*
- * The first competition of the season. The date came from the team (it had
- * not been published by FIRST when this was written, and last season's
- * North York Qualifier was 2025-11-15). Always format it with formatDate()
- * from src/lib/paths.ts, which works in UTC: formatting a date-only value in
- * local time shows the day before in Ontario, which is how "November 8"
- * rendered as "November 7" once already.
+ * The competition schedule for the 2026-27 season (BIOBUZZ). The source is
+ * FTCScout's 2026 season, one page per event. Add new events here, in date
+ * order. Results go on the awards page once they exist, not in this list.
+ *
+ * Dates are 'YYYY-MM-DD' strings, date only. Format them with formatDate()
+ * from src/lib/paths.ts, which works in UTC. Formatting a date-only value in
+ * local time shows the day before in Ontario, which has happened on this site
+ * already.
  */
-export type NextEvent = {
+export type CompetitionEvent = {
   name: string;
-  date: Date;
-  dateConfirmed: boolean;
+  date: string;
   venue: string;
   city: string;
-  lastYear?: {
-    date: string;
-    code: string;
-    url: string;
-  };
+  /** The FTCScout event code. Builds the link to the event's page. */
+  code: string;
 };
 
-export const nextEvent: NextEvent = {
-  name: 'North York Qualifier',
-  date: new Date('2026-11-08'),
-  dateConfirmed: true,
-  venue: 'Brebeuf College School',
-  city: 'North York, Ontario',
-  lastYear: {
-    date: '2025-11-15',
+export const events: CompetitionEvent[] = [
+  {
+    name: 'North York Qualifier',
+    date: '2026-11-21',
+    venue: 'Brebeuf College School',
+    city: 'North York',
     code: 'CAONNYQ',
-    url: 'https://ftcscout.org/events/2025/CAONNYQ',
   },
-};
+  {
+    name: 'Waterloo Qualifier',
+    date: '2026-12-06',
+    venue: 'University of Waterloo',
+    city: 'Waterloo',
+    code: 'CAONWAQ',
+  },
+  {
+    name: 'East Toronto Qualifier',
+    date: '2027-01-30',
+    venue: 'Riverdale Collegiate Institute',
+    city: 'Toronto',
+    code: 'CAONTOQ2',
+  },
+];
+
+/** The FTCScout page for one event of the 2026 season. */
+export function ftcscoutUrl(event: CompetitionEvent): string {
+  return `https://ftcscout.org/events/2026/${event.code}`;
+}
 
 /*
  * Home page stat counters. These animate from zero when scrolled into view.

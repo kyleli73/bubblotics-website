@@ -8,10 +8,19 @@ import PageHero from '../components/PageHero.astro';
 import Gallery from '../components/Gallery.astro';
 import CtaBand from '../components/CtaBand.astro';
 import StatStrip from '../components/StatStrip.astro';
-import { team, subteams } from '../data/site';
+import { team, subteams, events } from '../data/site';
 import { SHOW_UNFINISHED, publishable } from '../lib/publish';
+import { formatDate } from '../lib/paths';
 
-const timeline = [
+type TimelineItem = {
+  year: string;
+  title: string;
+  body: string | null;
+  quote?: boolean;
+  quoteSource?: string;
+};
+
+const timeline: TimelineItem[] = [
   {
     year: 'Before us',
     title: 'SolversMind Robotics',
@@ -24,11 +33,13 @@ const timeline = [
     title: 'BIOBUZZ kickoff and CAD',
     body: null,
   },
-  {
-    year: 'November 8, 2026',
-    title: 'North York Qualifier',
+  // One entry per competition. The label is the event's date, so a new event
+  // in site.ts appears here with no change to this page.
+  ...events.map((event) => ({
+    year: formatDate(new Date(event.date)),
+    title: event.name,
     body: null,
-  },
+  })),
 ];
 
 ---
