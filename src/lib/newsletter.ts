@@ -11,6 +11,7 @@
  */
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { url } from './paths';
 
 /*
  * The project URL and the publishable key are public by design. Supabase
@@ -24,8 +25,18 @@ const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_J8GLgVOd2ZWr8SI3MduKoA_SOdMLcP6
 /** The one account allowed to edit. The website's username maps to it. */
 export const NEWSLETTER_EMAIL = 'bubblotics+newsletter@gmail.com';
 
-/** The public storage bucket that holds the PDFs. Must match the SQL. */
+/** The public storage bucket that holds the photos. Must match the SQL. */
 export const BUCKET = 'newsletters';
+
+/*
+ * Every photo's public address starts with this. The sanitiser keeps an image
+ * only when its address starts with it, so an issue cannot show a picture
+ * from somewhere else on the internet.
+ */
+export const PHOTO_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/`;
+
+/* A photo's path inside the bucket: <slug>/<version>/<n>.<ext>. */
+const PHOTO_PATH = /^[a-z0-9]+(-[a-z0-9]+)*\/[a-z0-9]{6}\/[0-9]{1,3}\.(webp|jpg|png|gif)$/;
 
 /*
  * The bucket refuses anything over this, whatever the browser claims. The
@@ -82,6 +93,37 @@ export function pdfUrl(filePath: string): string {
 
 export function isIsoDate(value: string): boolean {
   return ISO_DATE.test(value);
+}
+
+/* The public address of one photo, given its path inside the bucket. */
+export function photoUrl(path: string): string {
+  return PHOTO_PREFIX + path;
+}
+
+/*
+ * The photo paths an issue uses, read from its stored HTML. Replacing or
+ * deleting an issue removes these from the bucket. DOMParser gives back an
+ * inert document, so nothing in the HTML loads or runs while it is read.
+ */
+export function photoPathsIn(html: string): string[] {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const paths = new Set<string>();
+  for (const img of Array.from(doc.querySelectorAll('img'))) {
+    const src = img.getAttribute('src') ?? '';
+    if (!src.startsWith(PHOTO_PREFIX)) continue;
+    const path = src.slice(PHOTO_PREFIX.length);
+    // Only paths in the shape this site uploads. Anything else is left alone.
+    if (PHOTO_PATH.test(path)) paths.add(path);
+  }
+  return [...paths];
+}
+
+/*
+ * The address of an issue page. The slug is the issue's permanent address, so
+ * a link saved from an older version of this page keeps working.
+ */
+export function issueHref(slug: string): string {
+  return `${url('/newsletter/issue/')}?n=${encodeURIComponent(slug)}`;
 }
 
 export type ResolvedUsername =
