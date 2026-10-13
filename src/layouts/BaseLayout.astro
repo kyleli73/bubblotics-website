@@ -22,6 +22,11 @@ interface Props {
   image?: string;
   /** Set on the home page so its <title> isn't "Bubblotics | Bubblotics". */
   bareTitle?: boolean;
+  /*
+   * Asks search engines not to list the page. Used for pages that are linked
+   * on purpose but are not for visitors, such as the team's manager page.
+   */
+  noindex?: boolean;
 }
 
 const {
@@ -29,6 +34,7 @@ const {
   description,
   image,
   bareTitle = false,
+  noindex = false,
 } = Astro.props;
 
 const pageTitle = bareTitle ? title : `${title} | ${team.name} · Team ${team.number}`;
@@ -103,6 +109,8 @@ if (image) {
 
     <!-- The browser chrome colour on mobile, matched to the page. -->
     <meta name="theme-color" content="#102542" />
+
+    {noindex && <meta name="robots" content="noindex" />}
 
     <!-- Link previews in iMessage, Discord, Instagram DMs, and Slack. -->
     <meta property="og:type" content="website" />

@@ -101,7 +101,14 @@ const navCols = [nav.slice(0, half), nav.slice(half)];
     <hr class="rule" />
 
     <div class="footer-bottom">
-      <p>&copy; {year} {team.name} &middot; {team.formalName}</p>
+      <p>
+        &copy; {year} {team.name} &middot; {team.formalName} &middot;
+        <!--
+          For the team only. The page is noindex and not in the menu, so this
+          footer link is the one way to reach it.
+        -->
+        <a href={url('/team/')} class="team-link">Team sign-in</a>
+      </p>
       <p class="faint">
         <!--
           FIRST asks that teams identify FIRST and the program by name when
@@ -280,6 +287,16 @@ const navCols = [nav.slice(0, half), nav.slice(half)];
     font-weight: 600;
   }
 
+  .team-link {
+    color: var(--ink-faint);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .team-link:hover {
+    color: var(--highlight);
+  }
+
   @media (min-width: 900px) {
     .footer-bottom {
       flex-direction: row;
@@ -310,6 +327,12 @@ const navCols = [nav.slice(0, half), nav.slice(half)];
       align-items: center;
       min-height: 44px;
       margin-bottom: 0;
+    }
+
+    .team-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
     }
   }
 </style>

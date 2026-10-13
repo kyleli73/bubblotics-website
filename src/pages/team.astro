@@ -1,0 +1,281 @@
+---
+/*
+ * Team sign-in and newsletter manager.
+ *
+ * One shared account uses this page to publish the newsletter. It is linked
+ * from the footer only, not from the menu, and it is marked noindex so search
+ * engines leave it out.
+ *
+ * The form is hidden until the script runs. Without that, a visitor with
+ * JavaScript off would be shown a password box that submits to nothing.
+ */
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+---
+
+<BaseLayout title="Newsletter manager" noindex>
+  <PageHero eyebrow="Team" title="Newsletter manager" />
+
+  <section class="section">
+    <div class="shell shell-narrow team-page">
+      <noscript>
+        <p class="team-message">The newsletter manager needs JavaScript.</p>
+      </noscript>
+
+      <p class="team-message" id="team-checking">Checking your sign-in…</p>
+
+      <div class="team-card" id="team-signin" hidden>
+        <h2 class="team-card-title">Sign in</h2>
+        <form id="team-signin-form" class="team-form" method="post" novalidate>
+          <div class="field">
+            <label for="ts-user">Username</label>
+            <input
+              id="ts-user"
+              name="username"
+              type="text"
+              autocomplete="username"
+              autocapitalize="none"
+              spellcheck="false"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="ts-pass">Password</label>
+            <input
+              id="ts-pass"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-primary form-submit" id="ts-submit">
+            Sign in
+          </button>
+          <p class="form-status" id="ts-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+
+      <div id="team-manager" hidden>
+        <div class="team-toolbar">
+          <button type="button" class="btn btn-ghost btn-sm" id="team-signout">
+            Sign out
+          </button>
+        </div>
+
+        <section class="team-card" aria-labelledby="team-new-title">
+          <h2 class="team-card-title" id="team-new-title">New issue</h2>
+          <form id="team-new-form" class="team-form" novalidate>
+            <div class="field">
+              <label for="tn-title">Title</label>
+              <input id="tn-title" name="title" type="text" maxlength="120" required />
+            </div>
+            <div class="field">
+              <label for="tn-date">Issue date</label>
+              <input id="tn-date" name="issue_date" type="date" required />
+            </div>
+            <div class="field">
+              <label for="tn-file">PDF file</label>
+              <input
+                id="tn-file"
+                name="pdf"
+                type="file"
+                accept="application/pdf,.pdf"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-primary form-submit" id="tn-submit">
+              Upload
+            </button>
+            <p class="form-status" id="tn-status" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+
+        <section class="team-card" aria-labelledby="team-issues-title">
+          <h2 class="team-card-title" id="team-issues-title">Published issues</h2>
+          <p class="form-status" id="team-list-status" role="status" aria-live="polite"></p>
+          <ul class="team-issues" id="team-issues"></ul>
+        </section>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style is:global>
+  /*
+   * Global on purpose: the issue rows are built by the script, not written
+   * in this file, so scoped styles would not reach them. Every rule starts
+   * with .team-page, so nothing leaks to the rest of the site.
+   */
+
+  .team-page [hidden] {
+    display: none !important;
+  }
+
+  .team-page .team-message {
+    color: var(--ink-muted);
+  }
+
+  .team-page .team-card {
+    display: grid;
+    gap: var(--sp-4);
+    margin-bottom: var(--sp-5);
+    padding: var(--sp-6);
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
+  }
+
+  @media (min-width: 768px) {
+    .team-page .team-card {
+      padding: var(--sp-7);
+    }
+  }
+
+  .team-page .team-card-title {
+    font-size: var(--step-2);
+    letter-spacing: var(--track-snug);
+    text-transform: none;
+  }
+
+  .team-page .team-form {
+    display: grid;
+    gap: var(--sp-4);
+  }
+
+  .team-page .field {
+    display: grid;
+    gap: var(--sp-2);
+    min-width: 0;
+  }
+
+  .team-page .field label {
+    font-size: var(--step--1);
+    font-weight: 700;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  /*
+   * Filled fields, matching the contact form. Font size stays at 1rem: iOS
+   * Safari zooms the page when a focused input is smaller than that.
+   */
+  .team-page .field input {
+    width: 100%;
+    min-height: 48px;
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--radius);
+    border: 0;
+    background: rgba(137, 172, 220, 0.1);
+    color: var(--ink);
+    font-size: 1rem;
+  }
+
+  .team-page .field input[type='file'] {
+    padding: var(--sp-2) 0;
+    background: none;
+  }
+
+  .team-page .field input[type='file']::file-selector-button {
+    min-height: 44px;
+    margin-right: var(--sp-3);
+    padding: var(--sp-2) var(--sp-4);
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .team-page .field input:focus {
+    outline: none;
+    background: rgba(137, 172, 220, 0.14);
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+
+  .team-page .form-submit {
+    width: 100%;
+  }
+
+  .team-page .form-status {
+    min-height: 1.4em;
+    font-size: var(--step--1);
+    line-height: 1.5;
+    color: var(--ink-muted);
+  }
+
+  .team-page .form-status a {
+    color: var(--accent-soft);
+  }
+
+  .team-page .form-status.is-error {
+    color: #ff8f6b;
+  }
+
+  .team-page .team-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: var(--sp-4);
+  }
+
+  .team-page .team-issues {
+    display: grid;
+    gap: var(--sp-3);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .team-page .team-issue {
+    display: grid;
+    gap: var(--sp-3);
+    padding: var(--sp-4);
+    border-radius: var(--radius);
+    background: rgba(137, 172, 220, 0.05);
+  }
+
+  .team-page .team-issue-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3) var(--sp-4);
+  }
+
+  .team-page .team-issue-title {
+    font-weight: 700;
+  }
+
+  .team-page .team-issue-date {
+    font-size: var(--text-meta);
+    color: var(--ink-muted);
+  }
+
+  .team-page .team-issue-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
+
+  .team-page .team-issue-edit {
+    display: grid;
+    gap: var(--sp-4);
+  }
+
+  .team-page .team-issue-edit-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
+
+  .team-page .team-issue .form-status {
+    margin: 0;
+  }
+</style>
+
+<script>
+  import '../scripts/team';
+</script>
