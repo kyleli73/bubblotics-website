@@ -11,7 +11,7 @@ import '../styles/global.css';
 import { getImage } from 'astro:assets';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { team } from '../data/site';
+import { team, analytics } from '../data/site';
 import { url } from '../lib/paths';
 import { logo, logoIsVector } from '../lib/brand';
 
@@ -27,6 +27,11 @@ interface Props {
    * on purpose but are not for visitors, such as the team's manager page.
    */
   noindex?: boolean;
+  /*
+   * Leaves the page out of visit and click counts. Used by the team page, so
+   * the people signing in there are not counted as visitors.
+   */
+  noAnalytics?: boolean;
 }
 
 const {
@@ -35,6 +40,7 @@ const {
   image,
   bareTitle = false,
   noindex = false,
+  noAnalytics = false,
 } = Astro.props;
 
 const pageTitle = bareTitle ? title : `${title} | ${team.name} · Team ${team.number}`;
@@ -137,9 +143,30 @@ if (image) {
     <script is:inline>
       document.documentElement.classList.add('has-js');
     </script>
+
+    <!--
+      Page-view counting for GoatCounter. Production builds only, so local
+      development never sends visits, and never on the team page.
+
+      The script is copied into public/vendor/ rather than loaded from
+      gc.zgo.at, so the site does not depend on a third party to load.
+      Source: https://gc.zgo.at/count.v4.js, copied 2026-10-12. It is released
+      under the ISC licence, and the licence header is kept at the top of the
+      file. To update it, download the file again and run node --check on it.
+    -->
+    {
+      import.meta.env.PROD && !noAnalytics && (
+        <script
+          is:inline
+          data-goatcounter={analytics.goatcounter}
+          async
+          src={url('/vendor/goatcounter-count.v4.js')}
+        ></script>
+      )
+    }
   </head>
 
-  <body>
+  <body data-no-analytics={noAnalytics ? '' : undefined}>
     <a href="#main" class="skip-link">Skip to content</a>
 
     <Header />
@@ -157,6 +184,7 @@ if (image) {
     -->
     <script>
       import '../scripts/motion';
+      import '../scripts/analytics';
     </script>
   </body>
 </html>

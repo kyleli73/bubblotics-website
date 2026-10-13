@@ -415,6 +415,17 @@ export const contact = {
 export const activeSocials = contact.socials.filter((s) => s.handle !== null);
 
 /*
+ * Visit and click counts, from GoatCounter (https://www.goatcounter.com).
+ * GoatCounter sets no cookies and does not collect personal data, so the
+ * site needs no consent banner. The dashboard is at
+ * https://bubblotics.goatcounter.com. The script itself is served from
+ * public/vendor/, and BaseLayout.astro adds it to production pages.
+ */
+export const analytics = {
+  goatcounter: 'https://bubblotics.goatcounter.com/count',
+};
+
+/*
  * ── Navigation ────────────────────────────────────────────────────────────
  *
  * Ten flat links is too many for a menu bar. Past about seven, nobody reads
