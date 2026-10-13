@@ -6,12 +6,16 @@
  * from the footer only, not from the menu, and it is marked noindex so search
  * engines leave it out.
  *
+ * An issue is a Word file. The page converts it in the browser, shows a
+ * preview in the same layout a reader gets, and uploads on Publish.
+ *
  * The form is hidden until the script runs. Without that, a visitor with
  * JavaScript off would be shown a password box that submits to nothing.
  */
 
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
+import '../styles/newsletter-article.css';
 ---
 
 <BaseLayout title="Newsletter manager" noindex noAnalytics>
@@ -76,20 +80,32 @@ import PageHero from '../components/PageHero.astro';
               <input id="tn-date" name="issue_date" type="date" required />
             </div>
             <div class="field">
-              <label for="tn-file">PDF file</label>
+              <label for="tn-file">Word file (.docx)</label>
               <input
                 id="tn-file"
-                name="pdf"
+                name="docx"
                 type="file"
-                accept="application/pdf,.pdf"
+                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 required
               />
             </div>
             <button type="submit" class="btn btn-primary form-submit" id="tn-submit">
-              Upload
+              Preview
             </button>
             <p class="form-status" id="tn-status" role="status" aria-live="polite"></p>
           </form>
+
+          <div class="team-preview" id="tn-preview" hidden>
+            <ul class="team-warnings" id="tn-warnings" hidden></ul>
+            <h3 class="team-preview-title" id="tn-preview-title"></h3>
+            <p class="team-issue-date" id="tn-preview-date"></p>
+            <div class="nl-preview" id="tn-article"></div>
+            <div class="team-preview-actions">
+              <button type="button" class="btn btn-primary btn-sm" id="tn-publish">Publish</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="tn-cancel">Cancel</button>
+            </div>
+            <p class="form-status" id="tn-preview-status" role="status" aria-live="polite"></p>
+          </div>
         </section>
 
         <section class="team-card" aria-labelledby="team-issues-title">
@@ -273,6 +289,53 @@ import PageHero from '../components/PageHero.astro';
 
   .team-page .team-issue .form-status {
     margin: 0;
+  }
+
+  /*
+   * The preview sits inside a card, so it steps one shade lighter than the card
+   * and reads as the next layer down. The article keeps its own styles.
+   */
+  .team-page .team-preview {
+    display: grid;
+    gap: var(--sp-4);
+    padding: var(--sp-5);
+    border-radius: var(--radius);
+    background: rgba(137, 172, 220, 0.05);
+  }
+
+  @media (min-width: 768px) {
+    .team-page .team-preview {
+      padding: var(--sp-6);
+    }
+  }
+
+  .team-page .team-preview-title {
+    font-size: var(--step-2);
+    letter-spacing: var(--track-snug);
+    text-transform: none;
+  }
+
+  /* Problems the team should fix before publishing. Yellow marks what matters. */
+  .team-page .team-warnings {
+    display: grid;
+    gap: var(--sp-2);
+    margin: 0;
+    padding: var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-6);
+    border-radius: var(--radius);
+    background: var(--surface-1);
+    color: var(--highlight);
+    font-size: var(--step--1);
+    line-height: 1.5;
+  }
+
+  .team-page .team-preview-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
+
+  .team-page .team-replace {
+    margin-top: var(--sp-3);
   }
 </style>
 

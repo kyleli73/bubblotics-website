@@ -196,7 +196,9 @@ function tidyTables(root: Element): void {
     if (rows.length > 0 && isBoldHeaderRow(rows[0])) {
       const [headRow, ...bodyRows] = rows;
       for (const cell of Array.from(headRow.cells)) {
-        unwrapInside(cell, 'strong');
+        for (const strong of Array.from(cell.querySelectorAll('strong'))) {
+          strong.replaceWith(...Array.from(strong.childNodes));
+        }
         retag(cell, 'TH');
       }
       const body = table.ownerDocument.createElement('tbody');
@@ -373,14 +375,9 @@ export function isItalicCaption(paragraph: Element): boolean {
   return hasText(paragraph) && !paragraph.querySelector('img') && allTextWithin(paragraph, 'em');
 }
 
+/* The children that take up space: elements, and text with something in it. */
 function significantChildren(el: Element): ChildNode[] {
   return Array.from(el.childNodes).filter(
-    (child) => !(child.nodeType !== ELEMENT && !child.textContent?.trim())
+    (child) => child.nodeType === ELEMENT || Boolean(child.textContent?.trim())
   );
-}
-
-function unwrapInside(el: Element, tag: string): void {
-  for (const inner of Array.from(el.querySelectorAll(tag))) {
-    inner.replaceWith(...Array.from(inner.childNodes));
-  }
 }

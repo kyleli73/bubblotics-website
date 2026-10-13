@@ -100,8 +100,7 @@ const intro = '[PLACEHOLDER] Newsletter page intro';
 
   #newsletter-root .newsletter-featured {
     display: grid;
-    justify-items: start;
-    gap: var(--sp-3);
+    gap: var(--sp-5);
     padding: var(--sp-6);
     border-radius: var(--radius-lg);
     background: var(--surface-1);
@@ -111,6 +110,36 @@ const intro = '[PLACEHOLDER] Newsletter page intro';
     #newsletter-root .newsletter-featured {
       padding: var(--sp-7);
     }
+  }
+
+  /* Cover above the text on a phone, beside it on a wide screen. */
+  @media (min-width: 900px) {
+    #newsletter-root .newsletter-featured {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: center;
+      gap: var(--sp-7);
+    }
+  }
+
+  #newsletter-root .newsletter-featured-text {
+    display: grid;
+    justify-items: start;
+    gap: var(--sp-3);
+    min-width: 0;
+  }
+
+  /* A 16:9 crop, so every cover is the same shape whatever the photo was. */
+  #newsletter-root .newsletter-cover {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+  }
+
+  #newsletter-root .newsletter-summary {
+    color: var(--ink-muted);
   }
 
   #newsletter-root .newsletter-title {
@@ -141,15 +170,29 @@ const intro = '[PLACEHOLDER] Newsletter page intro';
     margin: 0;
   }
 
+  /* The whole row is a link, so it gets the hover and focus treatment. */
   #newsletter-root .newsletter-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: var(--sp-3) var(--sp-4);
+    min-height: 44px;
     padding: var(--sp-3) var(--sp-4);
     border-radius: var(--radius);
     background: var(--surface-1);
+    color: var(--ink);
+    text-decoration: none;
+    transition: background var(--dur-fast) var(--ease);
+  }
+
+  #newsletter-root .newsletter-row:hover {
+    background: var(--surface-2);
+  }
+
+  #newsletter-root .newsletter-row:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
   }
 
   #newsletter-root .newsletter-row-details {

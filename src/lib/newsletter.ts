@@ -3,11 +3,12 @@
  * before it sends anything.
  *
  * Supabase is the hosted database and file store that the team's scouting app
- * already uses. Newsletters live there: one row per issue in a table, and one
- * PDF per row in a public storage bucket. The rules that decide who may change
- * them are in supabase/newsletters.sql, not in this file. Nothing here is a
- * security boundary. The checks below make the browser ask the right question
- * and fail early with a plain sentence. Supabase still makes the final call.
+ * already uses. Newsletters live there: one row per issue in a table, holding
+ * the issue as HTML, and the issue's photos in a public storage bucket. The
+ * rules that decide who may change them are in supabase/newsletters.sql, not
+ * in this file. Nothing here is a security boundary. The checks below make the
+ * browser ask the right question and fail early with a plain sentence.
+ * Supabase still makes the final call.
  */
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
@@ -39,24 +40,41 @@ export const PHOTO_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/
 const PHOTO_PATH = /^[a-z0-9]+(-[a-z0-9]+)*\/[a-z0-9]{6}\/[0-9]{1,3}\.(webp|jpg|png|gif)$/;
 
 /*
- * The bucket refuses anything over this, whatever the browser claims. The
- * check here exists so a big file fails before a slow upload, not after.
+ * The largest Word file the team page will read. The Word file is only read
+ * in the browser, so this guards the browser's memory and a slow conversion,
+ * not the server.
  */
-export const MAX_PDF_BYTES = 20 * 1024 * 1024;
+export const MAX_DOCX_BYTES = 20 * 1024 * 1024;
 
-/* The same pattern as the table's file_path check constraint. */
-const FILE_PATTERN = /^[a-z0-9-]+\.pdf$/;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
+/* One issue as stored. The body is only read when an issue is opened. */
 export type Newsletter = {
   id: string;
   title: string;
   /** 'YYYY-MM-DD'. Format with formatDate(new Date(issue_date)). */
   issue_date: string;
-  file_path: string;
+  /** The address of the issue page. Set once and never changed. */
+  slug: string;
+  /** The issue as HTML. Sanitised again every time it is shown. */
+  body_html: string;
+  /** First paragraph as plain text, for the list. Null if there is none. */
+  summary: string | null;
+  /** The first photo's public address, for the list. Null if no photos. */
+  cover_url: string | null;
   created_at: string;
   updated_at: string;
 };
+
+/*
+ * What the list pages need. body_html is left out on purpose: it can be large,
+ * and nothing in a list uses it. A list item cannot be used as a full issue by
+ * mistake, because the type has no body.
+ */
+export type NewsletterSummary = Pick<
+  Newsletter,
+  'id' | 'title' | 'issue_date' | 'slug' | 'summary' | 'cover_url' | 'created_at'
+>;
 
 let client: SupabaseClient | undefined;
 
@@ -76,19 +94,28 @@ export function supabase(): SupabaseClient {
  * Newest issue first. Two issues can share a date, so created_at breaks the
  * tie. The public page and the team page both use this order.
  */
-export async function listNewsletters(): Promise<Newsletter[]> {
+export async function listNewsletters(): Promise<NewsletterSummary[]> {
   const { data, error } = await supabase()
     .from('newsletters')
-    .select('id, title, issue_date, file_path, created_at, updated_at')
+    .select('id, title, issue_date, slug, summary, cover_url, created_at')
     .order('issue_date', { ascending: false })
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return (data ?? []) as Newsletter[];
+  return (data ?? []) as NewsletterSummary[];
 }
 
-/* The public URL of a PDF in the bucket. Readers need no sign-in to open it. */
-export function pdfUrl(filePath: string): string {
-  return supabase().storage.from(BUCKET).getPublicUrl(filePath).data.publicUrl;
+/*
+ * One whole issue, body included, or null when no issue has that slug. The
+ * slug is unique, so there is at most one row to return.
+ */
+export async function getNewsletter(slug: string): Promise<Newsletter | null> {
+  const { data, error } = await supabase()
+    .from('newsletters')
+    .select('id, title, issue_date, slug, body_html, summary, cover_url, created_at, updated_at')
+    .eq('slug', slug)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as Newsletter | null) ?? null;
 }
 
 export function isIsoDate(value: string): boolean {
@@ -164,8 +191,8 @@ export function signInMessage(error: { status?: number; name?: string }): string
 }
 
 /*
- * Turns a slug from a title into the part of a file name allowed by the
- * table's check constraint: lowercase letters, digits and dashes. Accents are
+ * Turns a title into the part of an issue's address that the table's check
+ * constraint allows: lowercase letters, digits and dashes. Accents are
  * folded to their base letter, and the result is capped so paths stay short.
  */
 export function slugify(title: string): string {
@@ -180,49 +207,66 @@ export function slugify(title: string): string {
   return slug || 'issue';
 }
 
-const SUFFIX_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
-
-function randomSuffix(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(4));
-  return Array.from(bytes, (b) => SUFFIX_CHARS[b % SUFFIX_CHARS.length]).join('');
-}
+const VERSION_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
 /*
- * A new, never-used file name: <issue_date>-<title slug>-<4 random characters>.pdf.
- *
- * The random part matters for replacements. Supabase's CDN caches public files
- * by path, so overwriting a PDF in place would leave readers with the old copy
- * for a long time. A replacement always gets a fresh path instead.
+ * The slug an issue is published under: <issue_date>-<title slug>. If another
+ * issue already has that slug, -2, -3 and so on are added. The slug is the
+ * issue's address, so it is chosen once here and never changed afterwards.
  */
-export function makeFilePath(issueDate: string, title: string): string {
+export async function makeSlug(issueDate: string, title: string): Promise<string> {
   if (!isIsoDate(issueDate)) {
     throw new Error(`Not a date: ${issueDate}`);
   }
-  const path = `${issueDate}-${slugify(title)}-${randomSuffix()}.pdf`;
-  if (!FILE_PATTERN.test(path)) {
-    throw new Error(`Generated a file name the table rejects: ${path}`);
+  const base = `${issueDate}-${slugify(title)}`;
+  for (let n = 1; n <= 99; n++) {
+    const candidate = n === 1 ? base : `${base}-${n}`;
+    const { data, error } = await supabase()
+      .from('newsletters')
+      .select('id')
+      .eq('slug', candidate);
+    if (error) throw error;
+    if (!data || data.length === 0) return candidate;
   }
-  return path;
+  throw new Error('Too many issues with this title and date.');
 }
 
 /*
- * Checks a chosen file before it is uploaded. Returns the sentence to show, or
- * null when the file is fine. The browser's type comes from the file name, so
- * a renamed file can pass that check. The first five bytes are checked too.
+ * A new folder name for one upload of an issue's photos. Six random characters.
+ *
+ * The random part matters for replacements. Supabase's CDN caches public files
+ * by path, so overwriting a photo in place would leave readers with the old
+ * copy for a long time. Every upload gets a fresh folder instead.
  */
-export async function checkPdf(file: File): Promise<string | null> {
-  if (file.type !== 'application/pdf') {
-    return 'That file is not a PDF.';
+export function makeVersion(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(6));
+  return Array.from(bytes, (b) => VERSION_CHARS[b % VERSION_CHARS.length]).join('');
+}
+
+function startsWithBytes(head: Uint8Array, bytes: number[]): boolean {
+  return bytes.every((byte, i) => head[i] === byte);
+}
+
+/*
+ * Checks a chosen file before it is converted. Returns the sentence to show,
+ * or null when the file looks like a Word file. The file name and the browser's
+ * type can both be wrong, so the first bytes decide: a Word file is a zip, and
+ * a zip starts with PK. A PDF or an old .doc is named, since those are the
+ * mistakes the team makes most often.
+ */
+export async function checkDocx(file: File): Promise<string | null> {
+  const head = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+  if (startsWithBytes(head, [0x25, 0x50, 0x44, 0x46])) {
+    return "That's a PDF. In Google Docs use File > Download > Microsoft Word (.docx).";
   }
-  if (file.size > MAX_PDF_BYTES) {
-    return 'That PDF is larger than 20 MB.';
+  if (startsWithBytes(head, [0xd0, 0xcf, 0x11, 0xe0])) {
+    return "That's an old .doc file. Download as Microsoft Word (.docx).";
   }
-  const head = new Uint8Array(await file.slice(0, 5).arrayBuffer());
-  const magic = '%PDF-';
-  for (let i = 0; i < magic.length; i++) {
-    if (head[i] !== magic.charCodeAt(i)) {
-      return 'That file is not a PDF.';
-    }
+  if (file.size > MAX_DOCX_BYTES) {
+    return 'That file is over 20 MB.';
+  }
+  if (!startsWithBytes(head, [0x50, 0x4b, 0x03, 0x04])) {
+    return "That isn't a Word file.";
   }
   return null;
 }
@@ -248,11 +292,14 @@ export function describeError(error: unknown, fallback: string): string {
   if (message.includes('row-level security')) {
     return 'This account is not allowed to make that change.';
   }
+  // The slug is unique, so this means another issue took it during the save.
   if (message.includes('already exists') || message.includes('duplicate key')) {
-    return 'That file name is already in use. Try again.';
+    return 'Another issue with that title and date was just saved. Change one and try again.';
   }
+  // The bucket limit. The browser shrinks photos first, so this is an
+  // unusually large GIF.
   if (message.includes('maximum allowed size')) {
-    return 'That PDF is larger than 20 MB.';
+    return 'A photo is larger than 10 MB. Use a smaller one.';
   }
   return fallback;
 }

@@ -1,0 +1,147 @@
+---
+/*
+ * One newsletter issue, on its own page.
+ *
+ * The address is /newsletter/issue/?n=<slug>. This file is the frame: the head
+ * band, a back link and a loading skeleton. The issue itself is fetched and
+ * rendered in the browser (see src/scripts/newsletter-issue.ts), so a new issue
+ * is readable without a rebuild.
+ *
+ * The head repeats PageHero's markup on purpose. PageHero writes its title
+ * into the HTML at build time, and this title is not known until the issue
+ * loads. The skeleton bars hold the space, so the page does not jump.
+ */
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Bubbles from '../../components/Bubbles.astro';
+import { url } from '../../lib/paths';
+import '../../styles/newsletter-article.css';
+---
+
+<BaseLayout title="Newsletter">
+  <section class="page-head issue-head">
+    <Bubbles count={10} tone="subtle" />
+    <div class="shell">
+      <p class="issue-back">
+        <a class="link-arrow" href={url('/newsletter/')}>All issues</a>
+      </p>
+      <p class="eyebrow">Newsletter</p>
+      <h1 id="issue-title" data-reveal data-reveal-delay="0.05">
+        <span class="issue-skeleton-bar issue-skeleton-title" aria-hidden="true"></span>
+      </h1>
+      <p class="issue-date" id="issue-date">
+        <span class="issue-skeleton-bar issue-skeleton-date" aria-hidden="true"></span>
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="shell shell-narrow">
+      <noscript>
+        <p class="issue-message">Newsletters need JavaScript to load.</p>
+      </noscript>
+
+      <div id="issue-root" aria-live="polite">
+        <!--
+          Shown only when JavaScript runs, for the same reason as the list page:
+          a skeleton that never fills in would be worse than the noscript line.
+        -->
+        <div class="issue-skeleton" aria-hidden="true">
+          <div class="issue-skeleton-block"></div>
+          <div class="issue-skeleton-line"></div>
+          <div class="issue-skeleton-line"></div>
+          <div class="issue-skeleton-line is-short"></div>
+          <div class="issue-skeleton-line"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style is:global>
+  .issue-head h1 {
+    font-size: var(--step-3);
+  }
+
+  .issue-head .issue-back {
+    margin-bottom: var(--sp-5);
+  }
+
+  .issue-head .issue-date {
+    margin-top: var(--sp-4);
+    font-size: var(--text-meta);
+    color: var(--ink-muted);
+  }
+
+  .issue-skeleton-bar {
+    display: inline-block;
+    height: 0.8em;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    animation: issue-pulse 1.6s var(--ease-io) infinite;
+  }
+
+  .issue-skeleton-title {
+    width: min(72%, 32rem);
+    height: 0.75em;
+  }
+
+  .issue-skeleton-date {
+    width: 9rem;
+  }
+
+  .issue-skeleton {
+    display: none;
+    gap: var(--sp-4);
+  }
+
+  .has-js .issue-skeleton {
+    display: grid;
+  }
+
+  .issue-skeleton-block,
+  .issue-skeleton-line {
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
+    animation: issue-pulse 1.6s var(--ease-io) infinite;
+  }
+
+  .issue-skeleton-block {
+    height: 14rem;
+  }
+
+  .issue-skeleton-line {
+    height: 1rem;
+    border-radius: var(--radius-pill);
+  }
+
+  .issue-skeleton-line.is-short {
+    width: 60%;
+  }
+
+  @keyframes issue-pulse {
+    50% {
+      opacity: 0.45;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .issue-skeleton-bar,
+    .issue-skeleton-block,
+    .issue-skeleton-line {
+      animation: none;
+    }
+  }
+
+  .issue-message {
+    color: var(--ink-muted);
+  }
+
+  .issue-message-error {
+    color: #ff8f6b;
+  }
+</style>
+
+<script>
+  import '../../scripts/newsletter-issue';
+</script>
