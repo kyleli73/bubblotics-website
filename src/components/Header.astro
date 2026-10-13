@@ -16,6 +16,7 @@
 
 import { nav, navGroups } from '../data/site';
 import { url, isActive } from '../lib/paths';
+import { publishable } from '../lib/publish';
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
 
@@ -89,7 +90,16 @@ const currentPath = Astro.url.pathname;
                             aria-current={itemActive ? 'page' : undefined}
                           >
                             <span class="nav-item-label">{item.label}</span>
-                            <span class="nav-item-blurb">{item.blurb}</span>
+                            {
+                              /*
+                               * An unfinished blurb is left out of the public
+                               * menu, the same as every other placeholder. The
+                               * link stays, with its label alone.
+                               */
+                              publishable(item.blurb) && (
+                                <span class="nav-item-blurb">{item.blurb}</span>
+                              )
+                            }
                           </a>
                         </li>
                       );

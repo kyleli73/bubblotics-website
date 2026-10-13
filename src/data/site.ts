@@ -505,6 +505,13 @@ export const navGroups: NavGroup[] = [
         href: '/sponsors/#tiers',
         blurb: 'What your support pays for',
       },
+      {
+        label: 'Newsletter',
+        href: '/newsletter/',
+        // Hidden from the public menu until the team writes this line. See
+        // Header.astro, which drops the blurb while it is unfinished.
+        blurb: '[PLACEHOLDER] menu blurb',
+      },
     ],
   },
 ];

@@ -1,0 +1,167 @@
+---
+/*
+ * Newsletter.
+ *
+ * This file is the static frame: the heading, a loading skeleton, and the
+ * no-JavaScript line. The issues come from Supabase in the browser (see
+ * src/scripts/newsletter-list.ts), so an upload appears here without a rebuild.
+ * The rows are built by that script, which is why their styles are global and
+ * scoped to #newsletter-root.
+ */
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import { publishable } from '../lib/publish';
+
+// Public copy is written by the team. Until it is, the placeholder stays out
+// of the public build (see src/lib/publish.ts).
+const intro = '[PLACEHOLDER] Newsletter page intro';
+---
+
+<BaseLayout title="Newsletter">
+  <PageHero
+    eyebrow="Newsletter"
+    title="Newsletter"
+    lead={publishable(intro) ? intro : undefined}
+  />
+
+  <section class="section">
+    <div class="shell">
+      <noscript>
+        <p class="newsletter-message">Newsletters need JavaScript to load.</p>
+      </noscript>
+
+      <div id="newsletter-root" aria-live="polite">
+        <!--
+          Shown only when JavaScript runs (the has-js class is set in the head
+          of every page). Without JavaScript the list cannot load, so a
+          skeleton that never fills in would be worse than the noscript line.
+        -->
+        <div class="newsletter-skeleton" aria-hidden="true">
+          <div class="skeleton-block"></div>
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style is:global>
+  #newsletter-root {
+    min-height: 12rem;
+  }
+
+  .newsletter-skeleton {
+    display: none;
+    gap: var(--sp-4);
+  }
+
+  .has-js .newsletter-skeleton {
+    display: grid;
+  }
+
+  .skeleton-block,
+  .skeleton-row {
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
+    animation: newsletter-pulse 1.6s var(--ease-io) infinite;
+  }
+
+  .skeleton-block {
+    height: 11rem;
+  }
+
+  .skeleton-row {
+    height: 3.5rem;
+    border-radius: var(--radius);
+  }
+
+  @keyframes newsletter-pulse {
+    50% {
+      opacity: 0.45;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-block,
+    .skeleton-row {
+      animation: none;
+    }
+  }
+
+  #newsletter-root .newsletter-message {
+    color: var(--ink-muted);
+  }
+
+  #newsletter-root .newsletter-message-error {
+    color: #ff8f6b;
+  }
+
+  #newsletter-root .newsletter-featured {
+    display: grid;
+    justify-items: start;
+    gap: var(--sp-3);
+    padding: var(--sp-6);
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
+  }
+
+  @media (min-width: 768px) {
+    #newsletter-root .newsletter-featured {
+      padding: var(--sp-7);
+    }
+  }
+
+  #newsletter-root .newsletter-title {
+    font-size: var(--step-2);
+    letter-spacing: var(--track-snug);
+  }
+
+  #newsletter-root .newsletter-date,
+  #newsletter-root .newsletter-row-date {
+    font-size: var(--text-meta);
+    color: var(--ink-muted);
+  }
+
+  #newsletter-root .newsletter-earlier {
+    margin-top: var(--sp-7);
+  }
+
+  #newsletter-root .newsletter-earlier-title {
+    font-size: var(--step-1);
+    margin-bottom: var(--sp-4);
+  }
+
+  #newsletter-root .newsletter-list {
+    display: grid;
+    gap: var(--sp-2);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  #newsletter-root .newsletter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3) var(--sp-4);
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--radius);
+    background: var(--surface-1);
+  }
+
+  #newsletter-root .newsletter-row-details {
+    display: grid;
+    gap: 2px;
+  }
+
+  #newsletter-root .newsletter-row-title {
+    font-weight: 700;
+  }
+</style>
+
+<script>
+  import '../scripts/newsletter-list';
+</script>
