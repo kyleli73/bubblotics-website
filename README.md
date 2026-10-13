@@ -48,7 +48,7 @@ page, edit it, then hand-edit the index too, and the nav bar would be
 duplicated across fifteen files. By season three that is a real burden on
 whoever inherits this.
 
-The full dependency list is six packages:
+The full dependency list is eight packages:
 
 | Package | What it does |
 |---|---|
@@ -58,6 +58,8 @@ The full dependency list is six packages:
 | `three` | The hologram CAD viewer (loaded only on robot pages that have a model) |
 | `@fontsource-variable/source-sans-3` | The body typeface from the branding guide |
 | `@supabase/supabase-js` | Reads the newsletter from Supabase (the newsletter page and the team page only) |
+| `mammoth` | Converts the team's Word file to an issue (the team page only, and only when a preview is made) |
+| `dompurify` | Cleans each issue's HTML before it is shown (the newsletter pages only) |
 
 ---
 
@@ -514,29 +516,45 @@ list: **`events`** in **`src/data/site.ts`**.
 
 ## Publishing a newsletter
 
-The newsletter is written as a Google Doc. This is how an issue gets from that
-doc onto the site.
+Each issue is one tab in a single Google Doc. The template is here:
+https://docs.google.com/document/d/1_pRb7uVcLe5Kjy_e0ndza6qpHP70dTar25TmfTjTPhs/edit
 
-1. In the Google Doc, choose **File → Download → PDF Document (.pdf)**.
-2. Open **bubblotics.ca/team/** and sign in with the username `bubblotics`.
+1. In the doc, click the three dots next to **Template**, then **Duplicate**.
+   Rename the copy after the issue, for example "Issue 3, Oct 24". Write in
+   that copy, never in Template.
+2. Open the issue's tab and choose **File → Download → Microsoft Word (.docx)**.
+   If Docs asks which tabs, pick **Current tab**.
+3. Open **bubblotics.ca/team/** and sign in with the username `bubblotics`.
    The password is not written in this repository. Ask the team's owner for it.
-3. Under **New issue**, enter the title and the issue date, choose the PDF, and
-   click **Upload**.
+4. Under **New issue**, enter the title and the issue date, choose the .docx
+   file, and click **Preview**. The preview is the page readers will see. Check
+   the photos and captions. Warnings above the preview are worth fixing, but
+   they do not stop you publishing.
+5. Click **Publish**. The issue appears on **bubblotics.ca/newsletter/**
+   straight away. There is no rebuild and no deploy.
 
-The issue appears on **bubblotics.ca/newsletter/** straight away. There is no
-rebuild and no deploy.
+Photos go in the doc as normal inline images. Put a one-line caption in italics
+on the line under each photo. Two or more photos in a row show as a grid.
+
+The warnings in the preview name the things most likely to be left by mistake:
+text still in [square brackets], a file that holds more than one tab, and any
+photo that could not be read (EMF and WMF images from some programs cannot be
+shown on the web, so use JPG or PNG).
 
 To change an issue later, use **Published issues** on the same page:
 
-- **View** opens the PDF.
-- **Edit** changes the title or the date. It does not change the PDF.
-- **Replace PDF** swaps in a new file. The new PDF gets a new web address, so
-  readers see the new file and not a saved copy of the old one. The old file is
-  deleted after the new one is in place.
-- **Delete** removes the issue and its PDF. It asks you to confirm first. There
-  is no undo.
+- **View** opens the issue on its own page.
+- **Edit** changes the title or the date. The web address does not change, so
+  links people saved keep working.
+- **Replace** takes a new .docx of the same issue. Preview it, then click
+  **Replace issue**. The address stays the same. The new photos are uploaded
+  and the old ones are removed afterwards.
+- **Delete** removes the issue and its photos. It asks you to confirm first.
+  There is no undo.
 
-PDF files only, 20 MB or smaller. A title can be up to 120 characters.
+Limits: Word files only, 20 MB or smaller. A title can be up to 120 characters.
+An issue can have up to 60 photos. Photos are shrunk in the browser before they
+are uploaded.
 
 The sign-in stays on the device you use, so the next visit goes straight to the
 manager. Sign out on a computer other people use.
@@ -545,13 +563,23 @@ manager. Sign out on a computer other people use.
 
 - **Table:** `newsletters`, in the Supabase project the scouting app uses
   (project `hhxwvxzlykycnuzkjccn`). It holds one row per issue: the title, the
-  issue date, and the file name.
-- **Files:** a public storage bucket named `newsletters`. Anyone with the link
-  can open a PDF, which is the point of a public newsletter.
+  issue date, the address (`slug`), the issue itself as HTML, a short summary,
+  and the address of the cover photo.
+- **Photos:** a public storage bucket named `newsletters`. Each upload of an
+  issue's photos goes in a new folder, so a reader never gets an old copy from
+  Supabase's cache after a replace. Anyone with the link can see them, which is
+  the point of a public newsletter.
+- **Cleaning:** the HTML is cleaned every time an issue is shown, in the
+  reader's browser. Only the tags and attributes on an allowlist survive, and
+  images are shown only when they come from the `newsletters` bucket. An issue
+  edited by hand in the Supabase dashboard is cleaned the same way.
 - **Rules:** `supabase/newsletters.sql` creates the table and the bucket and
-  sets who may change them. Run it once in the Supabase SQL Editor. It is safe
-  to run again. Until it has been run, the newsletter page shows "Couldn't load
-  the newsletters right now."
+  sets who may change them. It is safe to run again. Run it in the Supabase SQL
+  Editor after pulling a change to it. Until it has been run, the newsletter page
+  shows "Couldn't load the newsletters right now."
+- **Upgrading:** the first version of this feature stored each issue as a file.
+  If the table still holds any of those, the script stops with a message. Delete
+  those issues at bubblotics.ca/team, then run the script again.
 - **Why only one account can write:** anyone can create a scouting account in
   the same project, so "signed in" is not enough. A stranger with a scouting
   account could otherwise post to the public site. The rules accept only the
@@ -628,7 +656,7 @@ space should be. A failed build never replaces the live site.
 | Custom domain, HTTPS (after the move) | [Netlify → Domain management](https://app.netlify.com/projects/bubblotics-website/domain-management) |
 | Security headers, redirects (Netlify only) | `public/_headers` and `public/_redirects` in this repo |
 | Visit and click counts | [GoatCounter](https://bubblotics.goatcounter.com) |
-| Newsletter table and PDF files | [Supabase, project `hhxwvxzlykycnuzkjccn`](https://supabase.com/dashboard/project/hhxwvxzlykycnuzkjccn) |
+| Newsletter table and photos | [Supabase, project `hhxwvxzlykycnuzkjccn`](https://supabase.com/dashboard/project/hhxwvxzlykycnuzkjccn) |
 | Newsletter account | [Supabase → Authentication → Users](https://supabase.com/dashboard/project/hhxwvxzlykycnuzkjccn/auth/users) |
 | Newsletter rules (SQL) | `supabase/newsletters.sql` in this repo |
 | DNS records | [Cloudflare → DNS](https://dash.cloudflare.com/?to=/:account/bubblotics.ca/dns/records) |
