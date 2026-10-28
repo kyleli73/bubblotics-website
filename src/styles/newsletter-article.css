@@ -213,9 +213,14 @@
 /* ── Enlarged photo ───────────────────────────────────────────────────── */
 
 .nl-lightbox {
+  /* Browsers centre a modal dialog with margin: auto, but the global reset in
+     global.css zeroes every margin, which pinned the photo to the top left.
+     Putting auto back restores the centring. */
+  margin: auto;
   width: fit-content;
   max-width: 100vw;
   max-height: 100vh;
+  max-height: 100dvh;
   padding: var(--sp-4);
   border: 0;
   background: transparent;
@@ -232,6 +237,9 @@
   height: auto;
   max-width: calc(100vw - 2rem);
   max-height: calc(100vh - 6rem);
+  /* dvh: on phones, 100vh includes the space under the browser's toolbar,
+     which would push the Close button off screen. */
+  max-height: calc(100dvh - 6rem);
   margin: 0 auto;
   border-radius: var(--radius);
   object-fit: contain;
