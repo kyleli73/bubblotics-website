@@ -94,11 +94,11 @@ export const events: CompetitionEvent[] = [
     code: 'CAONNYQ',
   },
   {
-    name: 'Waterloo Qualifier',
-    date: '2026-12-06',
-    venue: 'University of Waterloo',
-    city: 'Waterloo',
-    code: 'CAONWAQ',
+    name: 'St. Catharines Qualifier',
+    date: '2026-12-05',
+    venue: 'Governor Simcoe Secondary School',
+    city: 'St. Catharines',
+    code: 'CAONSCQ',
   },
   {
     name: 'East Toronto Qualifier',

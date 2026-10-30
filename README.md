@@ -496,11 +496,11 @@ list: **`events`** in **`src/data/site.ts`**.
 
 ```ts
 {
-  name: 'Waterloo Qualifier',
-  date: '2026-12-06',
-  venue: 'University of Waterloo',
-  city: 'Waterloo',
-  code: 'CAONWAQ',
+  name: 'St. Catharines Qualifier',
+  date: '2026-12-05',
+  venue: 'Governor Simcoe Secondary School',
+  city: 'St. Catharines',
+  code: 'CAONSCQ',
 },
 ```
 
