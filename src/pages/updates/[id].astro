@@ -141,14 +141,23 @@ const { Content } = await render(post);
     z-index: var(--z-raised);
   }
 
+  /* Uppercase like every other h1 on the site. The post used to switch this
+     off, which made it the one article title that read differently. */
   .post-head h1 {
     font-size: var(--step-4);
-    text-transform: none;
     letter-spacing: var(--track-tight);
   }
 
+  /* The lead keeps a gap below the heading. Without it the two touched. */
+  .post-head .lead {
+    margin-top: var(--sp-5);
+  }
+
+  /* Block-level, with a 44px target, to match the robot pages' back link. */
   .back-link {
-    display: inline-flex;
+    display: flex;
+    width: fit-content;
+    min-height: 44px;
     align-items: center;
     gap: var(--sp-2);
     margin-bottom: var(--sp-5);
@@ -169,8 +178,10 @@ const { Content } = await render(post);
     transition: transform var(--dur) var(--ease);
   }
 
-  .back-link:hover :global(.back-arrow) {
-    transform: rotate(180deg) translateX(4px);
+  @media (hover: hover) and (pointer: fine) {
+    .back-link:hover :global(.back-arrow) {
+      transform: rotate(180deg) translateX(4px);
+    }
   }
 
   .post-meta {
@@ -217,12 +228,5 @@ const { Content } = await render(post);
   }
 
   .related {
-  }
-
-  /* A full thumb-sized target on touch screens; it was 22px tall. */
-  @media (pointer: coarse) {
-    .back-link {
-      min-height: 44px;
-    }
   }
 </style>

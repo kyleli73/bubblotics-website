@@ -173,9 +173,11 @@ const timeline: TimelineItem[] = [
     gap: var(--sp-6);
   }
 
+  /* The headline gets the wider column. At 0.8fr it ran six lines at 1440px.
+     At 1.6fr it runs four. Same two columns, same order. */
   @media (min-width: 900px) {
     .mission {
-      grid-template-columns: 0.8fr 1.2fr;
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
       gap: var(--sp-8);
     }
   }
@@ -232,9 +234,11 @@ const timeline: TimelineItem[] = [
     );
   }
 
+  /* On wide screens the spine sits on the edge of the year column. The 2px
+     line is centred there, so it is 1px to the left of that edge. */
   @media (min-width: 760px) {
     .timeline::before {
-      left: 148px;
+      left: calc(11rem - 1px);
     }
   }
 
@@ -246,9 +250,12 @@ const timeline: TimelineItem[] = [
     padding-bottom: var(--sp-7);
   }
 
+  /* 11rem, not 130px. The longest date, "November 21, 2026", measures 165px at
+     1440px, so the old 130px column was too narrow and the date broke after
+     the comma. 11rem (176px) holds it on one line. */
   @media (min-width: 760px) {
     .timeline-item {
-      grid-template-columns: 130px 1fr;
+      grid-template-columns: 11rem 1fr;
       gap: var(--sp-8);
       padding-left: 0;
     }
@@ -270,7 +277,7 @@ const timeline: TimelineItem[] = [
 
   @media (min-width: 760px) {
     .timeline-item::before {
-      left: 141px;
+      left: calc(11rem - 8px);
     }
   }
 
@@ -280,6 +287,8 @@ const timeline: TimelineItem[] = [
     font-weight: 700;
     letter-spacing: var(--track-caps);
     color: var(--highlight);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
   }
 
   .timeline-body h3 {
@@ -287,9 +296,10 @@ const timeline: TimelineItem[] = [
     margin-bottom: var(--sp-2);
   }
 
-  .timeline-body p {
+  /* The source line under a quote is a meta line, so it keeps its own size. */
+  .timeline-body p:not(.quote-source) {
     color: var(--ink-muted);
-    font-size: var(--step--1);
+    font-size: var(--text-body-sm);
     line-height: 1.65;
     max-width: 60ch;
   }
@@ -300,7 +310,7 @@ const timeline: TimelineItem[] = [
     border: none;
     font-style: italic;
     color: var(--ink-muted);
-    font-size: var(--step--1);
+    font-size: var(--text-body-sm);
     line-height: 1.65;
     max-width: 60ch;
   }
@@ -310,7 +320,7 @@ const timeline: TimelineItem[] = [
   }
 
   .quote-source {
-    font-size: var(--step--2);
+    font-size: var(--text-meta);
     color: var(--ink-faint);
   }
 
@@ -347,7 +357,7 @@ const timeline: TimelineItem[] = [
 
   .subteam-card p {
     color: var(--ink-muted);
-    font-size: var(--step--1);
+    font-size: var(--text-body-sm);
     line-height: 1.6;
   }
 </style>

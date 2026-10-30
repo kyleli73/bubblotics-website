@@ -12,7 +12,8 @@
 
 .nl-article {
   max-width: 68ch;
-  font-size: 1.125rem;
+  /* The site's body size, so an issue reads at the same size as a page. */
+  font-size: var(--step-0);
   line-height: 1.65;
   color: var(--ink);
   /* break-word, not anywhere: both wrap a long pasted link instead of
@@ -184,6 +185,14 @@
 .nl-article td {
   padding: var(--sp-3) var(--sp-4);
   vertical-align: top;
+  /* Figures in a column line up when every digit is the same width. */
+  font-variant-numeric: tabular-nums;
+}
+
+/* A date in the first column stays on one line, so it never breaks inside
+   the date itself. */
+.nl-article td:first-child {
+  white-space: nowrap;
 }
 
 .nl-article tbody tr:nth-child(odd) {

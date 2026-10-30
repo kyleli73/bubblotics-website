@@ -21,6 +21,10 @@
 @import '@fontsource-variable/source-sans-3';
 
 :root {
+  /* Tells the browser this is a dark site, so native controls (select
+     popups, scrollbars, autofill) draw dark instead of their light defaults. */
+  color-scheme: dark;
+
   /* ── Brand colours, exactly as specified ─────────────────────────────── */
   --cornflower: #5995ed;
   --prussian: #102542;
@@ -64,7 +68,7 @@
 
   --ink: var(--snow); /* body text on dark */
   --ink-muted: #a8bbd4; /* captions, secondary text. 7.1:1 on --bg */
-  --ink-faint: #6f86a5; /* labels and meta. 4.6:1 on --bg */
+  --ink-faint: #7d93b0; /* labels and meta. 4.9:1 on --prussian, 6.1:1 on --bg */
   --ink-inverse: var(--prussian-950); /* text on light or yellow surfaces */
 
   --accent: var(--cornflower);
@@ -166,6 +170,9 @@
      visitors are when they first see this. */
   --text-label: 0.75rem; /* 12px: eyebrows, tags, table headers */
   --text-meta: 0.8125rem; /* 13px: dates, captions, secondary lines */
+  /* 16px: running text in cards and panels. Paragraphs were set at the
+     14.7px step below, which is too small to read comfortably on a phone. */
+  --text-body-sm: 1rem;
 
   /* Fluid type. clamp(min, preferred, max) scales with the viewport between
      a phone and a desktop without a single media query. */
@@ -276,11 +283,14 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   font-size: var(--step-0);
-  line-height: 1.65;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: clip; /* stops decorative bubbles causing sideways scroll */
   min-height: 100vh;
+  /* 100svh is the height with the mobile browser toolbars showing. Where it
+     is supported it wins; 100vh stays as the fallback for older browsers. */
+  min-height: 100svh;
 }
 
 /*
@@ -496,8 +506,10 @@ p {
   max-width: var(--shell-narrow);
 }
 
+/* Below 900px, two neighbouring sections add up to two of these. At sp-9 that
+   was 192px of blank between every pair on a phone; sp-7 gives about 96px. */
 .section {
-  padding-block: var(--sp-9);
+  padding-block: var(--sp-7);
   position: relative;
 }
 
@@ -516,7 +528,9 @@ p {
   margin-bottom: var(--sp-7);
 }
 
-.section-head p {
+/* Not .eyebrow: this rule has higher specificity than .eyebrow, so a plain
+   `p` here used to override the eyebrow's size, colour and tracking. */
+.section-head p:not(.eyebrow) {
   color: var(--ink-muted);
   margin-top: var(--sp-4);
   font-size: var(--step-1);
@@ -546,6 +560,14 @@ p {
 
 .grid-4 {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+}
+
+/* Auto-fit fits three columns between 540px and 979px and leaves the fourth
+   card alone on a row. Two columns make a clean 2x2 across that range. */
+@media (min-width: 540px) and (max-width: 979px) {
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .stack > * + * {
@@ -623,8 +645,20 @@ p {
 
 .card:hover {
   background: var(--surface-2);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-2);
+}
+
+/* The lift and the photo zoom only apply where a pointer can hover. On a
+   touch screen :hover sticks after a tap, so a card would stay lifted until
+   the next tap somewhere else. */
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-2);
+  }
+
+  .card:hover .card-media img {
+    transform: scale(1.045);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -670,10 +704,6 @@ p {
   height: 100%;
   object-fit: cover;
   transition: transform var(--dur-slow) var(--ease);
-}
-
-.card:hover .card-media img {
-  transform: scale(1.045);
 }
 
 /* Inline marker for unfinished text. It only renders under `npm run dev`
@@ -739,17 +769,32 @@ p {
 }
 
 .btn:hover {
-  transform: translateY(-2px);
   color: var(--btn-fg);
-  box-shadow: 0 10px 28px rgba(89, 149, 237, 0.35);
 }
 
-.btn:hover::after {
-  transform: translateX(110%);
+/* The lift, the glow and the light sweep are for pointers only. On a touch
+   screen :hover sticks after a tap, which would leave the button lifted. */
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(89, 149, 237, 0.35);
+  }
+
+  .btn:hover::after {
+    transform: translateX(110%);
+  }
 }
 
+/* A press squeezes the button slightly, so a tap reads as a tap. Left out
+   under reduced motion, where any movement is unwanted. */
 .btn:active {
-  transform: translateY(0);
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:active {
+    transform: none;
+  }
 }
 
 /* The single most important action on a page. Yellow, and used once per
@@ -759,8 +804,10 @@ p {
   --btn-fg: var(--ink-inverse);
 }
 
-.btn-primary:hover {
-  box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.5);
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover {
+    box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.5);
+  }
 }
 
 .btn-ghost {
@@ -773,7 +820,12 @@ p {
 .btn-ghost:hover {
   --btn-fg: var(--ink-inverse);
   background: var(--snow);
-  box-shadow: var(--shadow);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-ghost:hover {
+    box-shadow: var(--shadow);
+  }
 }
 
 .btn-sm {
@@ -781,6 +833,14 @@ p {
   min-height: 44px;
   padding: var(--sp-2) var(--sp-4);
   font-size: var(--step--1);
+}
+
+/* Below 480px a pair of buttons stacks. Giving both the full width makes the
+   pair read as one unit instead of a wide button over a narrow one. */
+@media (max-width: 479px) {
+  .cluster > .btn:not(.btn-sm) {
+    width: 100%;
+  }
 }
 
 /* Text link with an arrow that slides on hover. Used to close out sections. */
@@ -804,8 +864,10 @@ p {
   transition: transform var(--dur) var(--ease);
 }
 
-.link-arrow:hover svg {
-  transform: translateX(5px);
+@media (hover: hover) and (pointer: fine) {
+  .link-arrow:hover svg {
+    transform: translateX(5px);
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -843,9 +905,9 @@ p {
 
 .prose {
   max-width: 68ch;
-  color: var(--ink-muted);
+  color: var(--ink);
   font-size: var(--step-0);
-  line-height: 1.75;
+  line-height: 1.65;
 }
 
 .prose > * + * {
@@ -856,8 +918,6 @@ p {
   font-size: var(--step-2);
   color: var(--ink);
   margin-top: var(--sp-8);
-  text-transform: none;
-  letter-spacing: var(--track-snug);
 }
 
 .prose h3 {

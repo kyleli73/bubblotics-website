@@ -21,7 +21,7 @@ import '../../styles/newsletter-article.css';
 <BaseLayout title="Newsletter">
   <section class="page-head issue-head">
     <Bubbles count={10} tone="subtle" />
-    <div class="shell">
+    <div class="shell shell-narrow">
       <p class="issue-back">
         <a class="link-arrow" href={url('/newsletter/')}>All issues</a>
       </p>
@@ -60,7 +60,7 @@ import '../../styles/newsletter-article.css';
 
 <style is:global>
   .issue-head h1 {
-    font-size: var(--step-3);
+    font-size: var(--step-4);
   }
 
   .issue-head .issue-back {

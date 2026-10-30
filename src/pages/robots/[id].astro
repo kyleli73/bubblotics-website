@@ -317,14 +317,20 @@ const liveSpecs = robot.data.specs.filter((s) => publishable(s.label, s.value));
     overflow: hidden;
   }
 
+  /* No max-width here: the hero shares the page's left edge with the rest of
+     the page. A 900px box centred inside the shell pushed the title in. */
   .robot-hero-inner {
     position: relative;
     z-index: var(--z-raised);
-    max-width: 900px;
   }
 
+  /* Block-level, so the eyebrow below drops onto its own line. As an
+     inline-flex link it sat on the same line as the eyebrow. */
   .back-link {
-    display: inline-flex;
+    display: flex;
+    width: fit-content;
+    /* 44px tall, with the words centred in it, so a thumb can hit it. */
+    min-height: 44px;
     align-items: center;
     gap: var(--sp-2);
     margin-bottom: var(--sp-5);
@@ -346,8 +352,16 @@ const liveSpecs = robot.data.specs.filter((s) => publishable(s.label, s.value));
     transition: transform var(--dur) var(--ease);
   }
 
-  .back-link:hover :global(.back-arrow) {
-    transform: rotate(180deg) translateX(4px);
+  @media (hover: hover) and (pointer: fine) {
+    .back-link:hover :global(.back-arrow) {
+      transform: rotate(180deg) translateX(4px);
+    }
+  }
+
+  /* The lead keeps a gap below the heading. Without it the two touched. */
+  .robot-hero .lead {
+    margin-top: var(--sp-5);
+    max-width: 62ch;
   }
 
   .robot-hero h1 {
@@ -575,8 +589,10 @@ const liveSpecs = robot.data.specs.filter((s) => publishable(s.label, s.value));
     margin-left: auto;
   }
 
-  .robot-nav-link:hover {
-    transform: translateY(-2px);
+  @media (hover: hover) and (pointer: fine) {
+    .robot-nav-link:hover {
+      transform: translateY(-2px);
+    }
   }
 
   .robot-nav-dir {
@@ -598,10 +614,4 @@ const liveSpecs = robot.data.specs.filter((s) => publishable(s.label, s.value));
     color: var(--highlight);
   }
 
-  /* A full thumb-sized target on touch screens; it was 22px tall. */
-  @media (pointer: coarse) {
-    .back-link {
-      min-height: 44px;
-    }
-  }
 </style>
