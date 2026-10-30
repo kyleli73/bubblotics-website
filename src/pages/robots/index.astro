@@ -91,50 +91,56 @@ const rest = all.filter((r) => r.id !== featured?.id);
     )
   }
 
-  <section class="section section-tight">
-    <div class="shell">
-      {
-        rest.length > 0 && (
-          <div class="section-head">
-            <p class="eyebrow">Earlier builds</p>
-            <h2 data-reveal>The ones that came before</h2>
-          </div>
-        )
-      }
+  {/*
+    An empty archive would leave a blank band. Render the section only
+    when it has robots to list or the empty-state message to show.
+  */}
+  {(rest.length > 0 || all.length === 0) && (
+    <section class="section section-tight">
+      <div class="shell">
+        {
+          rest.length > 0 && (
+            <div class="section-head">
+              <p class="eyebrow">Earlier builds</p>
+              <h2 data-reveal>The ones that came before</h2>
+            </div>
+          )
+        }
 
-      {
-        all.length > 0 ? (
-          <div class="grid grid-3" data-reveal data-stagger>
-            {rest.map((robot) => (
-              /*
-               * `all` is sorted newest first, so the newest robot sits at
-               * position 0. The season badge counts the other way (the first
-               * robot the team ever built is "Season 01"), hence the flip.
-               */
-              <RobotCard
-                robot={robot}
-                index={all.length - 1 - all.findIndex((r) => r.id === robot.id)}
-              />
-            ))}
-          </div>
-        ) : (
-          <div class="empty-state card">
-            <h3>No robots yet</h3>
-            {SHOW_UNFINISHED ? (
-              <p>
-                <span class="ph-tag">[Placeholder]</span> Add a markdown file to
-                <code>src/content/robots/</code> and a page appears here. The
-                README has a step-by-step walkthrough and a template you can
-                copy.
-              </p>
-            ) : (
-              <p>Each robot gets its own page here as it is built.</p>
-            )}
-          </div>
-        )
-      }
-    </div>
-  </section>
+        {
+          all.length > 0 ? (
+            <div class="grid grid-3" data-reveal data-stagger>
+              {rest.map((robot) => (
+                /*
+                 * `all` is sorted newest first, so the newest robot sits at
+                 * position 0. The season badge counts the other way (the first
+                 * robot the team ever built is "Season 01"), hence the flip.
+                 */
+                <RobotCard
+                  robot={robot}
+                  index={all.length - 1 - all.findIndex((r) => r.id === robot.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div class="empty-state card">
+              <h3>No robots yet</h3>
+              {SHOW_UNFINISHED ? (
+                <p>
+                  <span class="ph-tag">[Placeholder]</span> Add a markdown file to
+                  <code>src/content/robots/</code> and a page appears here. The
+                  README has a step-by-step walkthrough and a template you can
+                  copy.
+                </p>
+              ) : (
+                <p>Each robot gets its own page here as it is built.</p>
+              )}
+            </div>
+          )
+        }
+      </div>
+    </section>
+  )}
 </BaseLayout>
 
 <style>

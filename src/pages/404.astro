@@ -87,14 +87,17 @@ import { url } from '../lib/paths';
     max-width: 46ch;
   }
 
+  /* Capped and centred, so the ten links wrap into even rows instead of
+     spreading across the full width and leaving one alone on the last line. */
   .links {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: var(--sp-2);
+    max-width: 40rem;
     list-style: none;
     padding: 0;
-    margin: var(--sp-7) 0 0;
+    margin: var(--sp-7) auto 0;
   }
 
   .links a {
@@ -119,7 +122,12 @@ import { url } from '../lib/paths';
   .links a:hover {
     background: var(--highlight);
     color: var(--ink-inverse);
-    transform: translateY(-2px);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .links a:hover {
+      transform: translateY(-2px);
+    }
   }
 
   .notfound-cta {

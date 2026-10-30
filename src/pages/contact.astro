@@ -147,7 +147,7 @@ const reasons = [
 
   <!-- ── FAQ ──────────────────────────────────────────────────────── -->
   <section class="section section-tight">
-    <div class="shell shell-narrow">
+    <div class="shell">
       <div class="section-head">
         <p class="eyebrow">Before you write</p>
         <h2 data-reveal>Common questions</h2>
@@ -176,6 +176,14 @@ const reasons = [
       grid-template-columns: 0.9fr 1.1fr;
       gap: var(--sp-7);
       align-items: start;
+    }
+
+    /* The form is much taller than the channel list. Pinning the list keeps
+       the email and social links in view while the form is filled in. */
+    .channels {
+      position: sticky;
+      top: calc(var(--header-h) + var(--sp-5));
+      align-self: start;
     }
   }
 
@@ -251,7 +259,7 @@ const reasons = [
   }
 
   .channel-note {
-    font-size: var(--step--1);
+    font-size: var(--text-body-sm);
     color: var(--ink-muted);
     line-height: 1.5;
   }
@@ -277,7 +285,7 @@ const reasons = [
   .form-note {
     margin-top: var(--sp-2);
     margin-bottom: var(--sp-6);
-    font-size: var(--step--1);
+    font-size: var(--text-body-sm);
     line-height: 1.5;
   }
 
@@ -335,11 +343,17 @@ const reasons = [
   .field input:focus,
   .field select:focus,
   .field textarea:focus {
-    /* The ring is the only edge a field ever shows, and only while you are
-       typing in it. Where the cursor is must never be a guess. */
-    outline: none;
     background: rgba(137, 172, 220, 0.14);
-    box-shadow: 0 0 0 2px var(--accent);
+  }
+
+  /* Focus gets the same yellow outline as every other control, so a field is
+     not the one place where focus looks different. The fill still lightens
+     while you type. */
+  .field input:focus-visible,
+  .field select:focus-visible,
+  .field textarea:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
   }
 
   /* Marks a field the script found empty on submit. */
@@ -371,10 +385,13 @@ const reasons = [
 
   /* ── FAQ ─────────────────────────────────────────────────────────── */
 
+  /* The questions stop at the narrow reading width, but the heading above
+     them sits on the page's own left edge like every other heading. */
   .faq {
     display: flex;
     flex-direction: column;
     gap: var(--sp-3);
+    max-width: var(--shell-narrow);
   }
 
   .faq-item {
@@ -404,7 +421,7 @@ const reasons = [
   .faq-item summary::after {
     content: '+';
     flex-shrink: 0;
-    font-size: 1.5rem;
+    font-size: var(--step-1);
     line-height: 1;
     color: var(--highlight);
     transition: transform var(--dur) var(--ease);
@@ -418,7 +435,7 @@ const reasons = [
     padding: 0 var(--sp-5) var(--sp-5);
     margin: 0;
     color: var(--ink-muted);
-    font-size: var(--step--1);
+    font-size: var(--text-body-sm);
     line-height: 1.7;
   }
 </style>

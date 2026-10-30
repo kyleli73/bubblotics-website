@@ -91,48 +91,54 @@ const [featured, ...rest] = posts;
     )
   }
 
-  <section class="section section-tight">
-    <div class="shell">
-      {
-        rest.length > 0 && (
-          <div class="section-head">
-            <p class="eyebrow">Archive</p>
-            <h2 data-reveal>Everything else</h2>
-          </div>
-        )
-      }
+  {/*
+    An empty archive would leave a blank band. Render the section only
+    when it has posts to list or the empty-state message to show.
+  */}
+  {(rest.length > 0 || posts.length === 0) && (
+    <section class="section section-tight">
+      <div class="shell">
+        {
+          rest.length > 0 && (
+            <div class="section-head">
+              <p class="eyebrow">Archive</p>
+              <h2 data-reveal>Everything else</h2>
+            </div>
+          )
+        }
 
-      {
-        rest.length > 0 && (
-          <div class="grid grid-3" data-reveal data-stagger>
-            {rest.map((post) => (
-              <UpdateCard post={post} />
-            ))}
-          </div>
-        )
-      }
+        {
+          rest.length > 0 && (
+            <div class="grid grid-3" data-reveal data-stagger>
+              {rest.map((post) => (
+                <UpdateCard post={post} />
+              ))}
+            </div>
+          )
+        }
 
-      {
-        posts.length === 0 && (
-          <div class="card empty-state">
-            <h3>No posts yet</h3>
-            {SHOW_UNFINISHED ? (
-              <p>
-                <span class="ph-tag">[Placeholder]</span> Add a markdown file to
-                <code>src/content/updates/</code> and it appears here. The README
-                walks through it.
-              </p>
-            ) : (
-              <p>
-                Posts start as the season gets going. Follow us on Instagram
-                in the meantime.
-              </p>
-            )}
-          </div>
-        )
-      }
-    </div>
-  </section>
+        {
+          posts.length === 0 && (
+            <div class="card empty-state">
+              <h3>No posts yet</h3>
+              {SHOW_UNFINISHED ? (
+                <p>
+                  <span class="ph-tag">[Placeholder]</span> Add a markdown file to
+                  <code>src/content/updates/</code> and it appears here. The README
+                  walks through it.
+                </p>
+              ) : (
+                <p>
+                  Posts start as the season gets going. Follow us on Instagram
+                  in the meantime.
+                </p>
+              )}
+            </div>
+          )
+        }
+      </div>
+    </section>
+  )}
 
   <CtaBand
     eyebrow="Stay in touch"

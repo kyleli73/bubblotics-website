@@ -299,4 +299,10 @@ const totalEvents = seasons.reduce((n, s) => n + s.competitions.length, 0);
   .empty-state h3 {
     margin-bottom: var(--sp-3);
   }
+
+  /* Centred text longer than about 62 characters a line is hard to follow. */
+  .empty-state p {
+    max-width: 62ch;
+    margin-inline: auto;
+  }
 </style>

@@ -207,9 +207,13 @@ import '../styles/newsletter-article.css';
   }
 
   .team-page .field input:focus {
-    outline: none;
     background: rgba(137, 172, 220, 0.14);
-    box-shadow: 0 0 0 2px var(--accent);
+  }
+
+  /* Same yellow outline as the contact form and every other control. */
+  .team-page .field input:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
   }
 
   .team-page .form-submit {
