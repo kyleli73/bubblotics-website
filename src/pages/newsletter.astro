@@ -134,6 +134,9 @@ const intro = '[PLACEHOLDER] Newsletter page intro';
     width: 100%;
     aspect-ratio: 16 / 9;
     object-fit: cover;
+    /* A 16:9 crop of a portrait photo keeps one horizontal band. Weighting the
+       band upwards keeps faces, which sit in the upper part of a frame. */
+    object-position: center 35%;
     border-radius: var(--radius-lg);
     background: var(--surface-2);
   }

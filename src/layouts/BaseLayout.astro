@@ -96,7 +96,14 @@ if (image) {
 
     <!-- Generated from the team logo. See the note above. -->
     <link rel="icon" type={faviconType} href={faviconHref} />
-    <link rel="apple-touch-icon" href={faviconHref} />
+    <!--
+      Raster copies for the browsers that cannot use the SVG above. iOS ignores
+      SVG as a home screen icon and needs a 180px PNG. These two files are
+      rendered once from src/assets/brand/logo.svg, so re-render them when the
+      logo changes.
+    -->
+    <link rel="icon" type="image/png" sizes="32x32" href={url('/favicon-32.png')} />
+    <link rel="apple-touch-icon" sizes="180x180" href={url('/apple-touch-icon.png')} />
 
     <!--
       Referrer policy, set here because GitHub Pages cannot send response

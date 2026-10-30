@@ -24,6 +24,10 @@ function coverPhoto(issue: NewsletterSummary): HTMLImageElement | null {
   if (!issue.cover_url || !issue.cover_url.startsWith(PHOTO_PREFIX)) return null;
   const img = el('img', 'newsletter-cover');
   img.src = issue.cover_url;
+  // The stored photo's size is not in the database, so the page reserves the
+  // 16:9 crop the stylesheet uses. The row keeps its height while the photo loads.
+  img.width = 1600;
+  img.height = 900;
   // Decorative: the title sits right beside it, so the photo needs no alt text.
   img.alt = '';
   img.loading = 'lazy';

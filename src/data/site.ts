@@ -49,7 +49,7 @@ export const team = {
    * results that do not exist yet.
    */
   blurb:
-    'We are a rookie FIRST Tech Challenge team of fifteen students in Aurora, Ontario. BIOBUZZ is our first competition season. We mentor five FIRST LEGO League teams: Solvers of X & Y, Chrono Solvers, Future Solvers, Unknown Solvers and Solvers of Infinity.',
+    'We are a rookie FIRST Tech Challenge team of fifteen students in Aurora, Ontario. BIOBUZZ is our first competition season. We mentor five FIRST LEGO League teams: Solvers of X\u00a0&\u00a0Y, Chrono Solvers, Future Solvers, Unknown Solvers and Solvers of Infinity.',
 };
 
 /*
@@ -250,7 +250,7 @@ export const outreach = [
     date: 'Ongoing, 2024-25 SUBMERGED and 2025-26 UNEARTHED seasons',
     audience: 'Five FLL teams across Aurora, Newmarket, Richmond Hill and Markham',
     description:
-      'All of our team members have come from world-class FLL teams, like Solvers of X & Y.',
+      'All of our team members have come from world-class FLL teams, like Solvers of X\u00a0&\u00a0Y.',
     image: null as string | null,
   },
 ];
@@ -271,7 +271,7 @@ export type FllTeam = {
 
 export const fllTeams: FllTeam[] = [
   {
-    name: 'Solvers of X & Y',
+    name: 'Solvers of X\u00a0&\u00a0Y',
     number: '52777',
     awards: [
       { season: '2025-26 UNEARTHED', award: "Champion's Award, 1st place (Regional)" },
