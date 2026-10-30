@@ -26,6 +26,10 @@ const {
   secondaryLabel = 'Contact the team',
   secondaryHref = '/contact/',
 } = Astro.props;
+
+/* The diagonal arrow tells a visitor the link leaves the site. Internal links
+   use the same arrow as every other link on the site. */
+const primaryIsExternal = /^https?:\/\//.test(primaryHref);
 ---
 
 <section class="section">
@@ -45,7 +49,7 @@ const {
             data-magnetic="0.2"
           >
             {primaryLabel}
-            <Icon name="arrowUpRight" size={17} />
+            <Icon name={primaryIsExternal ? 'arrowUpRight' : 'arrow'} size={17} />
           </a>
           <a href={url(secondaryHref)} class="btn btn-ghost">
             {secondaryLabel}

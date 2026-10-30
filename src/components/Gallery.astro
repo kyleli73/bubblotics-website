@@ -204,13 +204,17 @@ const instagram = activeSocials.find((s) => s.name === 'Instagram');
       filter var(--dur) var(--ease);
   }
 
-  .tile:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow), var(--glow);
-  }
+  /* Lift and zoom are for pointers only: on a touch screen :hover sticks
+     after a tap and would leave the tile lifted. */
+  @media (hover: hover) and (pointer: fine) {
+    .tile:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow), var(--glow);
+    }
 
-  .tile:hover :global(img) {
-    transform: scale(1.06);
+    .tile:hover :global(img) {
+      transform: scale(1.06);
+    }
   }
 
   /* Caption slides up from the bottom edge on hover or keyboard focus. */
@@ -233,10 +237,16 @@ const instagram = activeSocials.find((s) => s.name === 'Instagram');
       transform var(--dur) var(--ease);
   }
 
-  .tile:hover .tile-caption,
   .tile:focus-visible .tile-caption {
     opacity: 1;
     transform: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .tile:hover .tile-caption {
+      opacity: 1;
+      transform: none;
+    }
   }
 
   /* ── Lightbox ─────────────────────────────────────────────────────── */
@@ -304,7 +314,7 @@ const instagram = activeSocials.find((s) => s.name === 'Instagram');
     background: rgba(16, 37, 66, 0.7);
     backdrop-filter: blur(8px);
     color: var(--snow);
-    font-size: 1.6rem;
+    font-size: var(--step-1);
     line-height: 1;
     transition:
       background var(--dur-fast) var(--ease),
@@ -314,7 +324,13 @@ const instagram = activeSocials.find((s) => s.name === 'Instagram');
   .lb-nav:hover,
   .lb-close:hover {
     background: var(--accent);
-    transform: scale(1.06);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .lb-nav:hover,
+    .lb-close:hover {
+      transform: scale(1.06);
+    }
   }
 
   .lb-close {

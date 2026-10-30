@@ -404,7 +404,8 @@ const { model, name, caption } = Astro.props;
   }
 
   .holo-btn {
-    min-height: 40px;
+    /* 44px: the smallest target a thumb hits reliably on a phone. */
+    min-height: 44px;
     padding: var(--sp-2) var(--sp-4);
     border-radius: var(--radius-pill);
     border: 0;
@@ -464,7 +465,7 @@ const { model, name, caption } = Astro.props;
     align-items: baseline;
     gap: var(--sp-3);
     width: 100%;
-    min-height: 36px;
+    min-height: 44px;
     padding: var(--sp-2) var(--sp-2);
     text-align: left;
     border: 0;
@@ -504,23 +505,25 @@ const { model, name, caption } = Astro.props;
     color: var(--highlight);
   }
 
+  /* A caption or note wider than about 62 characters is hard to track back to
+     the start of its line, so it stops there even on a wide screen. */
   .holo-caption {
     margin-top: var(--sp-4);
-    font-size: var(--step--1);
+    max-width: 62ch;
+    font-size: var(--text-body-sm);
     color: var(--ink-muted);
   }
 
   .holo-note {
     margin-top: var(--sp-3);
-    font-size: var(--step--1);
+    max-width: 62ch;
+    font-size: var(--text-body-sm);
   }
 
-  /* Thumb-sized controls on touch screens: the part buttons were 27px tall,
-     the view buttons 38px and the slider 42px. */
+  /* The slider is the one control that was not already at 44px on touch
+     screens. The buttons above are 44px on every screen. */
   @media (pointer: coarse) {
-    .holo-btn,
-    .holo-range,
-    .holo-parts :global(button) {
+    .holo-range {
       min-height: 44px;
     }
   }

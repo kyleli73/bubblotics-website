@@ -148,8 +148,10 @@ const markWidth = Math.round(size * aspect);
 
   /* The mark tips and lifts when you hover the header link, like a bubble
      catching a draft. */
-  :global(a:hover) > .logo .logo-mark {
-    transform: translateY(-2px) rotate(-4deg);
+  @media (hover: hover) and (pointer: fine) {
+    :global(a:hover) > .logo .logo-mark {
+      transform: translateY(-2px) rotate(-4deg);
+    }
   }
 
   .logo-word {
@@ -161,7 +163,7 @@ const markWidth = Math.round(size * aspect);
   .logo-name {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 1.15rem;
+    font-size: var(--step-0);
     letter-spacing: var(--track-tight);
     text-transform: uppercase;
     color: var(--ink);
