@@ -4,9 +4,8 @@
  * monthly job sends through Resend.
  *
  * These functions only build text. They never call the network, so the tests
- * can check the exact HTML and text. The mailing and dates are fixed here
- * rather than read from the clock, so the same input always gives the same
- * email.
+ * can check the exact HTML and text. Nothing here reads the clock, so the same
+ * input always gives the same email.
  *
  * The confirm email is built again by supabase/functions/newsletter-signup,
  * because that file cannot import this one. The tests compare the two.
@@ -20,7 +19,12 @@ export const PHOTO_PREFIX =
 export const SITE_URL = 'https://bubblotics.ca';
 
 const SENDER_NAME = 'Bubblotics';
-const MAILING_MISSING = '[mailing address missing]';
+/*
+ * The team's contact address, shown in the footer of both emails. It moves to
+ * team@bubblotics.ca once that inbox exists. The sign-up function keeps its own
+ * copy of this value, and the tests check that the two agree.
+ */
+export const CONTACT_EMAIL = 'bubblotics@gmail.com';
 const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 /*
@@ -160,7 +164,7 @@ export function buildConfirmEmail({ link }) {
 <p style="margin:0 0 24px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="${safeLink}" style="color:#3d72c4;">${safeLink}</a></p>
 <p style="margin:0;font-size:13px;line-height:1.5;color:#4a5b70;">Didn't sign up? Ignore this email and you won't hear from us.</p>`;
   const footer = `<p style="margin:0 0 4px;">Bubblotics, FTC Team 35858, Aurora, Ontario</p>
-<p style="margin:0;"><a href="${SITE_URL}" style="color:#3d72c4;">bubblotics.ca</a></p>`;
+<p style="margin:0;"><a href="mailto:${CONTACT_EMAIL}" style="color:#3d72c4;">${CONTACT_EMAIL}</a> &nbsp; <a href="${SITE_URL}" style="color:#3d72c4;">bubblotics.ca</a></p>`;
 
   const subject = 'Confirm your Bubblotics newsletter subscription';
   const html = page({ subject, preheader: '', content, footer, logoUrl: `${SITE_URL}/apple-touch-icon.png` });
@@ -178,6 +182,7 @@ export function buildConfirmEmail({ link }) {
     "Didn't sign up? Ignore this email and you won't hear from us.",
     '',
     'Bubblotics, FTC Team 35858, Aurora, Ontario',
+    CONTACT_EMAIL,
     'bubblotics.ca',
   ].join('\n');
   return { subject, html, text };
@@ -215,13 +220,12 @@ function issueText(issue, siteUrl) {
  * the caller can send nothing. The name is the Resend broadcast name, which the
  * job uses to notice a month that already went out.
  */
-export function buildMonthlyEmail({ month, issues, siteUrl = SITE_URL, mailingAddress }) {
+export function buildMonthlyEmail({ month, issues, siteUrl = SITE_URL }) {
   if (!issues || issues.length === 0) return null;
 
   const monthLabel = formatMonth(month);
   const subject = `Bubblotics newsletter, ${monthLabel}`;
   const preheader = joinTitles(issues.map((issue) => issue.title));
-  const address = mailingAddress ? mailingAddress : MAILING_MISSING;
 
   const content = `<p style="margin:0 0 4px;font-size:13px;letter-spacing:0.14em;text-transform:uppercase;font-weight:700;color:#3d72c4;">Newsletter</p>
 <h1 style="margin:0 0 28px;font-size:28px;line-height:1.2;color:#102542;">${escapeHtml(monthLabel)}</h1>
@@ -230,8 +234,7 @@ ${issues.map((issue) => issueHtml(issue, siteUrl)).join('\n')}
 </table>`;
 
   const footer = `<p style="margin:0 0 4px;">Bubblotics, FTC Team 35858, Aurora, Ontario</p>
-<p style="margin:0 0 4px;">${escapeHtml(address)}</p>
-<p style="margin:0 0 12px;"><a href="${SITE_URL}" style="color:#3d72c4;">bubblotics.ca</a></p>
+<p style="margin:0 0 12px;"><a href="mailto:${CONTACT_EMAIL}" style="color:#3d72c4;">${CONTACT_EMAIL}</a> &nbsp; <a href="${SITE_URL}" style="color:#3d72c4;">bubblotics.ca</a></p>
 <p style="margin:0 0 4px;">You're getting this because you signed up at bubblotics.ca.</p>
 <p style="margin:0;"><a href="{{{RESEND_UNSUBSCRIBE_URL}}}" style="color:#3d72c4;">Unsubscribe</a></p>`;
 
@@ -243,7 +246,7 @@ ${issues.map((issue) => issueHtml(issue, siteUrl)).join('\n')}
     '',
     ...issues.map((issue) => `${issueText(issue, siteUrl)}\n`),
     'Bubblotics, FTC Team 35858, Aurora, Ontario',
-    address,
+    CONTACT_EMAIL,
     'bubblotics.ca',
     "You're getting this because you signed up at bubblotics.ca.",
     'Unsubscribe',

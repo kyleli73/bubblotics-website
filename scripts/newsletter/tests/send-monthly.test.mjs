@@ -18,7 +18,6 @@ const BASE_ENV = {
   RESEND_API_KEY: KEY,
   RESEND_SEGMENT_ID: 'seg_everyone',
   RESEND_TEST_SEGMENT_ID: 'seg_test',
-  NEWSLETTER_MAILING_ADDRESS: 'Bubblotics, Aurora, Ontario, Canada',
 };
 
 function jsonResponse(data, status = 200) {
@@ -88,23 +87,14 @@ test('a send to everyone uses the everyone segment and the month name', async ()
   assert.ok(post.body.html.includes('{{{RESEND_UNSUBSCRIBE_URL}}}'));
 });
 
-test('a send to everyone without a mailing address is refused before any broadcast', async () => {
+test('a send to everyone goes out without any postal address, with the contact email in the footer', async () => {
   const w = world();
-  const env = { ...BASE_ENV, MODE: 'send', AUDIENCE: 'everyone', NEWSLETTER_MAILING_ADDRESS: '' };
-  const code = await main(env, w.deps);
-  assert.equal(code, 1);
-  assert.equal(w.posts().length, 0);
-  assert.equal(
-    w.errors[0],
-    'Set the NEWSLETTER_MAILING_ADDRESS variable before sending to subscribers. Canada\'s anti-spam law requires a mailing address in every newsletter.',
-  );
-});
-
-test('a test send may go out without a mailing address, with the placeholder in the footer', async () => {
-  const w = world();
-  const env = { ...BASE_ENV, MODE: 'send', NEWSLETTER_MAILING_ADDRESS: '' };
-  assert.equal(await main(env, w.deps), 0);
-  assert.ok(w.posts()[0].body.html.includes('[mailing address missing]'));
+  const code = await main({ ...BASE_ENV, MODE: 'send', AUDIENCE: 'everyone' }, w.deps);
+  assert.equal(code, 0);
+  const [post] = w.posts();
+  assert.equal(post.body.send, true);
+  assert.ok(post.body.html.includes('mailto:bubblotics@gmail.com'));
+  assert.equal(w.errors.length, 0);
 });
 
 test('a month that already went out is skipped, but a draft does not count', async () => {

@@ -17,13 +17,10 @@
 #   month: optional, as 2026-10. Leave it empty for last month.
 # A run for everyone that finds the month already sent stops and says so.
 #
-# If the run fails, GitHub emails whoever last edited this file. That includes a
-# missing mailing address, which the job refuses to work around.
+# If the run fails, GitHub emails whoever last edited this file.
 #
 # Secrets (Settings, Secrets and variables, Actions):
 #   RESEND_API_KEY, RESEND_SEGMENT_ID, RESEND_TEST_SEGMENT_ID
-# Variable: NEWSLETTER_MAILING_ADDRESS (the postal address Canada's anti-spam law
-# requires in every newsletter).
 
 name: Monthly newsletter
 
@@ -80,5 +77,4 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_SEGMENT_ID: ${{ secrets.RESEND_SEGMENT_ID }}
           RESEND_TEST_SEGMENT_ID: ${{ secrets.RESEND_TEST_SEGMENT_ID }}
-          NEWSLETTER_MAILING_ADDRESS: ${{ vars.NEWSLETTER_MAILING_ADDRESS }}
         run: node scripts/newsletter/send-monthly.mjs

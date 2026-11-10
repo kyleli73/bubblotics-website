@@ -56,6 +56,10 @@ const REQUIRED_ENV = [
 const DEFAULT_SITE_URL = 'https://bubblotics.ca';
 const SENDER = 'Bubblotics <newsletter@bubblotics.ca>';
 const REPLY_TO = 'bubblotics@gmail.com';
+// The team's contact address, shown in the footer. It moves to
+// team@bubblotics.ca once that inbox exists. scripts/newsletter/build-email.mjs
+// keeps the same value, and its tests check that the two emails agree.
+const CONTACT_EMAIL = 'bubblotics@gmail.com';
 const RESEND_API = 'https://api.resend.com';
 const LOGO_URL = 'https://bubblotics.ca/apple-touch-icon.png';
 
@@ -284,7 +288,7 @@ export function confirmEmail(link: string): { subject: string; html: string; tex
 <p style="margin:0 0 24px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="${safeLink}" style="color:#3d72c4;">${safeLink}</a></p>
 <p style="margin:0;font-size:13px;line-height:1.5;color:#4a5b70;">Didn't sign up? Ignore this email and you won't hear from us.</p>`;
   const footer = `<p style="margin:0 0 4px;">Bubblotics, FTC Team 35858, Aurora, Ontario</p>
-<p style="margin:0;"><a href="${LOGO_SITE}" style="color:#3d72c4;">bubblotics.ca</a></p>`;
+<p style="margin:0;"><a href="mailto:${CONTACT_EMAIL}" style="color:#3d72c4;">${CONTACT_EMAIL}</a> &nbsp; <a href="${LOGO_SITE}" style="color:#3d72c4;">bubblotics.ca</a></p>`;
 
   const html = page({ subject: 'Confirm your Bubblotics newsletter subscription', preheader: '', content, footer });
   const text = [
@@ -301,6 +305,7 @@ export function confirmEmail(link: string): { subject: string; html: string; tex
     "Didn't sign up? Ignore this email and you won't hear from us.",
     '',
     'Bubblotics, FTC Team 35858, Aurora, Ontario',
+    CONTACT_EMAIL,
     'bubblotics.ca',
   ].join('\n');
   return { subject: 'Confirm your Bubblotics newsletter subscription', html, text };

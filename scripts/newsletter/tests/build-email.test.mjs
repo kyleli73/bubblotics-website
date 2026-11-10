@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   buildConfirmEmail,
   buildMonthlyEmail,
+  CONTACT_EMAIL,
   formatIssueDate,
   monthRange,
   PHOTO_PREFIX,
@@ -45,7 +46,7 @@ test('formatIssueDate reads the date in UTC so it does not shift a day', () => {
 });
 
 test('buildMonthlyEmail returns null when there are no issues', () => {
-  assert.equal(buildMonthlyEmail({ month: '2026-10', issues: [], mailingAddress: 'x' }), null);
+  assert.equal(buildMonthlyEmail({ month: '2026-10', issues: [] }), null);
 });
 
 test('buildMonthlyEmail names the broadcast and the subject, and joins the preheader', () => {
@@ -53,7 +54,6 @@ test('buildMonthlyEmail names the broadcast and the subject, and joins the prehe
     month: '2026-10',
     issues: [ISSUE_B, ISSUE_A],
     siteUrl: 'https://bubblotics.ca',
-    mailingAddress: 'Bubblotics, Aurora, Ontario, Canada',
   });
   assert.equal(email.name, 'newsletter-2026-10');
   assert.equal(email.subject, 'Bubblotics newsletter, October 2026');
@@ -65,14 +65,13 @@ test('the preheader lists three or more titles with commas and a final and', () 
   const email = buildMonthlyEmail({
     month: '2026-10',
     issues: [ISSUE_B, ISSUE_A, { ...ISSUE_B, title: 'Third one', slug: 'third' }],
-    mailingAddress: 'x',
   });
   assert.equal(email.preheader, 'Autumn scrimmage, Robots on the move and Third one');
 });
 
 test('titles from the database are escaped, never written as markup', () => {
   const hostile = { ...ISSUE_B, title: '<img src=x onerror=alert(1)>', summary: '<b>bold</b>' };
-  const email = buildMonthlyEmail({ month: '2026-10', issues: [hostile], mailingAddress: 'x' });
+  const email = buildMonthlyEmail({ month: '2026-10', issues: [hostile] });
   assert.ok(!email.html.includes('<img src=x'), 'raw tag must not appear in the HTML');
   assert.ok(!email.html.includes('<b>bold</b>'), 'raw summary markup must not appear');
   assert.ok(email.html.includes('&lt;img src=x onerror=alert(1)&gt;'));
@@ -86,7 +85,6 @@ test('only covers from the bucket are shown', () => {
   const email = buildMonthlyEmail({
     month: '2026-10',
     issues: [ISSUE_A, foreign],
-    mailingAddress: 'x',
   });
   assert.ok(email.html.includes(`src="${ISSUE_A.cover_url}"`));
   assert.ok(!email.html.includes('evil.example.com'));
@@ -94,27 +92,37 @@ test('only covers from the bucket are shown', () => {
 });
 
 test('the unsubscribe placeholder is left for Resend to fill in, in HTML and text', () => {
-  const email = buildMonthlyEmail({ month: '2026-10', issues: [ISSUE_A], mailingAddress: 'x' });
+  const email = buildMonthlyEmail({ month: '2026-10', issues: [ISSUE_A] });
   assert.ok(email.html.includes('href="{{{RESEND_UNSUBSCRIBE_URL}}}"'));
   assert.ok(email.text.includes('{{{RESEND_UNSUBSCRIBE_URL}}}'));
 });
 
 test('each issue links to its page by slug', () => {
-  const email = buildMonthlyEmail({ month: '2026-10', issues: [ISSUE_A], mailingAddress: 'x' });
+  const email = buildMonthlyEmail({ month: '2026-10', issues: [ISSUE_A] });
   assert.ok(email.html.includes(`https://bubblotics.ca/newsletter/issue/?n=${ISSUE_A.slug}`));
   assert.ok(email.text.includes(`https://bubblotics.ca/newsletter/issue/?n=${ISSUE_A.slug}`));
   assert.ok(email.html.includes('Read the issue'));
 });
 
-test('a missing mailing address shows the placeholder, so drafts can still be made', () => {
-  const email = buildMonthlyEmail({ month: '2026-10', issues: [ISSUE_A], mailingAddress: '' });
-  assert.ok(email.html.includes('[mailing address missing]'));
-  assert.ok(email.text.includes('[mailing address missing]'));
+test('the monthly footer shows the contact email as a mailto link next to bubblotics.ca', () => {
+  const email = buildMonthlyEmail({ month: '2026-10', issues: [ISSUE_A] });
+  assert.ok(email.html.includes(`href="mailto:${CONTACT_EMAIL}"`));
+  assert.ok(email.html.includes(`>${CONTACT_EMAIL}</a>`));
+  assert.ok(email.html.includes('href="https://bubblotics.ca"'));
+  assert.ok(email.text.includes(`${CONTACT_EMAIL}\nbubblotics.ca`));
+  assert.ok(!email.html.includes('mailing address'), 'no physical address is shown');
 });
 
-test('the mailing address is escaped like every other value', () => {
-  const email = buildMonthlyEmail({ month: '2026-10', issues: [ISSUE_A], mailingAddress: 'A & B <Suite 1>' });
-  assert.ok(email.html.includes('A &amp; B &lt;Suite 1&gt;'));
+test('the monthly footer keeps the unsubscribe link and the signup reason', () => {
+  const email = buildMonthlyEmail({ month: '2026-10', issues: [ISSUE_A] });
+  assert.ok(email.html.includes('href="{{{RESEND_UNSUBSCRIBE_URL}}}"'));
+  assert.ok(email.html.includes("You're getting this because you signed up at bubblotics.ca."));
+});
+
+test('the confirm email footer carries the same contact email', () => {
+  const mail = buildConfirmEmail({ link: 'https://bubblotics.ca/newsletter/confirm/?t=x' });
+  assert.ok(mail.html.includes(`href="mailto:${CONTACT_EMAIL}"`));
+  assert.ok(mail.text.includes(CONTACT_EMAIL));
 });
 
 test('the confirm email carries its link in the button, the fallback line and the text', () => {

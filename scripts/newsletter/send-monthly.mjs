@@ -141,15 +141,7 @@ export async function main(env, deps = defaultDeps()) {
       return 0;
     }
 
-    const mailingAddress = env.NEWSLETTER_MAILING_ADDRESS || '';
-    if (mode === 'send' && audience === 'everyone' && !mailingAddress) {
-      deps.error(
-        'Set the NEWSLETTER_MAILING_ADDRESS variable before sending to subscribers. Canada\'s anti-spam law requires a mailing address in every newsletter.',
-      );
-      return 1;
-    }
-
-    const email = buildMonthlyEmail({ month, issues, siteUrl: SITE_URL, mailingAddress });
+    const email = buildMonthlyEmail({ month, issues, siteUrl: SITE_URL });
     if (!email) {
       deps.log(`No issues in ${month}, nothing to send.`);
       return 0;
