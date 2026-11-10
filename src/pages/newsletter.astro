@@ -12,6 +12,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
 import { publishable } from '../lib/publish';
+import NewsletterSignup from '../components/NewsletterSignup.astro';
 
 // Public copy is written by the team. Until it is, the placeholder stays out
 // of the public build (see src/lib/publish.ts).
@@ -43,6 +44,7 @@ const intro = '[PLACEHOLDER] Newsletter page intro';
           <div class="skeleton-row"></div>
         </div>
       </div>
+      <NewsletterSignup />
     </div>
   </section>
 </BaseLayout>

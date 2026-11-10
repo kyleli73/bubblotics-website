@@ -1,0 +1,145 @@
+---
+/*
+ * The "Get it by email" panel. It sits under the issues list and under every
+ * issue, so a reader can sign up where they are. The form sends the address to
+ * the sign-up function, which emails a confirm link. Nothing is sent to the
+ * person until they click that link.
+ *
+ * The honeypot is a field a person never sees. Bots tend to fill in every
+ * field, so the function quietly ignores a sign-up that has one.
+ */
+---
+
+<section class="newsletter-signup" aria-labelledby="newsletter-signup-title">
+  <h2 id="newsletter-signup-title" class="newsletter-signup-title">Get it by email</h2>
+  <p class="newsletter-signup-consent">One email a month with new issues from Bubblotics, FTC Team 35858. Unsubscribe anytime.</p>
+
+  <form class="newsletter-signup-form" novalidate>
+    <label class="newsletter-signup-label" for="newsletter-signup-email">Email</label>
+    <div class="newsletter-signup-row">
+      <input
+        id="newsletter-signup-email"
+        class="newsletter-signup-input"
+        name="email"
+        type="email"
+        autocomplete="email"
+        inputmode="email"
+        required
+      />
+      <input
+        class="newsletter-signup-honeypot"
+        name="website"
+        type="text"
+        tabindex="-1"
+        autocomplete="off"
+        aria-hidden="true"
+      />
+      <button class="btn btn-primary newsletter-signup-button" type="submit">Subscribe</button>
+    </div>
+    <p class="newsletter-signup-status" role="status" aria-live="polite"></p>
+  </form>
+</section>
+
+<style>
+  .newsletter-signup {
+    display: grid;
+    gap: var(--sp-3);
+    margin-top: var(--sp-7);
+    padding: var(--sp-6);
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
+  }
+
+  @media (min-width: 768px) {
+    .newsletter-signup {
+      padding: var(--sp-7);
+    }
+  }
+
+  .newsletter-signup-title {
+    font-size: var(--step-1);
+    letter-spacing: var(--track-snug);
+  }
+
+  .newsletter-signup-consent {
+    color: var(--ink-muted);
+    font-size: var(--text-meta);
+  }
+
+  .newsletter-signup-form {
+    display: grid;
+    gap: var(--sp-2);
+    margin-top: var(--sp-2);
+  }
+
+  .newsletter-signup-label {
+    font-size: var(--text-meta);
+    color: var(--ink-muted);
+  }
+
+  .newsletter-signup-row {
+    display: grid;
+    gap: var(--sp-3);
+  }
+
+  /* Input and button side by side from 560px, stacked below that. */
+  @media (min-width: 560px) {
+    .newsletter-signup-row {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+    }
+  }
+
+  .newsletter-signup-input {
+    min-height: 44px;
+    padding: var(--sp-3) var(--sp-4);
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--ink);
+    font: inherit;
+  }
+
+  .newsletter-signup-input:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+  }
+
+  /* Off screen rather than display:none, so a bot still finds it and fills it in. */
+  .newsletter-signup-honeypot {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .newsletter-signup-button {
+    min-height: 44px;
+  }
+
+  .newsletter-signup-button:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+
+  .newsletter-signup-status {
+    min-height: 1.5em;
+    font-size: var(--text-meta);
+    color: var(--ink-muted);
+  }
+
+  .newsletter-signup-status.is-error {
+    color: #ff8f6b;
+  }
+
+  @media print {
+    .newsletter-signup {
+      display: none !important;
+    }
+  }
+</style>
+
+<script>
+  import '../scripts/newsletter-signup';
+</script>

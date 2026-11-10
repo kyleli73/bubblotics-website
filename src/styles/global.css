@@ -1133,6 +1133,7 @@ main {
   .site-header,
   .site-footer,
   .bubbles,
+  .newsletter-signup,
   .skip-link {
     display: none !important;
   }

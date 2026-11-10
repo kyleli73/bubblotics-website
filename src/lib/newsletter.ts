@@ -325,3 +325,69 @@ export function describeError(error: unknown, fallback: string): string {
   }
   return fallback;
 }
+
+/*
+ * The monthly email's sign-up. The browser never talks to Resend or to the
+ * consent table itself. It sends the address to a Supabase Edge Function
+ * (supabase/functions/newsletter-signup), which keeps the record, sends the
+ * confirm link, and holds the Resend key. The publishable key is what lets the
+ * browser reach the function at all, and it grants nothing else.
+ */
+export const SIGNUP_URL = `${SUPABASE_URL}/functions/v1/newsletter-signup`;
+
+export type SubscribeResult =
+  | { ok: true }
+  | { ok: false; error: 'invalid_email' | 'busy' | 'failed' };
+
+export type ConfirmResult = { ok: true } | { ok: false; error: 'expired' | 'failed' };
+
+type SignupReply = { status: number; data: { error?: string } };
+
+/*
+ * One POST to the function. Returns null when the request never got an answer
+ * (offline, or the server is unreachable), so callers can show one sentence for
+ * both that and a server error.
+ */
+async function postSignup(payload: Record<string, unknown>): Promise<SignupReply | null> {
+  try {
+    const res = await fetch(SIGNUP_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_PUBLISHABLE_KEY,
+      },
+      body: JSON.stringify(payload),
+    });
+    // Some answers have no body. A missing body is treated as no detail.
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    return { status: res.status, data };
+  } catch {
+    return null;
+  }
+}
+
+/* Asks for a confirm email. The address is trimmed and checked by the function. */
+export async function subscribe(email: string, honeypot: string): Promise<SubscribeResult> {
+  const reply = await postSignup({ action: 'subscribe', email, website: honeypot });
+  if (reply?.status === 200) return { ok: true };
+  if (reply?.status === 400 && reply.data.error === 'invalid_email') {
+    return { ok: false, error: 'invalid_email' };
+  }
+  if (reply?.status === 429) return { ok: false, error: 'busy' };
+  return { ok: false, error: 'failed' };
+}
+
+/*
+ * Confirms a sign-up from the token in the link. A token that is malformed, was
+ * never issued, or has run out gets the same answer, because the person sees
+ * the same thing either way.
+ */
+export async function confirmSubscription(token: string): Promise<ConfirmResult> {
+  const reply = await postSignup({ action: 'confirm', token });
+  if (reply?.status === 200) return { ok: true };
+  if (reply?.status === 410) return { ok: false, error: 'expired' };
+  if (reply?.status === 400 && reply.data.error === 'invalid_token') {
+    return { ok: false, error: 'expired' };
+  }
+  return { ok: false, error: 'failed' };
+}
