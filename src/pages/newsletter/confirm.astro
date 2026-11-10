@@ -1,0 +1,32 @@
+---
+/*
+ * The page a confirm link opens. It is not for search engines and it is kept out
+ * of the visit counts: the token is in the address, and it must never reach the
+ * analytics script. The browser reads the token and asks the function to confirm
+ * it (see src/scripts/newsletter-confirm.ts).
+ */
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Bubbles from '../../components/Bubbles.astro';
+---
+
+<BaseLayout title="Newsletter" noindex noAnalytics>
+  <section class="page-head">
+    <Bubbles count={10} tone="subtle" />
+    <div class="shell">
+      <p class="eyebrow">Newsletter</p>
+      <h1 id="confirm-title" data-reveal data-reveal-delay="0.05">Confirming...</h1>
+      <p class="confirm-next" id="confirm-next"></p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style is:global>
+  .page-head .confirm-next {
+    margin-top: var(--sp-5);
+  }
+</style>
+
+<script>
+  import '../../scripts/newsletter-confirm';
+</script>
