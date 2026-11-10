@@ -1,0 +1,84 @@
+# Sends the monthly newsletter email to everyone who confirmed a sign-up.
+#
+# On the 1st of each month, GitHub runs scripts/newsletter/send-monthly.mjs. It
+# reads last month's issues from Supabase, builds one digest, and creates a
+# Resend broadcast to the Newsletter segment. Resend does the sending and handles
+# unsubscribes. A month with no issues sends nothing.
+#
+# The schedule is 14:00 UTC on the 1st, which is 9 or 10 in the morning in
+# Ontario, depending on daylight saving.
+#
+# TO RUN A TEST OR A DRAFT BY HAND
+# Open the Actions tab, choose "Monthly newsletter", then "Run workflow".
+#   mode: draft leaves a draft in the Resend dashboard to look at. send sends it.
+#   audience: test sends to the "Newsletter test" segment only. everyone is the
+#     real list. A test run gets its own broadcast name, so it never blocks the
+#     real send.
+#   month: optional, as 2026-10. Leave it empty for last month.
+# A run for everyone that finds the month already sent stops and says so.
+#
+# If the run fails, GitHub emails whoever last edited this file. That includes a
+# missing mailing address, which the job refuses to work around.
+#
+# Secrets (Settings, Secrets and variables, Actions):
+#   RESEND_API_KEY, RESEND_SEGMENT_ID, RESEND_TEST_SEGMENT_ID
+# Variable: NEWSLETTER_MAILING_ADDRESS (the postal address Canada's anti-spam law
+# requires in every newsletter).
+
+name: Monthly newsletter
+
+on:
+  schedule:
+    # 14:00 UTC on the 1st of every month.
+    - cron: '0 14 1 * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'draft saves a Resend draft. send sends the broadcast.'
+        type: choice
+        options:
+          - draft
+          - send
+        default: draft
+      audience:
+        description: 'test sends to the test segment. everyone is the real list.'
+        type: choice
+        options:
+          - test
+          - everyone
+        default: test
+      month:
+        description: 'Month to send, as 2026-10. Leave empty for last month.'
+        type: string
+        required: false
+
+permissions: {}
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Check Node
+        # The script uses built-in fetch and node:test, which need Node 20 or
+        # newer. GitHub's Ubuntu image ships a newer Node, so this only fails if
+        # the image changes.
+        run: |
+          node --version
+          node -e "const major = Number(process.versions.node.split('.')[0]); if (major < 20) { console.error('Node 20 or newer is needed.'); process.exit(1); }"
+
+      - name: Build and send the digest
+        env:
+          # A scheduled run always sends to everyone. Only a manual run can pick
+          # the mode, the audience and the month.
+          MODE: ${{ github.event_name == 'schedule' && 'send' || github.event.inputs.mode }}
+          AUDIENCE: ${{ github.event_name == 'schedule' && 'everyone' || github.event.inputs.audience }}
+          MONTH: ${{ github.event.inputs.month }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_SEGMENT_ID: ${{ secrets.RESEND_SEGMENT_ID }}
+          RESEND_TEST_SEGMENT_ID: ${{ secrets.RESEND_TEST_SEGMENT_ID }}
+          NEWSLETTER_MAILING_ADDRESS: ${{ vars.NEWSLETTER_MAILING_ADDRESS }}
+        run: node scripts/newsletter/send-monthly.mjs

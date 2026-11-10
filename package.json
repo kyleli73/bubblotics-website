@@ -10,6 +10,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "test:newsletter": "node --test \"scripts/newsletter/tests/*.test.mjs\"",
     "zip": "astro build && cd dist && rm -f ../bubblotics-website.zip && zip -qr ../bubblotics-website.zip . && cd .. && echo \"\\nReady to deploy: bubblotics-website.zip (drag it onto Netlify)\""
   },
   "dependencies": {
