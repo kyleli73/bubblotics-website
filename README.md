@@ -645,6 +645,29 @@ space should be. A failed build never replaces the live site.
 
 ---
 
+## Newsletter by email
+
+Readers sign up at [bubblotics.ca/newsletter](https://bubblotics.ca/newsletter/), or at the end of any issue. Each sign-up is confirmed by email before anything is sent.
+
+**How sign-up works.** The form sends the address to the `newsletter-signup` Edge Function in Supabase (`supabase/functions/newsletter-signup/index.ts`). The function saves a row in `newsletter_signups` holding a hash of a one-time token, and emails a confirm link. Clicking the link opens `/newsletter/confirm/?t=...`, which asks the function to confirm the token. The function then adds the person to the **Newsletter** segment in Resend. The token itself is never stored, and the confirm page is kept out of the visit counts.
+
+**Where the list lives.** The subscriber list is the Resend segment **Newsletter**. The consent record, which shows when and how each person agreed, is the Supabase table `newsletter_signups`. Nobody can read that table through the public API.
+
+**Unsubscribing.** Every email carries an Unsubscribe link that Resend handles. Rows in `newsletter_signups` are kept as the record of consent, so they are not deleted when someone leaves.
+
+**The monthly email.** On the 1st of each month a GitHub Actions job (`.github/workflows/monthly-newsletter.yml`) runs `scripts/newsletter/send-monthly.mjs`. It sends one digest of the issues published in the previous month, as a Resend broadcast to the Newsletter segment. A month with no issues sends nothing. The job will not send the same month twice.
+
+**To run a test or a draft by hand.** Open the Actions tab, choose **Monthly newsletter**, then **Run workflow**. Choose `draft` to leave a draft in Resend to look at, or `send` to send it. Choose `test` to send to the **Newsletter test** segment only, or `everyone` for the real list. Leave the month empty for last month.
+
+**To run the tests.** Run `npm run test:newsletter`. These cover the sign-up function, the email builder and the monthly job.
+
+**One-time setup.**
+
+1. Run `supabase/newsletter-signups.sql` in the Supabase SQL editor.
+2. In Resend, create the segments **Newsletter** and **Newsletter test**, and a full-access API key.
+3. In Supabase, create the Edge Function `newsletter-signup` by pasting in `supabase/functions/newsletter-signup/index.ts`. Turn off JWT verification for it. Set the secrets `RESEND_API_KEY` and `RESEND_SEGMENT_ID`.
+4. In GitHub, add the secrets `RESEND_API_KEY`, `RESEND_SEGMENT_ID` and `RESEND_TEST_SEGMENT_ID` to the repository's Actions secrets.
+
 ## Where the site's settings live
 
 | What | Where |
@@ -659,6 +682,12 @@ space should be. A failed build never replaces the live site.
 | Newsletter table and photos | [Supabase, project `hhxwvxzlykycnuzkjccn`](https://supabase.com/dashboard/project/hhxwvxzlykycnuzkjccn) |
 | Newsletter account | [Supabase → Authentication → Users](https://supabase.com/dashboard/project/hhxwvxzlykycnuzkjccn/auth/users) |
 | Newsletter rules (SQL) | `supabase/newsletters.sql` in this repo |
+| Sign-up function, its secrets | [Supabase → Edge Functions, project `hhxwvxzlykycnuzkjccn`](https://supabase.com/dashboard/project/hhxwvxzlykycnuzkjccn/functions) |
+| Consent records (`newsletter_signups`) | [Supabase, project `hhxwvxzlykycnuzkjccn`](https://supabase.com/dashboard/project/hhxwvxzlykycnuzkjccn) |
+| Subscriber list and segments | [Resend → Segments](https://resend.com/segments) |
+| Sent and draft broadcasts | [Resend → Broadcasts](https://resend.com/broadcasts) |
+| Resend API key | [Resend → API keys](https://resend.com/api-keys) |
+| Monthly job and its secrets | [GitHub → Actions, Monthly newsletter](https://github.com/kyleli73/bubblotics-website/actions/workflows/monthly-newsletter.yml) and [GitHub → Actions secrets](https://github.com/kyleli73/bubblotics-website/settings/secrets/actions) |
 | DNS records | [Cloudflare → DNS](https://dash.cloudflare.com/?to=/:account/bubblotics.ca/dns/records) |
 | Domain renewal, auto-renew | [Cloudflare → Registrar](https://dash.cloudflare.com/?to=/:account/domains) |
 
